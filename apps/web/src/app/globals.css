@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+        --primary: 142.1 76.2% 36.3%;
+        --primary-foreground: 355.7 100% 97.3%;
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 142.1 76.2% 36.3%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 0 0% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 3.9%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 142.1 70.6% 45.3%;
+        --primary-foreground: 144.9 80.4% 10%;
+        --secondary: 0 0% 14.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 14.9%;
+        --muted-foreground: 0 0% 63.9%;
+        --accent: 0 0% 14.9%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 14.9%;
+        --input: 0 0% 14.9%;
+        --ring: 142.4 71.8% 29.2%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* ─── Map controls: unified styling ─── */
+.maplibregl-ctrl-group {
+    background: hsl(var(--background) / 0.9) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+    width: 36px !important;
+    height: 36px !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid hsl(var(--border)) !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.maplibregl-ctrl-group button:last-child {
+    border-bottom: none !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+    background-color: hsl(var(--muted));
+}
+
+/* SVG icons inside custom buttons */
+.maplibregl-ctrl-group button svg {
+    width: 16px;
+    height: 16px;
+    stroke: hsl(var(--foreground));
+}
+
+/* Navigation control built-in icons — adapt to theme */
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: none;
+    opacity: 0.8;
+}
+
+.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1);
+    opacity: 0.9;
+}
+
+/* Hide empty control groups from MapboxDraw (no UI controls) */
+.mapboxgl-ctrl-group:empty {
+    display: none;
+}
+
+/* Position map controls vertically centered on the left side */
+.maplibregl-ctrl-top-left {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    pointer-events: none;
+}
+
+.maplibregl-ctrl-top-left .maplibregl-ctrl {
+    margin-left: 16px;
+    pointer-events: auto;
+}
+
+/* Visually merge consecutive control groups into one block (nav + geolocate) */
+.maplibregl-ctrl-top-left .maplibregl-ctrl-group+.maplibregl-ctrl-group {
+    margin-top: -1px;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+.maplibregl-ctrl-top-left .maplibregl-ctrl-group:has(+ .maplibregl-ctrl-group) {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-bottom: none !important;
+}

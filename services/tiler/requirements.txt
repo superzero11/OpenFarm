@@ -1,0 +1,5 @@
+titiler.core>=0.18.0,<1.0
+titiler.mosaic>=0.18.0,<1.0
+titiler.extensions>=0.18.0,<1.0
+python-jose[cryptography]>=3.3.0
+uvicorn>=0.30.0

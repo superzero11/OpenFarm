@@ -1,0 +1,150 @@
+<div align="center">
+
+# OpenFarm
+
+<img src="apps/web/public/logo.svg" alt="OpenFarm Logo" width="120" />
+
+### Open Intelligence for Every Farm
+
+Satellite-powered crop intelligence platform — self-hostable, reproducible, and open.
+
+[![CI](https://github.com/superzero11/OpenFarm/actions/workflows/ci.yml/badge.svg)](https://github.com/superzero11/OpenFarm/actions/workflows/ci.yml)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+
+[Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
+
+</div>
+
+**Vision:** A world where every farm, from smallholders to enterprises, can access transparent, trustworthy, and affordable digital farming intelligence.
+
+**Mission:** Build and maintain an open, reproducible crop intelligence platform that turns satellite, weather, sensor and field data into actionable insights, with modular workflows for scouting, operations, and analytics — deployable anywhere (self-hosted or hosted).
+
+## Why OpenFarm
+- Self-hostable stack with clear service boundaries (Next.js ↔ FastAPI ↔ TiTiler ↔ MinIO ↔ PostGIS)
+- Reproducible NDVI pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
+- Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
+- MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
+- Open, permissive BSD-3-Clause license
+
+## Prerequisites
+- Docker + Docker Compose v2
+- Node.js 20+ and npm 10+ (for local web development)
+- Python 3.11+ and pip (for local API development)
+- Google OAuth credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
+
+## Architecture
+```
+apps/web/       → Next.js 14 + NextAuth (Google OAuth) + Tailwind + shadcn/ui + MapLibre + ECharts
+services/api/   → FastAPI + SQLAlchemy 2.0 (async) + Alembic + Celery tasks (NDVI)
+services/tiler/ → TiTiler COG tile server (shared JWT auth)
+docker-compose.yml → Postgres/PostGIS, Redis, MinIO, API, Celery worker, TiTiler, Web
+```
+**Critical rule:** Next.js talks to Postgres **only** for user upsert during NextAuth auth callback (`apps/web/src/lib/db.ts`). All other data flows through the FastAPI API via `apps/web/src/lib/api.ts`.
+
+## Quick Start (Full Stack via Docker)
+```bash
+cp .env.example .env
+# Fill GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+# Generate secrets:
+#   NEXTAUTH_SECRET:     openssl rand -base64 32
+#   OPENFARM_JWT_SECRET: openssl rand -base64 64
+
+docker compose up --build
+```
+
+Services:
+| Service | URL | Purpose |
+|---|---|---|
+| Web (Next.js) | http://localhost:3000 | Frontend UI |
+| API (FastAPI) | http://localhost:8000 | Backend API |
+| API Docs | http://localhost:8000/docs | Swagger UI |
+| TiTiler | http://localhost:8080 | COG tiles |
+| MinIO Console | http://localhost:9001 | Object storage admin |
+
+Health checks:
+```bash
+curl http://localhost:8000/healthz    # API
+curl http://localhost:8080/healthz    # TiTiler
+curl http://localhost:3000/api/health # Web
+```
+
+## Local Development
+
+### Frontend (apps/web)
+```bash
+cd apps/web
+npm install
+npm run dev          # start dev server
+npm run lint         # ESLint
+npm run type-check   # TypeScript (no emit)
+npm run build        # production build
+```
+
+### Backend (services/api)
+```bash
+cd services/api
+pip install -e ".[dev]"   # includes ruff
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+
+ruff check .              # lint
+ruff format --check .     # format check
+```
+
+### Database Migrations
+```bash
+cd services/api
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+
+```
+
+## Developer Verification Checklist
+Run these before opening a PR:
+
+```bash
+# Web
+cd apps/web
+npm run lint
+npm run type-check
+npm run build
+
+# API
+cd ../../services/api
+ruff check .
+ruff format --check .
+```
+
+## API Conventions
+- All endpoints prefixed with `/v1`
+- Org-scoped endpoints require `X-Org-Id` header and JWT
+- Pagination envelope: `{ items, total, limit, offset }`
+- Soft delete via `deleted_at` column
+- Geometry stored as `MultiPolygon(4326)`; polygons auto-wrapped
+- Audit events on key actions (e.g., field_created)
+
+## Feature Overview (MVP)
+- Auth: Google OAuth via NextAuth → JWT bridge (`/api/auth/token`)
+- Orgs & RBAC: owner/admin/member/viewer
+- Farms & Fields: draw/upload GeoJSON/KML, area calc, soft delete
+- NDVI Monitoring: STAC search → NDVI COG → TiTiler tiles → time-series stats
+- Alerts: ndvi_drop / ndvi_threshold
+- Scouting: geotagged notes, optional photo
+- Sharing: read-only field health report via share links
+
+## Quality & CI
+- GitHub Actions: lint + type-check (`.github/workflows/ci.yml`)
+- Frontend: `npm run lint`, `npm run type-check`
+- Backend: `ruff check`, `ruff format --check`
+- No tests yet — contributions welcome
+
+## Contributing & Security
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR process
+- See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards
+- See [SECURITY.md](SECURITY.md) to report vulnerabilities (hello@openfarm.earth)
+
+## License
+
+BSD-3-Clause — see [LICENSE](LICENSE)

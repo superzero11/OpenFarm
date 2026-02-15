@@ -140,6 +140,9 @@ ruff format --check .
 - Backend: `ruff check`, `ruff format --check`
 - No tests yet — contributions welcome
 
+## Roadmap
+See [ROADMAP.md](ROADMAP.md) for the full development plan — what's done, what's in progress, and where contributors can help most.
+
 ## Contributing & Security
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR process
 - See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards

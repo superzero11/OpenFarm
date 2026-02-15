@@ -75,16 +75,41 @@ Backend APIs are complete. Frontend UI is the remaining work.
 
 ## Future Ideas (Post-MVP)
 
-These are under consideration but not yet committed:
+These are under consideration but not yet committed. Grouped by theme and roughly ordered by priority.
 
-- **Weather data integration** — overlay weather forecasts on field maps
-- **Additional vegetation indices** — EVI, SAVI, NDWI
+### Platform Foundations
+- **Email/Microsoft & Enterprise SSO** — support email/password, Microsoft OAuth, and SAML/OIDC for enterprise identity providers
+- **Direct API integration** — stable, versioned public API with API keys for integrating OpenFarm into existing farm management software
+- **Boundary detection** — automatic field boundary detection from satellite imagery
+- **Crop detection and classification** — ML-based crop type identification from spectral data
+- **Additional vegetation indices** — EVI, SAVI, NDWI alongside NDVI
 - **Multi-satellite support** — Landsat, Planet (currently Sentinel-2 only)
-- **Mobile app** — React Native companion for field scouting
-- **Webhook/notification system** — email, Slack, or SMS on alerts
+
+### Agricultural Intelligence
+- **Disease/pest risk signals** — risk scoring framework combining vegetation anomalies, weather, and regional pest data
+- **Yield analysis and forecasting** — predict yield from historical NDVI trends, weather, and field data
+- **Weather data integration** — overlay forecasts and historical weather on field maps
+- **Carbon/sustainability reporting** — track and report carbon sequestration, emissions, and sustainability metrics
+
+### Analytics & Workflows
+- **Advanced analytics and reporting framework** — customizable dashboards, scheduled reports, and data export
 - **Field comparison** — side-by-side health comparison across fields
 - **Historical analytics** — season-over-season trend analysis
-- **Plugin system** — extensible processing pipelines
+- **Advanced workflows** — rule-based automation (e.g., auto-trigger NDVI on new imagery, scheduled monitoring)
+- **Webhook/notification system** — email, Slack, or SMS on alerts
+
+### Ecosystem & Integrations
+- **OpenFarm MCP server** — Model Context Protocol server for AI agent integration
+- **Device/Sensor plugin framework** — connect soil sensors, weather stations, and IoT devices
+- **Machinery telemetry integration** — ingest GPS tracks and operational data from farm equipment
+- **Supply chain / traceability integrations** — link field data to downstream logistics and compliance systems
+- **Plugin system** — extensible processing pipelines for custom analysis
+
+### Enterprise & Scale
+- **Enterprise admin controls** — SSO enforcement, audit policies, usage quotas, multi-tenant admin
+- **Custom analytics packs per vertical** — tailored modules for tree crops, forestry, viticulture, etc.
+- **Modular ERP** — lightweight farm operations management (inventory, tasks, financials)
+- **Mobile app** — React Native companion for field scouting
 - **Hosted offering** — managed cloud version
 
 ---

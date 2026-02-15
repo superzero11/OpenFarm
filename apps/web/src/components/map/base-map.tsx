@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { registerPMTilesProtocol, getBasemapStyle } from "@/lib/pmtiles";
+import { registerPMTilesProtocol, getBasemapStyle, tryUpgradeToPMTiles } from "@/lib/pmtiles";
 import { createTransformRequest, refreshMapToken } from "@/lib/map-auth";
 
 export interface BaseMapProps {
@@ -114,7 +114,8 @@ export default function BaseMap({
         map.addControl(geolocateCtrl as any, "top-left");
 
         map.on("load", () => {
-            onReadyCb(map);
+            // Try upgrading to PMTiles vector tiles (no-ops if unavailable)
+            tryUpgradeToPMTiles(map).then(() => onReadyCb(map));
         });
 
         mapRef.current = map;

@@ -34,117 +34,163 @@ export const PMTILES_BASEMAP_URL =
 /**
  * Returns a MapLibre style spec.
  *
- * - If NEXT_PUBLIC_PROTOMAPS_URL is set → PMTiles vector style
- * - Otherwise → OSM raster tile fallback
+ * Always returns the OSM raster fallback for instant map display.
+ * Use `tryUpgradeToPMTiles(map)` after map creation to switch to
+ * PMTiles vector tiles if the basemap file is available.
  */
 export function getBasemapStyle(): maplibregl.StyleSpecification {
-    if (PMTILES_BASEMAP_URL) {
-        // PMTiles vector basemap from MinIO / object storage
-        return {
-            version: 8,
-            glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-            sources: {
-                protomaps: {
-                    type: "vector",
-                    url: `pmtiles://${PMTILES_BASEMAP_URL}`,
-                    attribution:
-                        '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+    return getOsmFallbackStyle();
+}
+
+/**
+ * Returns the PMTiles vector basemap style, or null if not configured.
+ */
+export function getPMTilesStyle(): maplibregl.StyleSpecification | null {
+    if (!PMTILES_BASEMAP_URL) return null;
+    return {
+        version: 8,
+        glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+        sources: {
+            protomaps: {
+                type: "vector",
+                url: `pmtiles://${PMTILES_BASEMAP_URL}`,
+                attribution:
+                    '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+            },
+        },
+        layers: [
+            {
+                id: "background",
+                type: "background",
+                paint: { "background-color": "#f8f4f0" },
+            },
+            {
+                id: "earth",
+                type: "fill",
+                source: "protomaps",
+                "source-layer": "earth",
+                paint: { "fill-color": "#f0e9e1" },
+            },
+            {
+                id: "water",
+                type: "fill",
+                source: "protomaps",
+                "source-layer": "water",
+                paint: { "fill-color": "#aad3df" },
+            },
+            {
+                id: "landuse-park",
+                type: "fill",
+                source: "protomaps",
+                "source-layer": "landuse",
+                filter: ["in", "pmap:kind", "park", "nature_reserve", "forest"],
+                paint: { "fill-color": "#c8facc", "fill-opacity": 0.5 },
+            },
+            {
+                id: "landuse-farm",
+                type: "fill",
+                source: "protomaps",
+                "source-layer": "landuse",
+                filter: [
+                    "in",
+                    "pmap:kind",
+                    "farmland",
+                    "farm",
+                    "orchard",
+                    "vineyard",
+                ],
+                paint: { "fill-color": "#eef0d5", "fill-opacity": 0.6 },
+            },
+            {
+                id: "roads-highway",
+                type: "line",
+                source: "protomaps",
+                "source-layer": "roads",
+                filter: ["in", "pmap:kind", "highway", "major_road"],
+                paint: {
+                    "line-color": "#ffb347",
+                    "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 12, 2],
                 },
             },
-            layers: [
-                {
-                    id: "background",
-                    type: "background",
-                    paint: { "background-color": "#f8f4f0" },
+            {
+                id: "roads-minor",
+                type: "line",
+                source: "protomaps",
+                "source-layer": "roads",
+                filter: ["in", "pmap:kind", "minor_road", "medium_road"],
+                paint: {
+                    "line-color": "#ddd",
+                    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 15, 1],
                 },
-                {
-                    id: "earth",
-                    type: "fill",
-                    source: "protomaps",
-                    "source-layer": "earth",
-                    paint: { "fill-color": "#f0e9e1" },
+                minzoom: 10,
+            },
+            {
+                id: "buildings",
+                type: "fill",
+                source: "protomaps",
+                "source-layer": "buildings",
+                paint: { "fill-color": "#d9d0c9", "fill-opacity": 0.6 },
+                minzoom: 13,
+            },
+            {
+                id: "place-labels",
+                type: "symbol",
+                source: "protomaps",
+                "source-layer": "places",
+                layout: {
+                    "text-field": ["get", "name"],
+                    "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 14],
                 },
-                {
-                    id: "water",
-                    type: "fill",
-                    source: "protomaps",
-                    "source-layer": "water",
-                    paint: { "fill-color": "#aad3df" },
+                paint: {
+                    "text-color": "#333",
+                    "text-halo-color": "#fff",
+                    "text-halo-width": 1,
                 },
-                {
-                    id: "landuse-park",
-                    type: "fill",
-                    source: "protomaps",
-                    "source-layer": "landuse",
-                    filter: ["in", "pmap:kind", "park", "nature_reserve", "forest"],
-                    paint: { "fill-color": "#c8facc", "fill-opacity": 0.5 },
-                },
-                {
-                    id: "landuse-farm",
-                    type: "fill",
-                    source: "protomaps",
-                    "source-layer": "landuse",
-                    filter: [
-                        "in",
-                        "pmap:kind",
-                        "farmland",
-                        "farm",
-                        "orchard",
-                        "vineyard",
-                    ],
-                    paint: { "fill-color": "#eef0d5", "fill-opacity": 0.6 },
-                },
-                {
-                    id: "roads-highway",
-                    type: "line",
-                    source: "protomaps",
-                    "source-layer": "roads",
-                    filter: ["in", "pmap:kind", "highway", "major_road"],
-                    paint: {
-                        "line-color": "#ffb347",
-                        "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 12, 2],
-                    },
-                },
-                {
-                    id: "roads-minor",
-                    type: "line",
-                    source: "protomaps",
-                    "source-layer": "roads",
-                    filter: ["in", "pmap:kind", "minor_road", "medium_road"],
-                    paint: {
-                        "line-color": "#ddd",
-                        "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 15, 1],
-                    },
-                    minzoom: 10,
-                },
-                {
-                    id: "buildings",
-                    type: "fill",
-                    source: "protomaps",
-                    "source-layer": "buildings",
-                    paint: { "fill-color": "#d9d0c9", "fill-opacity": 0.6 },
-                    minzoom: 13,
-                },
-                {
-                    id: "place-labels",
-                    type: "symbol",
-                    source: "protomaps",
-                    "source-layer": "places",
-                    layout: {
-                        "text-field": ["get", "name"],
-                        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 14],
-                    },
-                    paint: {
-                        "text-color": "#333",
-                        "text-halo-color": "#fff",
-                        "text-halo-width": 1,
-                    },
-                },
-            ],
-        };
+            },
+        ],
+    };
+}
+
+/** Cache the availability check so we only probe once per page load. */
+let pmtilesAvailable: boolean | null = null;
+
+/**
+ * Asynchronously check if the PMTiles basemap file exists, then upgrade
+ * the map style from OSM raster to PMTiles vector tiles.
+ *
+ * Safe to call even if NEXT_PUBLIC_PROTOMAPS_URL is not set — it no-ops.
+ */
+export async function tryUpgradeToPMTiles(map: maplibregl.Map): Promise<void> {
+    if (!PMTILES_BASEMAP_URL) return;
+
+    // Only probe once per page load
+    if (pmtilesAvailable === false) return;
+
+    if (pmtilesAvailable === null) {
+        try {
+            const resp = await fetch(PMTILES_BASEMAP_URL, {
+                method: "HEAD",
+                cache: "no-store",
+            });
+            pmtilesAvailable = resp.ok;
+        } catch {
+            pmtilesAvailable = false;
+        }
     }
 
-    // Fallback: OSM raster tiles
+    if (!pmtilesAvailable) {
+        console.warn("[OpenFarm] PMTiles basemap not found at", PMTILES_BASEMAP_URL, "— using OSM tiles");
+        return;
+    }
+
+    const style = getPMTilesStyle();
+    if (style && map.getCanvas()) {
+        map.setStyle(style);
+    }
+}
+
+/** OSM raster tile style — used as fallback when PMTiles is unavailable. */
+export function getOsmFallbackStyle(): maplibregl.StyleSpecification {
     return {
         version: 8,
         glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",

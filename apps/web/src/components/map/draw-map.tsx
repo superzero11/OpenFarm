@@ -5,7 +5,7 @@ import maplibregl from "maplibre-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-import { registerPMTilesProtocol, getBasemapStyle } from "@/lib/pmtiles";
+import { registerPMTilesProtocol, getBasemapStyle, tryUpgradeToPMTiles } from "@/lib/pmtiles";
 import { createTransformRequest, refreshMapToken } from "@/lib/map-auth";
 
 interface DrawMapProps {
@@ -159,6 +159,9 @@ export default function DrawMap({
         map.addControl(draw as any);
 
         map.on("load", () => {
+            // Try upgrading to PMTiles vector tiles (no-ops if unavailable)
+            tryUpgradeToPMTiles(map);
+
             // Load existing geometry if provided
             if (initialGeometry) {
                 const fc: GeoJSON.FeatureCollection = {

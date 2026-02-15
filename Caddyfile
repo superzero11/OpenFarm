@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OpenFarm — Caddy Reverse Proxy Configuration
+#
+# Replace {$DOMAIN} with your actual domain, or set DOMAIN env var.
+# Caddy auto-provisions Let's Encrypt SSL certificates.
+# ─────────────────────────────────────────────────────────────────────────────
+
+{$DOMAIN:localhost} {
+	# ── API routes → FastAPI ─────────────────────────────────────────
+	handle /v1/* {
+		reverse_proxy api:8000
+	}
+
+	handle /docs* {
+		reverse_proxy api:8000
+	}
+
+	handle /openapi.json {
+		reverse_proxy api:8000
+	}
+
+	handle /healthz {
+		reverse_proxy api:8000
+	}
+
+	# ── Tile routes → TiTiler ────────────────────────────────────────
+	handle /tiles/* {
+		uri strip_prefix /tiles
+		reverse_proxy tiler:80
+	}
+
+	handle /cog/* {
+		reverse_proxy tiler:80
+	}
+
+	# ── MinIO public assets (basemap tiles) ──────────────────────────
+	handle /storage/* {
+		uri strip_prefix /storage
+		reverse_proxy minio:9000
+	}
+
+	# ── Everything else → Next.js ────────────────────────────────────
+	handle {
+		reverse_proxy web:3000
+	}
+
+	# Compression
+	encode gzip zstd
+
+	# Security headers
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	# Logging
+	log {
+		output file /data/access.log {
+			roll_size 100mb
+			roll_keep 5
+		}
+	}
+}

@@ -1,0 +1,109 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OpenFarm — Production Docker Compose
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# This file overrides docker-compose.yml for production:
+#   - Removes exposed dev ports (only Caddy 80/443 are public)
+#   - Adds Caddy reverse proxy with auto-SSL
+#   - Sets restart policies and resource limits
+#   - Reduces Celery concurrency for smaller VPS
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Override: remove dev ports ─────────────────────────────────────
+  db:
+    ports: !override []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+  redis:
+    ports: !override []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  minio:
+    ports: !override []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  api:
+    ports: !override []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  processor:
+    restart: unless-stopped
+    command: >
+      celery -A app.worker worker
+      --loglevel=info
+      --concurrency=2
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+  tiler:
+    ports: !override []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+
+  web:
+    ports: !override []
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ── Caddy (Reverse Proxy + Auto-SSL) ──────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_started
+      api:
+        condition: service_healthy
+      tiler:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
+volumes:
+  caddy_data:
+  caddy_config:

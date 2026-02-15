@@ -140,6 +140,9 @@ ruff format --check .
 - Backend: `ruff check`, `ruff format --check`
 - No tests yet — contributions welcome
 
+## Deployment
+See [DEPLOYMENT.md](DEPLOYMENT.md) for a step-by-step guide to deploy on a free Oracle Cloud VM (or any VPS) with Docker Compose + Caddy auto-SSL.
+
 ## Roadmap
 See [ROADMAP.md](ROADMAP.md) for the full development plan — what's done, what's in progress, and where contributors can help most.
 

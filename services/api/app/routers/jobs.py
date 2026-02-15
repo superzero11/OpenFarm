@@ -50,6 +50,7 @@ async def create_ndvi_job(
     # Dispatch Celery task
     try:
         from app.worker import celery_app
+
         celery_app.send_task(
             "app.tasks.ndvi.process_ndvi",
             args=[str(job.id)],

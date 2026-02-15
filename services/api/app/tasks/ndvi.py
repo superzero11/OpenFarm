@@ -40,7 +40,9 @@ logger = structlog.get_logger()
 
 # ── Configuration ────────────────────────────────────────────────────
 
-STAC_API_URL = os.environ.get("STAC_API_URL", "https://earth-search.aws.element84.com/v1")
+STAC_API_URL = os.environ.get(
+    "STAC_API_URL", "https://earth-search.aws.element84.com/v1"
+)
 STAC_COLLECTION = "sentinel-2-l2a"
 MAX_CLOUD_COVER = 20
 MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "minio:9000")
@@ -59,11 +61,17 @@ os.environ.setdefault("VSI_CACHE_SIZE", "5000000")
 
 
 def _get_minio_client() -> Minio:
-    return Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=MINIO_SECURE)
+    return Minio(
+        MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+        secure=MINIO_SECURE,
+    )
 
 
 def _get_db_session():
     from app.core.database_sync import SyncSession
+
     return SyncSession()
 
 
@@ -92,7 +100,9 @@ def _complete_step(session, job, step: str, details: dict | None = None):
     session.commit()
 
 
-def _search_scenes(field_geom_geojson: dict, date_from: date, date_to: date) -> list[dict]:
+def _search_scenes(
+    field_geom_geojson: dict, date_from: date, date_to: date
+) -> list[dict]:
     """Search Element84 STAC for Sentinel-2 scenes covering the field."""
     catalog = STACClient.open(STAC_API_URL)
     search = catalog.search(
@@ -103,7 +113,12 @@ def _search_scenes(field_geom_geojson: dict, date_from: date, date_to: date) -> 
         max_items=100,
     )
     items = list(search.items())
-    logger.info("stac_search_results", count=len(items), date_from=str(date_from), date_to=str(date_to))
+    logger.info(
+        "stac_search_results",
+        count=len(items),
+        date_from=str(date_from),
+        date_to=str(date_to),
+    )
 
     if not items:
         return []
@@ -124,17 +139,21 @@ def _search_scenes(field_geom_geojson: dict, date_from: date, date_to: date) -> 
         item = entry["item"]
         red_asset = item.assets.get("red") or item.assets.get("B04")
         nir_asset = item.assets.get("nir") or item.assets.get("B08")
-        scenes.append({
-            "id": item.id,
-            "date": entry["date"],
-            "cloud_cover": entry["cloud"],
-            "red_href": red_asset.href if red_asset else None,
-            "nir_href": nir_asset.href if nir_asset else None,
-        })
+        scenes.append(
+            {
+                "id": item.id,
+                "date": entry["date"],
+                "cloud_cover": entry["cloud"],
+                "red_href": red_asset.href if red_asset else None,
+                "nir_href": nir_asset.href if nir_asset else None,
+            }
+        )
     return scenes
 
 
-def _read_band_windowed(href: str, bounds: tuple, target_shape: tuple, target_transform) -> np.ndarray:
+def _read_band_windowed(
+    href: str, bounds: tuple, target_shape: tuple, target_transform
+) -> np.ndarray:
     """Read a band from a remote COG, windowed to field extent.
 
     bounds are in EPSG:4326.  The source COG is typically in UTM, so we
@@ -170,7 +189,9 @@ def _compute_ndvi(red: np.ndarray, nir: np.ndarray) -> np.ndarray:
     return ndvi
 
 
-def _write_cog(ndvi: np.ndarray, transform, crs: str, org_id: str, field_id: str, scene_date: date) -> str:
+def _write_cog(
+    ndvi: np.ndarray, transform, crs: str, org_id: str, field_id: str, scene_date: date
+) -> str:
     """Write NDVI array as COG to MinIO. Returns the cog_uri."""
     object_key = f"cogs/{org_id}/{field_id}/{scene_date.isoformat()}/ndvi.tif"
     tmp_src_path = tempfile.mktemp(suffix="_src.tif")
@@ -178,17 +199,26 @@ def _write_cog(ndvi: np.ndarray, transform, crs: str, org_id: str, field_id: str
 
     try:
         profile = {
-            "driver": "GTiff", "dtype": "float32",
-            "width": ndvi.shape[1], "height": ndvi.shape[0],
-            "count": 1, "crs": crs, "transform": transform, "nodata": np.nan,
+            "driver": "GTiff",
+            "dtype": "float32",
+            "width": ndvi.shape[1],
+            "height": ndvi.shape[0],
+            "count": 1,
+            "crs": crs,
+            "transform": transform,
+            "nodata": np.nan,
         }
         with rasterio.open(tmp_src_path, "w", **profile) as dst:
             dst.write(ndvi, 1)
 
         output_profile = cog_profiles.get("deflate")
-        cog_translate(tmp_src_path, tmp_dst_path, output_profile, overview_level=2, quiet=True)
+        cog_translate(
+            tmp_src_path, tmp_dst_path, output_profile, overview_level=2, quiet=True
+        )
 
-        _get_minio_client().fput_object(MINIO_BUCKET, object_key, tmp_dst_path, content_type="image/tiff")
+        _get_minio_client().fput_object(
+            MINIO_BUCKET, object_key, tmp_dst_path, content_type="image/tiff"
+        )
         logger.info("cog_uploaded", object_key=object_key)
         return f"s3://{MINIO_BUCKET}/{object_key}"
     finally:
@@ -202,8 +232,16 @@ def _write_cog(ndvi: np.ndarray, transform, crs: str, org_id: str, field_id: str
 def _compute_zonal_stats(ndvi: np.ndarray) -> dict:
     valid = ndvi[np.isfinite(ndvi)]
     if len(valid) == 0:
-        return {"mean": None, "median": None, "min": None, "max": None,
-                "stddev": None, "p10": None, "p90": None, "quality_score": 0.0}
+        return {
+            "mean": None,
+            "median": None,
+            "min": None,
+            "max": None,
+            "stddev": None,
+            "p10": None,
+            "p90": None,
+            "quality_score": 0.0,
+        }
     total_pixels = ndvi.size
     return {
         "mean": float(np.nanmean(valid)),
@@ -217,8 +255,16 @@ def _compute_zonal_stats(ndvi: np.ndarray) -> dict:
     }
 
 
-def _run_alerts(session, field_id, org_id, scene_date: date, stats: dict, historical_means: list[float]):
+def _run_alerts(
+    session,
+    field_id,
+    org_id,
+    scene_date: date,
+    stats: dict,
+    historical_means: list[float],
+):
     from app.models.tables import Alert
+
     current_mean = stats.get("mean")
     if current_mean is None:
         return
@@ -227,28 +273,42 @@ def _run_alerts(session, field_id, org_id, scene_date: date, stats: dict, histor
     threshold_params = {"threshold": 0.3}
     if current_mean < threshold_params["threshold"]:
         severity = "high" if current_mean < 0.15 else "medium"
-        session.add(Alert(
-            org_id=org_id, field_id=field_id, date=scene_date, severity=severity,
-            rule_name="ndvi_threshold", rule_params_json=threshold_params,
-            message=f"NDVI mean ({current_mean:.3f}) below threshold ({threshold_params['threshold']}). Consider scouting.",
-            status="open",
-        ))
+        session.add(
+            Alert(
+                org_id=org_id,
+                field_id=field_id,
+                date=scene_date,
+                severity=severity,
+                rule_name="ndvi_threshold",
+                rule_params_json=threshold_params,
+                message=f"NDVI mean ({current_mean:.3f}) below threshold ({threshold_params['threshold']}). Consider scouting.",
+                status="open",
+            )
+        )
 
     # ndvi_drop
     drop_params = {"drop_pct": 15, "window": 4}
     if len(historical_means) >= 2:
-        window = historical_means[-drop_params["window"]:]
+        window = historical_means[-drop_params["window"] :]
         rolling_avg = sum(window) / len(window)
         if rolling_avg > 0:
             drop_pct = ((rolling_avg - current_mean) / rolling_avg) * 100
             if drop_pct >= drop_params["drop_pct"]:
-                severity = "high" if drop_pct >= 30 else "medium" if drop_pct >= 20 else "low"
-                session.add(Alert(
-                    org_id=org_id, field_id=field_id, date=scene_date, severity=severity,
-                    rule_name="ndvi_drop", rule_params_json=drop_params,
-                    message=f"NDVI dropped {drop_pct:.1f}% (from avg {rolling_avg:.3f} to {current_mean:.3f}). Investigate crop stress.",
-                    status="open",
-                ))
+                severity = (
+                    "high" if drop_pct >= 30 else "medium" if drop_pct >= 20 else "low"
+                )
+                session.add(
+                    Alert(
+                        org_id=org_id,
+                        field_id=field_id,
+                        date=scene_date,
+                        severity=severity,
+                        rule_name="ndvi_drop",
+                        rule_params_json=drop_params,
+                        message=f"NDVI dropped {drop_pct:.1f}% (from avg {rolling_avg:.3f} to {current_mean:.3f}). Investigate crop stress.",
+                        status="open",
+                    )
+                )
     session.commit()
 
 
@@ -316,7 +376,10 @@ def process_ndvi(self, job_id: str) -> dict:
         # Compute target grid (~10m resolution)
         minx, miny, maxx, maxy = field_bounds
         buf = 0.001
-        minx -= buf; miny -= buf; maxx += buf; maxy += buf
+        minx -= buf
+        miny -= buf
+        maxx += buf
+        maxy += buf
         pixel_size = 0.0001
         width = max(int((maxx - minx) / pixel_size), 1)
         height = max(int((maxy - miny) / pixel_size), 1)
@@ -328,12 +391,23 @@ def process_ndvi(self, job_id: str) -> dict:
 
         target_transform = from_bounds(minx, miny, maxx, maxy, width, height)
         target_shape = (height, width)
-        field_mask = geometry_mask([field_geom], out_shape=target_shape, transform=target_transform, invert=True)
+        field_mask = geometry_mask(
+            [field_geom],
+            out_shape=target_shape,
+            transform=target_transform,
+            invert=True,
+        )
 
         # Historical means for alerts
-        existing_stats = session.execute(
-            select(FieldStat.mean).where(FieldStat.field_id == job.field_id).order_by(FieldStat.date.asc())
-        ).scalars().all()
+        existing_stats = (
+            session.execute(
+                select(FieldStat.mean)
+                .where(FieldStat.field_id == job.field_id)
+                .order_by(FieldStat.date.asc())
+            )
+            .scalars()
+            .all()
+        )
         historical_means = [float(m) for m in existing_stats if m is not None]
 
         layers_created = 0
@@ -350,11 +424,19 @@ def process_ndvi(self, job_id: str) -> dict:
                 continue
 
             try:
-                _update_job_progress(session, job, "download_bands", {
-                    "scene": i + 1, "total_scenes": len(scenes), "scene_id": scene_id})
+                _update_job_progress(
+                    session,
+                    job,
+                    "download_bands",
+                    {"scene": i + 1, "total_scenes": len(scenes), "scene_id": scene_id},
+                )
 
-                red = _read_band_windowed(red_href, (minx, miny, maxx, maxy), target_shape, target_transform)
-                nir = _read_band_windowed(nir_href, (minx, miny, maxx, maxy), target_shape, target_transform)
+                red = _read_band_windowed(
+                    red_href, (minx, miny, maxx, maxy), target_shape, target_transform
+                )
+                nir = _read_band_windowed(
+                    nir_href, (minx, miny, maxx, maxy), target_shape, target_transform
+                )
                 _complete_step(session, job, "download_bands")
 
                 _update_job_progress(session, job, "compute_ndvi")
@@ -363,7 +445,14 @@ def process_ndvi(self, job_id: str) -> dict:
                 _complete_step(session, job, "compute_ndvi")
 
                 _update_job_progress(session, job, "write_cog")
-                cog_uri = _write_cog(ndvi, target_transform, "EPSG:4326", org_id_str, field_id_str, scene_date)
+                cog_uri = _write_cog(
+                    ndvi,
+                    target_transform,
+                    "EPSG:4326",
+                    org_id_str,
+                    field_id_str,
+                    scene_date,
+                )
                 _complete_step(session, job, "write_cog")
 
                 _update_job_progress(session, job, "compute_stats")
@@ -373,19 +462,43 @@ def process_ndvi(self, job_id: str) -> dict:
                 ndvi_max = float(np.nanmax(valid)) if len(valid) > 0 else None
 
                 layer = RasterLayer(
-                    org_id=job.org_id, field_id=job.field_id, layer_type="NDVI", satellite="S2",
-                    date=scene_date, cog_uri=cog_uri, min=ndvi_min, max=ndvi_max,
-                    params_json={"date_from": str(date_from), "date_to": str(date_to), "cloud_cover": scene["cloud_cover"]},
-                    provenance_json={"scene_id": scene_id, "red_href": red_href, "nir_href": nir_href,
-                                     "processed_at": datetime.now(timezone.utc).isoformat(), "pipeline_version": "1.0.0"},
+                    org_id=job.org_id,
+                    field_id=job.field_id,
+                    layer_type="NDVI",
+                    satellite="S2",
+                    date=scene_date,
+                    cog_uri=cog_uri,
+                    min=ndvi_min,
+                    max=ndvi_max,
+                    params_json={
+                        "date_from": str(date_from),
+                        "date_to": str(date_to),
+                        "cloud_cover": scene["cloud_cover"],
+                    },
+                    provenance_json={
+                        "scene_id": scene_id,
+                        "red_href": red_href,
+                        "nir_href": nir_href,
+                        "processed_at": datetime.now(timezone.utc).isoformat(),
+                        "pipeline_version": "1.0.0",
+                    },
                 )
                 session.add(layer)
                 session.flush()
 
                 field_stat = FieldStat(
-                    org_id=job.org_id, field_id=job.field_id, layer_id=layer.id, date=scene_date,
-                    mean=stats["mean"], median=stats["median"], min=stats["min"], max=stats["max"],
-                    p10=stats["p10"], p90=stats["p90"], stddev=stats["stddev"], quality_score=stats["quality_score"],
+                    org_id=job.org_id,
+                    field_id=job.field_id,
+                    layer_id=layer.id,
+                    date=scene_date,
+                    mean=stats["mean"],
+                    median=stats["median"],
+                    min=stats["min"],
+                    max=stats["max"],
+                    p10=stats["p10"],
+                    p90=stats["p90"],
+                    stddev=stats["stddev"],
+                    quality_score=stats["quality_score"],
                 )
                 session.add(field_stat)
                 session.commit()
@@ -394,11 +507,23 @@ def process_ndvi(self, job_id: str) -> dict:
                 _update_job_progress(session, job, "run_alerts")
                 if stats["mean"] is not None:
                     historical_means.append(stats["mean"])
-                _run_alerts(session, job.field_id, job.org_id, scene_date, stats, historical_means)
+                _run_alerts(
+                    session,
+                    job.field_id,
+                    job.org_id,
+                    scene_date,
+                    stats,
+                    historical_means,
+                )
                 _complete_step(session, job, "run_alerts")
 
                 layers_created += 1
-                logger.info("scene_processed", scene_id=scene_id, date=str(scene_date), mean_ndvi=stats["mean"])
+                logger.info(
+                    "scene_processed",
+                    scene_id=scene_id,
+                    date=str(scene_date),
+                    mean_ndvi=stats["mean"],
+                )
 
             except Exception as e:
                 logger.error("scene_processing_error", scene_id=scene_id, error=str(e))
@@ -416,7 +541,11 @@ def process_ndvi(self, job_id: str) -> dict:
         session.commit()
 
         logger.info("ndvi_job_completed", job_id=job_id, layers_created=layers_created)
-        return {"job_id": job_id, "status": "completed", "layers_created": layers_created}
+        return {
+            "job_id": job_id,
+            "status": "completed",
+            "layers_created": layers_created,
+        }
 
     except Exception as e:
         logger.error("ndvi_job_failed", job_id=job_id, error=str(e))

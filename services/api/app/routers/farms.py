@@ -32,9 +32,15 @@ async def list_farms(
     offset: int = Query(0, ge=0),
 ):
     base = select(Farm).where(Farm.org_id == ctx.org_id, _not_deleted())
-    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
-    result = await db.execute(base.order_by(Farm.created_at.desc()).limit(limit).offset(offset))
-    return PaginatedResponse(items=result.scalars().all(), total=total, limit=limit, offset=offset)
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar() or 0
+    result = await db.execute(
+        base.order_by(Farm.created_at.desc()).limit(limit).offset(offset)
+    )
+    return PaginatedResponse(
+        items=result.scalars().all(), total=total, limit=limit, offset=offset
+    )
 
 
 @router.post("/farms", response_model=FarmOut, status_code=status.HTTP_201_CREATED)
@@ -43,10 +49,18 @@ async def create_farm(
     ctx: Annotated[OrgContext, Depends(get_org_context)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    farm = Farm(org_id=ctx.org_id, name=body.name, country=body.country, region=body.region, timezone=body.timezone)
+    farm = Farm(
+        org_id=ctx.org_id,
+        name=body.name,
+        country=body.country,
+        region=body.region,
+        timezone=body.timezone,
+    )
     db.add(farm)
     await db.flush()
-    logger.info("farm_created", farm_id=str(farm.id), name=body.name, org_id=str(ctx.org_id))
+    logger.info(
+        "farm_created", farm_id=str(farm.id), name=body.name, org_id=str(ctx.org_id)
+    )
     return farm
 
 
@@ -101,7 +115,9 @@ async def delete_farm(
     farm.deleted_at = now
 
     # Cascade soft-delete fields
-    result = await db.execute(select(Field).where(Field.farm_id == farm_id, Field.deleted_at.is_(None)))
+    result = await db.execute(
+        select(Field).where(Field.farm_id == farm_id, Field.deleted_at.is_(None))
+    )
     for field in result.scalars().all():
         field.deleted_at = now
 
@@ -122,6 +138,12 @@ async def list_farm_fields(
         raise HTTPException(status_code=404, detail="Farm not found")
 
     base = select(Field).where(Field.farm_id == farm_id, Field.deleted_at.is_(None))
-    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
-    result = await db.execute(base.order_by(Field.created_at.desc()).limit(limit).offset(offset))
-    return PaginatedResponse(items=result.scalars().all(), total=total, limit=limit, offset=offset)
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar() or 0
+    result = await db.execute(
+        base.order_by(Field.created_at.desc()).limit(limit).offset(offset)
+    )
+    return PaginatedResponse(
+        items=result.scalars().all(), total=total, limit=limit, offset=offset
+    )

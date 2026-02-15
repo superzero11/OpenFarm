@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from geoalchemy2.shape import from_shape, to_shape
@@ -43,7 +43,9 @@ def _obs_to_out(obs: ScoutingObservation) -> ScoutingOut:
     )
 
 
-@router.get("/fields/{field_id}/scouting", response_model=PaginatedResponse[ScoutingOut])
+@router.get(
+    "/fields/{field_id}/scouting", response_model=PaginatedResponse[ScoutingOut]
+)
 async def list_scouting(
     field_id: uuid.UUID,
     ctx: Annotated[OrgContext, Depends(get_org_context)],
@@ -55,15 +57,25 @@ async def list_scouting(
         ScoutingObservation.field_id == field_id,
         ScoutingObservation.org_id == ctx.org_id,
     )
-    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
-    result = await db.execute(base.order_by(ScoutingObservation.created_at.desc()).limit(limit).offset(offset))
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar() or 0
+    result = await db.execute(
+        base.order_by(ScoutingObservation.created_at.desc()).limit(limit).offset(offset)
+    )
     return PaginatedResponse(
         items=[_obs_to_out(o) for o in result.scalars().all()],
-        total=total, limit=limit, offset=offset,
+        total=total,
+        limit=limit,
+        offset=offset,
     )
 
 
-@router.post("/fields/{field_id}/scouting", response_model=ScoutingOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/fields/{field_id}/scouting",
+    response_model=ScoutingOut,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_scouting(
     field_id: uuid.UUID,
     body: ScoutingCreate,
@@ -121,7 +133,9 @@ async def update_scouting(
     return _obs_to_out(obs)
 
 
-@router.delete("/fields/{field_id}/scouting/{obs_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/fields/{field_id}/scouting/{obs_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_scouting(
     field_id: uuid.UUID,
     obs_id: uuid.UUID,

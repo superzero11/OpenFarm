@@ -10,14 +10,12 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import MultiPolygon, mapping, shape
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context
 from app.models.tables import AuditEvent, Farm, Field
-from app.schemas.common import PaginatedResponse
 from app.schemas.farm import FieldCreate, FieldImportResponse, FieldOut, FieldUpdate
 
 router = APIRouter()
@@ -77,7 +75,10 @@ async def create_field(
     # Compute area in hectares (approximate using geodesic area)
     from shapely.ops import transform
     import pyproj
-    project = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:6933", always_xy=True).transform
+
+    project = pyproj.Transformer.from_crs(
+        "EPSG:4326", "EPSG:6933", always_xy=True
+    ).transform
     area_m2 = transform(project, multi).area
     area_ha = area_m2 / 10_000
 
@@ -96,13 +97,25 @@ async def create_field(
     await db.flush()
 
     # Audit event: field_created (per PRD Section 5.1)
-    db.add(AuditEvent(
-        org_id=ctx.org_id, user_id=ctx.user.id,
-        event_type="field_created",
-        metadata_json={"field_id": str(field.id), "farm_id": str(body.farm_id), "name": body.name},
-    ))
+    db.add(
+        AuditEvent(
+            org_id=ctx.org_id,
+            user_id=ctx.user.id,
+            event_type="field_created",
+            metadata_json={
+                "field_id": str(field.id),
+                "farm_id": str(body.farm_id),
+                "name": body.name,
+            },
+        )
+    )
     await db.flush()
-    logger.info("field_created", field_id=str(field.id), farm_id=str(body.farm_id), name=body.name)
+    logger.info(
+        "field_created",
+        field_id=str(field.id),
+        farm_id=str(body.farm_id),
+        name=body.name,
+    )
     return _field_to_out(field)
 
 
@@ -147,7 +160,10 @@ async def update_field(
         # Recompute area
         from shapely.ops import transform
         import pyproj
-        project = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:6933", always_xy=True).transform
+
+        project = pyproj.Transformer.from_crs(
+            "EPSG:4326", "EPSG:6933", always_xy=True
+        ).transform
         area_m2 = transform(project, multi).area
         field.area_ha = round(area_m2 / 10_000, 4)
 
@@ -203,7 +219,10 @@ async def import_fields(
 
             from shapely.ops import transform
             import pyproj
-            project = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:6933", always_xy=True).transform
+
+            project = pyproj.Transformer.from_crs(
+                "EPSG:4326", "EPSG:6933", always_xy=True
+            ).transform
             area_m2 = transform(project, multi).area
             area_ha = round(area_m2 / 10_000, 4)
 

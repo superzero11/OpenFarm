@@ -11,6 +11,7 @@ from pydantic import BaseModel, field_validator, Field as PydanticField
 
 # ── Farm ─────────────────────────────────────────────────────────────
 
+
 class FarmCreate(BaseModel):
     name: str
     country: str | None = None
@@ -39,6 +40,7 @@ class FarmOut(BaseModel):
 
 
 # ── Field ────────────────────────────────────────────────────────────
+
 
 class FieldCreate(BaseModel):
     farm_id: uuid.UUID
@@ -85,6 +87,7 @@ class FieldOut(BaseModel):
         try:
             from geoalchemy2.shape import to_shape
             from shapely.geometry import mapping
+
             return mapping(to_shape(v))
         except Exception:
             return None

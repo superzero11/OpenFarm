@@ -10,6 +10,7 @@ from pydantic import BaseModel, EmailStr
 
 # ── User ─────────────────────────────────────────────────────────────
 
+
 class UserOut(BaseModel):
     id: uuid.UUID
     email: str
@@ -33,6 +34,7 @@ class OrgBrief(BaseModel):
 
 
 # ── Org ──────────────────────────────────────────────────────────────
+
 
 class OrgCreate(BaseModel):
     name: str
@@ -58,6 +60,7 @@ class OrgDetailOut(OrgOut):
 
 # ── Org Members ──────────────────────────────────────────────────────
 
+
 class MemberOut(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
@@ -74,6 +77,7 @@ class MemberRoleUpdate(BaseModel):
 
 
 # ── Invites ──────────────────────────────────────────────────────────
+
 
 class InviteCreate(BaseModel):
     email: EmailStr

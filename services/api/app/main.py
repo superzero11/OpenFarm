@@ -8,7 +8,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.routers import alerts, farms, fields, jobs, monitoring, orgs, scouting, share, uploads, users
+from app.routers import (
+    alerts,
+    farms,
+    fields,
+    jobs,
+    monitoring,
+    orgs,
+    scouting,
+    share,
+    uploads,
+    users,
+)
 
 
 @asynccontextmanager
@@ -61,6 +72,7 @@ async def healthz():
     try:
         from sqlalchemy import text
         from app.core.database import engine
+
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
     except Exception as e:

@@ -37,11 +37,20 @@ async def list_alerts(
     # farm_id filter would require a join through fields → farms
     if farm_id:
         from app.models.tables import Field
-        base = base.join(Field, Alert.field_id == Field.id).where(Field.farm_id == farm_id)
 
-    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
-    result = await db.execute(base.order_by(Alert.created_at.desc()).limit(limit).offset(offset))
-    return PaginatedResponse(items=result.scalars().all(), total=total, limit=limit, offset=offset)
+        base = base.join(Field, Alert.field_id == Field.id).where(
+            Field.farm_id == farm_id
+        )
+
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar() or 0
+    result = await db.execute(
+        base.order_by(Alert.created_at.desc()).limit(limit).offset(offset)
+    )
+    return PaginatedResponse(
+        items=result.scalars().all(), total=total, limit=limit, offset=offset
+    )
 
 
 @router.get("/fields/{field_id}/alerts", response_model=PaginatedResponse[AlertOut])
@@ -53,9 +62,15 @@ async def list_field_alerts(
     offset: int = Query(0, ge=0),
 ):
     base = select(Alert).where(Alert.org_id == ctx.org_id, Alert.field_id == field_id)
-    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
-    result = await db.execute(base.order_by(Alert.created_at.desc()).limit(limit).offset(offset))
-    return PaginatedResponse(items=result.scalars().all(), total=total, limit=limit, offset=offset)
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar() or 0
+    result = await db.execute(
+        base.order_by(Alert.created_at.desc()).limit(limit).offset(offset)
+    )
+    return PaginatedResponse(
+        items=result.scalars().all(), total=total, limit=limit, offset=offset
+    )
 
 
 @router.patch("/alerts/{alert_id}", response_model=AlertOut)

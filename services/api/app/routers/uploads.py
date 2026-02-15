@@ -35,6 +35,7 @@ async def get_presigned_upload(
     object_key = f"photos/{ctx.org_id}/{uuid.uuid4()}.{ext}"
 
     from datetime import timedelta
+
     url = client.presigned_put_object(
         settings.minio_bucket,
         object_key,

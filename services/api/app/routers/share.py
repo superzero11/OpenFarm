@@ -7,15 +7,23 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context
-from app.models.tables import Alert, AuditEvent, Field, FieldStat, RasterLayer, ScoutingObservation, ShareLink
-from app.schemas.monitoring import AlertOut, FieldStatOut, RasterLayerOut, ScoutingOut, ShareCreate, ShareOut, ShareReportOut
+from app.models.tables import (
+    Alert,
+    AuditEvent,
+    Field,
+    FieldStat,
+    RasterLayer,
+    ScoutingObservation,
+    ShareLink,
+)
+from app.schemas.monitoring import ShareCreate, ShareOut, ShareReportOut
 
 router = APIRouter()
 
@@ -36,12 +44,17 @@ async def list_share_links(
     # Filter out expired links
     now = datetime.now(timezone.utc)
     return [
-        link for link in result.scalars().all()
+        link
+        for link in result.scalars().all()
         if link.expires_at is None or link.expires_at > now
     ]
 
 
-@router.post("/fields/{field_id}/share", response_model=ShareOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/fields/{field_id}/share",
+    response_model=ShareOut,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_share_link(
     field_id: uuid.UUID,
     body: ShareCreate,
@@ -67,17 +80,26 @@ async def create_share_link(
     db.add(link)
 
     # Audit event: report_shared (per PRD Section 5.1)
-    db.add(AuditEvent(
-        org_id=ctx.org_id, user_id=ctx.user.id,
-        event_type="report_shared",
-        metadata_json={"field_id": str(field_id), "scope": body.scope, "token": link.token},
-    ))
+    db.add(
+        AuditEvent(
+            org_id=ctx.org_id,
+            user_id=ctx.user.id,
+            event_type="report_shared",
+            metadata_json={
+                "field_id": str(field_id),
+                "scope": body.scope,
+                "token": link.token,
+            },
+        )
+    )
     await db.flush()
     logger.info("report_shared", field_id=str(field_id), scope=body.scope)
     return link
 
 
-@router.delete("/fields/{field_id}/share/{token}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/fields/{field_id}/share/{token}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def revoke_share_link(
     field_id: uuid.UUID,
     token: str,
@@ -168,12 +190,12 @@ async def get_shared_report(
         .order_by(ScoutingObservation.created_at.desc())
         .limit(10)
     )
-    scouting = scouting_result.scalars().all()
+    scouting_entries = scouting_result.scalars().all()
 
     return ShareReportOut(
         field=field_data,
         latest_layer=latest_layer,
         stats=stats,
         alerts=alerts,
-        scouting=[],  # Simplified — would need geometry conversion
+        scouting=scouting_entries,
     )

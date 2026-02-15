@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 # ── Raster / NDVI Layers ─────────────────────────────────────────────
 
+
 class RasterLayerOut(BaseModel):
     id: uuid.UUID
     field_id: uuid.UUID
@@ -28,6 +29,7 @@ class RasterLayerOut(BaseModel):
 
 
 # ── Field Stats ──────────────────────────────────────────────────────
+
 
 class FieldStatOut(BaseModel):
     id: uuid.UUID
@@ -47,6 +49,7 @@ class FieldStatOut(BaseModel):
 
 
 # ── Jobs ─────────────────────────────────────────────────────────────
+
 
 class JobCreateNDVI(BaseModel):
     date_from: date
@@ -69,6 +72,7 @@ class JobOut(BaseModel):
 
 # ── Alerts ───────────────────────────────────────────────────────────
 
+
 class AlertOut(BaseModel):
     id: uuid.UUID
     field_id: uuid.UUID
@@ -88,6 +92,7 @@ class AlertUpdate(BaseModel):
 
 
 # ── Scouting ─────────────────────────────────────────────────────────
+
 
 class ScoutingCreate(BaseModel):
     geom_point: dict[str, Any]  # GeoJSON Point
@@ -121,6 +126,7 @@ class ScoutingOut(BaseModel):
 
 # ── Share Links ──────────────────────────────────────────────────────
 
+
 class ShareCreate(BaseModel):
     scope: str = "field_report"
     expires_in_days: int | None = 30  # 7, 30, or None (never)
@@ -139,6 +145,7 @@ class ShareOut(BaseModel):
 
 class ShareReportOut(BaseModel):
     """Public share link data — no auth required."""
+
     field: dict[str, Any]
     latest_layer: RasterLayerOut | None = None
     stats: list[FieldStatOut] = []
@@ -147,6 +154,7 @@ class ShareReportOut(BaseModel):
 
 
 # ── Presigned Upload ─────────────────────────────────────────────────
+
 
 class PresignedUploadRequest(BaseModel):
     filename: str
@@ -159,6 +167,7 @@ class PresignedUploadOut(BaseModel):
 
 
 # ── Audit Events ─────────────────────────────────────────────────────
+
 
 class AuditEventOut(BaseModel):
     id: uuid.UUID

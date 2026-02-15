@@ -6,15 +6,13 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context
 from app.models.tables import FieldStat, RasterLayer
-from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import FieldStatOut, RasterLayerOut
 
 router = APIRouter()
@@ -32,6 +30,7 @@ def _layer_to_out(layer: RasterLayer) -> RasterLayerOut:
     s3_path = _cog_uri_to_s3_path(layer.cog_uri)
     # URL-encode the s3 path for the TiTiler query param
     from urllib.parse import quote
+
     encoded_url = quote(s3_path, safe="")
     tile_url = (
         f"{settings.titiler_public_url}/cog/tiles/WebMercatorQuad/{{z}}/{{x}}/{{y}}.png"
@@ -67,9 +66,11 @@ async def list_layers(
         RasterLayer.org_id == ctx.org_id,
         RasterLayer.layer_type == type,
     )
-    result = await db.execute(base.order_by(RasterLayer.date.desc()).limit(limit).offset(offset))
+    result = await db.execute(
+        base.order_by(RasterLayer.date.desc()).limit(limit).offset(offset)
+    )
     layers = result.scalars().all()
-    return [_layer_to_out(l) for l in layers]
+    return [_layer_to_out(layer) for layer in layers]
 
 
 @router.get("/fields/{field_id}/stats", response_model=list[FieldStatOut])
@@ -90,5 +91,7 @@ async def list_stats(
             RasterLayer.layer_type == type,
         )
     )
-    result = await db.execute(base.order_by(FieldStat.date.asc()).limit(limit).offset(offset))
+    result = await db.execute(
+        base.order_by(FieldStat.date.asc()).limit(limit).offset(offset)
+    )
     return result.scalars().all()

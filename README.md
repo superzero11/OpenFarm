@@ -15,6 +15,15 @@ Satellite-powered crop intelligence platform — self-hostable, reproducible, an
 
 [Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
 
+<p>
+  <img src="apps/web/public/screenshots/openfarm-1.png" width="49%" />
+  <img src="apps/web/public/screenshots/openfarm-2.png" width="49%" />
+</p>
+<p>
+  <img src="apps/web/public/screenshots/openfarm-3.png" width="49%" />
+  <img src="apps/web/public/screenshots/openfarm-4.png" width="49%" />
+</p>
+
 </div>
 
 **Vision:** A world where every farm, from smallholders to enterprises, can access transparent, trustworthy, and affordable digital farming intelligence.

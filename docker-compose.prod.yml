@@ -5,16 +5,14 @@
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 #
 # This file overrides docker-compose.yml for production:
-#   - Removes exposed dev ports (only Caddy 80/443 are public)
-#   - Adds Caddy reverse proxy with auto-SSL
+#   - Adds Caddy reverse proxy with auto-SSL (only ports 80/443 exposed)
 #   - Sets restart policies and resource limits
 #   - Reduces Celery concurrency for smaller VPS
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
-  # ── Override: remove dev ports ─────────────────────────────────────
+  # ── Resource limits & restart policies ─────────────────────────────
   db:
-    ports: !override []
     restart: unless-stopped
     deploy:
       resources:
@@ -23,7 +21,6 @@ services:
           memory: 2G
 
   redis:
-    ports: !override []
     restart: unless-stopped
     deploy:
       resources:
@@ -32,7 +29,6 @@ services:
           memory: 256M
 
   minio:
-    ports: !override []
     restart: unless-stopped
     deploy:
       resources:
@@ -41,7 +37,6 @@ services:
           memory: 512M
 
   api:
-    ports: !override []
     restart: unless-stopped
     deploy:
       resources:
@@ -62,7 +57,6 @@ services:
           memory: 2G
 
   tiler:
-    ports: !override []
     restart: unless-stopped
     deploy:
       resources:
@@ -71,7 +65,6 @@ services:
           memory: 1G
 
   web:
-    ports: !override []
     restart: unless-stopped
     deploy:
       resources:

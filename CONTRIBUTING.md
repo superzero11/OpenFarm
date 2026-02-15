@@ -76,8 +76,8 @@ openssl rand -base64 64   # → paste as OPENFARM_JWT_SECRET
 
 # 3. Edit .env — fill in GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 
-# 4. Start everything
-docker compose up --build
+# 4. Start everything (dev mode — exposes ports to localhost)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 Services will be available at:
@@ -186,7 +186,7 @@ These are **strict invariants** — please follow them in all contributions:
 
 3. **Test locally** — ensure the full stack runs:
    ```bash
-   docker compose up --build
+   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
    ```
 
 4. **Lint and type-check** before pushing:
@@ -209,7 +209,7 @@ These are **strict invariants** — please follow them in all contributions:
    cd apps/web && npm run build
 
    # Docker full-stack build
-   docker compose build
+   docker compose -f docker-compose.yml -f docker-compose.dev.yml build
    ```
 
 ---
@@ -374,7 +374,7 @@ When adding new strings:
 
 Before submitting a PR, verify:
 
-- [ ] Full stack starts cleanly with `docker compose up --build`
+- [ ] Full stack starts cleanly with `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
 - [ ] Health endpoints respond: `/healthz` (API), `/api/health` (Web)
 - [ ] Google OAuth sign-in flow works end-to-end
 - [ ] Core workflows function: create farm → add field → trigger NDVI job

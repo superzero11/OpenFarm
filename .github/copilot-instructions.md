@@ -58,8 +58,8 @@ OpenFarm is a satellite-powered crop intelligence platform with a strict fronten
 ## Development Commands
 
 ```bash
-# Full stack (Docker)
-docker compose up --build
+# Full stack (Docker — dev mode with localhost ports)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 # API only (local dev)
 cd services/api && pip install -e ".[dev]" && uvicorn app.main:app --reload --port 8000
@@ -89,5 +89,7 @@ curl http://localhost:3000/api/health # Web
 | NextAuth + user upsert | `apps/web/src/lib/auth.ts`, `apps/web/src/lib/db.ts` |
 | Org context provider | `apps/web/src/components/org-context.tsx` |
 | i18n routing config | `apps/web/src/i18n/routing.ts` |
-| Docker Compose (all services) | `docker-compose.yml` |
+| Docker Compose (base services) | `docker-compose.yml` |
+| Dev port overrides | `docker-compose.dev.yml` |
+| Prod overrides (Caddy, limits) | `docker-compose.prod.yml` |
 | PRD (full product spec) | `docs/openfarm.md` |

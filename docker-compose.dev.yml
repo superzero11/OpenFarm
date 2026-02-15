@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OpenFarm — Development Docker Compose
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Exposes service ports to localhost for local development and debugging.
+# Not used in production — see docker-compose.prod.yml instead.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  api:
+    ports:
+      - "8000:8000"
+
+  tiler:
+    ports:
+      - "8080:80"
+
+  web:
+    ports:
+      - "3000:3000"

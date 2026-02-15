@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -28,8 +26,6 @@ services:
       --save "900 1"
       --save "300 10"
       --save "60 10000"
-    ports:
-      - "6379:6379"
     volumes:
       - redisdata:/data
     healthcheck:
@@ -45,9 +41,6 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     volumes:
       - miniodata:/data
     healthcheck:
@@ -87,8 +80,6 @@ services:
       DATABASE_URL_SYNC: ${DATABASE_URL_SYNC}
       TITILER_PUBLIC_URL: ${TITILER_PUBLIC_URL:-http://localhost:8080}
       STAC_API_URL: ${STAC_API_URL}
-    ports:
-      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -138,8 +129,6 @@ services:
       AWS_HTTPS: "NO"
       GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
       TITILER_API_CORS_ORIGINS: ${CORS_ORIGINS}
-    ports:
-      - "8080:80"
     depends_on:
       minio:
         condition: service_healthy
@@ -169,8 +158,6 @@ services:
       NEXT_PUBLIC_PROTOMAPS_URL: ${NEXT_PUBLIC_PROTOMAPS_URL}
       DATABASE_URL: ${DATABASE_URL_SYNC}
       INTERNAL_API_URL: http://api:8000
-    ports:
-      - "3000:3000"
     depends_on:
       db:
         condition: service_healthy

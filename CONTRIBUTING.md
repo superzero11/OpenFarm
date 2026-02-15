@@ -40,7 +40,11 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
    ```bash
    git remote add upstream https://github.com/superzero11/OpenFarm.git
    ```
-4. **Create a branch** from `main`:
+4. **Enable pre-commit hooks** (runs lint + type-check before each commit):
+   ```bash
+   git config core.hooksPath .husky
+   ```
+5. **Create a branch** from `main`:
    ```bash
    git checkout -b feat/your-feature-name
    ```

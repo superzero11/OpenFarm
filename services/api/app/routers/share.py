@@ -1,4 +1,4 @@
-"""Share links router — create, list, revoke, public read."""
+"""Share links router — create, list, revoke, public read, tile proxy."""
 
 from __future__ import annotations
 
@@ -6,11 +6,16 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
+from urllib.parse import quote
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
+from jose import jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context
@@ -26,6 +31,28 @@ from app.models.tables import (
 from app.schemas.monitoring import ScoutingOut, ShareCreate, ShareOut, ShareReportOut
 
 router = APIRouter()
+
+# ── Tile proxy helpers ────────────────────────────────────────────────
+
+_http_client: httpx.AsyncClient | None = None
+
+
+def _get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(timeout=30.0)
+    return _http_client
+
+
+def _mint_service_jwt() -> str:
+    """Mint a short-lived JWT for internal TiTiler calls."""
+    payload = {
+        "sub": "service:share-proxy",
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+    }
+    return jwt.encode(
+        payload, settings.openfarm_jwt_secret, algorithm=settings.jwt_algorithm
+    )
 
 
 @router.get("/fields/{field_id}/share", response_model=list[ShareOut])
@@ -223,3 +250,70 @@ async def get_shared_report(
         alerts=alerts,
         scouting=scouting_out,
     )
+
+
+@router.get("/share/{token}/tiles/{z}/{x}/{y}.png")
+async def proxy_share_tile(
+    token: str,
+    z: int,
+    x: int,
+    y: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Public tile proxy — validates share token, proxies to TiTiler."""
+    result = await db.execute(select(ShareLink).where(ShareLink.token == token))
+    link = result.scalar_one_or_none()
+
+    if not link:
+        raise HTTPException(status_code=404, detail="Share link not found")
+
+    now = datetime.now(timezone.utc)
+    if link.revoked_at is not None or (
+        link.expires_at is not None and link.expires_at < now
+    ):
+        raise HTTPException(status_code=410, detail="Share link expired or revoked")
+
+    # Find latest NDVI layer for the field
+    layer_result = await db.execute(
+        select(RasterLayer)
+        .where(RasterLayer.field_id == link.field_id, RasterLayer.layer_type == "NDVI")
+        .order_by(RasterLayer.date.desc())
+        .limit(1)
+    )
+    layer = layer_result.scalar_one_or_none()
+    if not layer:
+        raise HTTPException(status_code=404, detail="No NDVI layer available")
+
+    # Build TiTiler URL (internal)
+    cog_uri = layer.cog_uri
+    if cog_uri.startswith("s3://"):
+        cog_uri = cog_uri.replace("s3://", "/vsis3/")
+    encoded_url = quote(cog_uri, safe="")
+    tiler_url = (
+        f"{settings.titiler_internal_url}/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png"
+        f"?url={encoded_url}"
+        f"&colormap_name=rdylgn&rescale=-0.2,0.9"
+    )
+
+    # Forward request with a service JWT
+    service_token = _mint_service_jwt()
+    client = _get_http_client()
+    try:
+        resp = await client.get(
+            tiler_url,
+            headers={"Authorization": f"Bearer {service_token}"},
+        )
+        if resp.status_code != 200:
+            raise HTTPException(
+                status_code=resp.status_code, detail="Tile not available"
+            )
+        return Response(
+            content=resp.content,
+            media_type="image/png",
+            headers={
+                "Cache-Control": "public, max-age=86400",
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+    except httpx.HTTPError:
+        raise HTTPException(status_code=502, detail="Tile server unavailable")

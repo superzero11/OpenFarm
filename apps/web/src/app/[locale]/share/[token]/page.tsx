@@ -155,7 +155,7 @@ export default function ShareReportPage() {
                         <div className="text-xs font-medium px-3 py-2 border-b text-muted-foreground">
                             {t("fieldBoundary")}
                         </div>
-                        <FieldMap geom={report.field.geom} />
+                        <FieldMap geom={report.field.geom} token={token} hasNdvi={!!report.latest_layer} />
                     </div>
                 </div>
 
@@ -219,7 +219,9 @@ export default function ShareReportPage() {
 
 /* ── Sub-components ────────────────────────────────────────── */
 
-function FieldMap({ geom }: { geom: GeoJSON.Geometry | null }) {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/v1";
+
+function FieldMap({ geom, token, hasNdvi }: { geom: GeoJSON.Geometry | null; token: string; hasNdvi: boolean }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
 
@@ -232,14 +234,17 @@ function FieldMap({ geom }: { geom: GeoJSON.Geometry | null }) {
             style: {
                 version: 8,
                 sources: {
-                    osm: {
+                    esri: {
                         type: "raster",
-                        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                        tiles: [
+                            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                        ],
                         tileSize: 256,
-                        attribution: "&copy; OpenStreetMap contributors",
+                        attribution: "Esri, Maxar, Earthstar Geographics",
+                        maxzoom: 18,
                     },
                 },
-                layers: [{ id: "osm", type: "raster", source: "osm" }],
+                layers: [{ id: "satellite", type: "raster", source: "esri" }],
             },
             center: [0, 0],
             zoom: 2,
@@ -279,6 +284,26 @@ function FieldMap({ geom }: { geom: GeoJSON.Geometry | null }) {
                 },
             });
 
+            // NDVI tile overlay (proxied through API — no JWT needed)
+            if (hasNdvi) {
+                map.addSource("ndvi-tiles", {
+                    type: "raster",
+                    tiles: [`${API_BASE}/share/${token}/tiles/{z}/{x}/{y}.png`],
+                    tileSize: 256,
+                });
+                map.addLayer(
+                    {
+                        id: "ndvi-raster",
+                        type: "raster",
+                        source: "ndvi-tiles",
+                        paint: { "raster-opacity": 0.75 },
+                        minzoom: 10,
+                        maxzoom: 18,
+                    },
+                    "field-outline",
+                );
+            }
+
             // Fit to bounds
             const coords = getAllCoords(geom);
             if (coords.length > 0) {
@@ -289,7 +314,7 @@ function FieldMap({ geom }: { geom: GeoJSON.Geometry | null }) {
         });
 
         mapRef.current = map;
-    }, [geom]);
+    }, [geom, token, hasNdvi]);
 
     useEffect(() => {
         initMap();

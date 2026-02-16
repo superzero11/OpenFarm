@@ -115,7 +115,7 @@ export function AlertRow({
                 </div>
 
                 {/* Message */}
-                <p className="text-xs leading-relaxed text-foreground/90 mt-1 truncate">
+                <p className="text-xs leading-relaxed text-foreground/90 mt-1">
                     {alert.message}
                 </p>
 
@@ -190,7 +190,7 @@ export function AlertRow({
                     </span>
                 </div>
 
-                <p className="mt-1 text-sm leading-relaxed text-foreground/90 truncate">
+                <p className="mt-1 text-sm leading-relaxed text-foreground/90">
                     {alert.message}
                 </p>
 

@@ -182,7 +182,7 @@ export default function FieldDetailPage() {
             if (!cancelled) {
                 setOpenAlertCount(res.items.filter((a) => a.status === "open").length);
             }
-        }).catch(() => {});
+        }).catch(() => { });
         return () => { cancelled = true; };
     }, [currentOrg, fieldId]);
 

@@ -8,7 +8,6 @@ import { farmsApi, fieldsApi, alertsApi } from "@/lib/api";
 import type { Farm, Field, Alert } from "@/lib/api";
 import { toast } from "sonner";
 import {
-    AlertTriangle,
     ArrowLeft,
     Bell,
     ChevronRight,
@@ -18,7 +17,6 @@ import {
     MapPin,
     Plus,
     Save,
-    ShieldAlert,
     Trash2,
     Upload,
     X,
@@ -36,10 +34,10 @@ import { useTranslations } from "next-intl";
 
 /* ── Alert severity helpers ─────────────────────────── */
 
-const SEVERITY_ICON: Record<string, React.ReactNode> = {
-    high: <ShieldAlert className="h-4 w-4 text-destructive" />,
-    medium: <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
-    low: <Bell className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />,
+const SEVERITY_DOT: Record<string, string> = {
+    high: "bg-red-500",
+    medium: "bg-amber-500",
+    low: "bg-yellow-500",
 };
 
 const RULE_LABELS: Record<string, string> = {
@@ -279,61 +277,83 @@ export default function FarmDetailPage() {
 
             {/* Alerts Summary */}
             {alerts.length > 0 && (
-                <Card className="mb-6 border-amber-500/20 bg-amber-500/5">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <Card className="mb-6">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Bell className="h-5 w-5 text-primary" />
                             {tAlerts("title")}
-                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0 ml-auto">
-                                {alerts.length}
-                            </Badge>
                         </CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                                {alerts.length} {tAlerts("openLabel")}
+                            </Badge>
+                            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                                <Link href="/alerts">{tAlerts("viewAll")}</Link>
+                            </Button>
+                        </div>
                     </CardHeader>
-                    <CardContent className="pt-0 space-y-2">
-                        {alerts.slice(0, 5).map((alert) => {
-                            const fieldName = fields.find((f) => f.id === alert.field_id)?.name;
-                            return (
-                                <div
-                                    key={alert.id}
-                                    className="flex items-start gap-2 text-xs"
-                                >
-                                    <div className="mt-0.5 shrink-0">
-                                        {SEVERITY_ICON[alert.severity] || SEVERITY_ICON.low}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5">
-                                            <Badge
-                                                variant={alert.severity === "high" ? "destructive" : "secondary"}
-                                                className="text-[9px] px-1 py-0"
-                                            >
-                                                {alert.severity}
-                                            </Badge>
-                                            <span className="text-muted-foreground text-[10px]">
-                                                {RULE_LABELS[alert.rule_name] || alert.rule_name}
-                                            </span>
-                                            <span className="text-muted-foreground text-[10px] ml-auto shrink-0">
-                                                {alert.date}
-                                            </span>
+                    <CardContent className="pt-0">
+                        <div className="space-y-2">
+                            {alerts.slice(0, 5).map((alert) => {
+                                const fieldName = fields.find((f) => f.id === alert.field_id)?.name;
+                                const severity = SEVERITY_DOT[alert.severity] || SEVERITY_DOT.low;
+                                return (
+                                    <div
+                                        key={alert.id}
+                                        className="flex items-center gap-3 rounded-lg border p-3 hover:border-primary/20 transition-colors"
+                                    >
+                                        {/* Severity dot */}
+                                        <div className="shrink-0">
+                                            <span className={cn("block h-2.5 w-2.5 rounded-full", severity)} />
                                         </div>
-                                        <p className="text-xs mt-0.5 text-muted-foreground truncate">
-                                            {alert.message}
-                                        </p>
-                                        {fieldName && (
-                                            <Link
-                                                href={`/farms/${farmId}/fields/${alert.field_id}`}
-                                                className="text-[10px] text-primary hover:underline"
-                                            >
-                                                {fieldName} →
-                                            </Link>
-                                        )}
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-medium truncate">
+                                                    {RULE_LABELS[alert.rule_name] || alert.rule_name}
+                                                </span>
+                                                <Badge
+                                                    variant={alert.severity === "high" ? "destructive" : "secondary"}
+                                                    className="text-[9px] px-1.5 py-0 uppercase tracking-wider shrink-0"
+                                                >
+                                                    {alert.severity}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                                {alert.message}
+                                            </p>
+                                        </div>
+
+                                        {/* Field link + date */}
+                                        <div className="shrink-0 text-right">
+                                            <p className="text-[11px] text-muted-foreground">
+                                                {new Date(alert.date).toLocaleDateString(undefined, {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })}
+                                            </p>
+                                            {fieldName && (
+                                                <Link
+                                                    href={`/farms/${farmId}/fields/${alert.field_id}`}
+                                                    className="text-[11px] text-primary hover:underline font-medium"
+                                                >
+                                                    {fieldName} →
+                                                </Link>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                         {alerts.length > 5 && (
-                            <p className="text-[10px] text-muted-foreground text-center pt-1">
-                                +{alerts.length - 5} more
-                            </p>
+                            <div className="mt-3 text-center">
+                                <Button variant="link" size="sm" className="text-xs h-auto p-0" asChild>
+                                    <Link href="/alerts">
+                                        +{alerts.length - 5} {tAlerts("more")} →
+                                    </Link>
+                                </Button>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

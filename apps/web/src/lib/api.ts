@@ -314,6 +314,13 @@ export const jobsApi = {
 // ── Alerts ───────────────────────────────────────────────────────────
 
 export const alertsApi = {
+    list: (opts: { status?: string; limit?: number; offset?: number } = {}) => {
+        const params = new URLSearchParams();
+        if (opts.status) params.set("status", opts.status);
+        params.set("limit", String(opts.limit ?? 50));
+        params.set("offset", String(opts.offset ?? 0));
+        return apiFetch<Paginated<Alert>>(`/alerts?${params}`);
+    },
     listForField: (fieldId: string, limit = 50) =>
         apiFetch<Paginated<Alert>>(`/alerts?field_id=${fieldId}&limit=${limit}`),
     listForFarm: (farmId: string, limit = 50) =>

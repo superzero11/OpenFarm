@@ -3,17 +3,21 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useOrg } from "@/components/org-context";
-import { farmsApi, orgsApi } from "@/lib/api";
-import type { Farm, OrgDetail } from "@/lib/api";
+import { farmsApi, orgsApi, alertsApi } from "@/lib/api";
+import type { Farm, OrgDetail, Alert } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     Tractor,
     Map,
     Users,
     Plus,
     ChevronRight,
+    Bell,
+    ShieldAlert,
+    AlertTriangle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CreateFarmModal } from "@/components/create-farm-modal";
@@ -24,6 +28,7 @@ export default function DashboardPage() {
     const [orgDetail, setOrgDetail] = useState<OrgDetail | null>(null);
     const [farms, setFarms] = useState<Farm[]>([]);
     const [totalFields, setTotalFields] = useState(0);
+    const [openAlerts, setOpenAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -33,13 +38,15 @@ export default function DashboardPage() {
         (async () => {
             setLoading(true);
             try {
-                const [detail, farmRes] = await Promise.all([
+                const [detail, farmRes, alertRes] = await Promise.all([
                     orgsApi.get(currentOrg.id),
                     farmsApi.list(10, 0),
+                    alertsApi.list({ status: "open", limit: 10 }),
                 ]);
                 if (cancelled) return;
                 setOrgDetail(detail);
                 setFarms(farmRes.items);
+                setOpenAlerts(alertRes.items);
 
                 // Fetch field counts per farm in parallel
                 const fieldCounts = await Promise.all(
@@ -95,7 +102,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatCard
                     icon={<Tractor className="h-5 w-5 text-primary" />}
                     label={t("farms")}
@@ -112,7 +119,63 @@ export default function DashboardPage() {
                     label={t("members")}
                     value={orgDetail?.member_count ?? 0}
                 />
+                <StatCard
+                    icon={<Bell className="h-5 w-5 text-primary" />}
+                    label={t("openAlerts")}
+                    value={openAlerts.length}
+                    sublabel={t("requireAttention")}
+                />
             </div>
+
+            {/* Open Alerts */}
+            {openAlerts.length > 0 && (
+                <Card className="mb-8">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Bell className="h-5 w-5 text-primary" />
+                            {t("recentAlerts")}
+                        </CardTitle>
+                        <Button variant="link" className="h-auto p-0 text-xs" asChild>
+                            <Link href="/alerts">{t("viewAllAlerts")}</Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            {openAlerts.slice(0, 5).map((alert) => {
+                                const sevIcon =
+                                    alert.severity === "high" ? <ShieldAlert className="h-4 w-4 text-red-500" /> :
+                                    alert.severity === "medium" ? <AlertTriangle className="h-4 w-4 text-amber-500" /> :
+                                    <Bell className="h-4 w-4 text-yellow-500" />;
+                                return (
+                                    <div
+                                        key={alert.id}
+                                        className="flex items-center gap-3 rounded-lg border p-3 hover:border-primary/20 transition-colors"
+                                    >
+                                        <div className="shrink-0">{sevIcon}</div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium truncate">{alert.message}</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <Badge
+                                                    variant={alert.severity === "high" ? "destructive" : "secondary"}
+                                                    className="text-[9px] px-1.5 py-0 uppercase tracking-wider"
+                                                >
+                                                    {alert.severity}
+                                                </Badge>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {new Date(alert.date).toLocaleDateString(undefined, {
+                                                        month: "short", day: "numeric",
+                                                    })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Quick Actions */}
             <Card className="mb-8">

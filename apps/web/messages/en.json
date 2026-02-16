@@ -14,6 +14,7 @@
     "nav": {
         "dashboard": "Dashboard",
         "farms": "Farms",
+        "alerts": "Alerts",
         "settings": "Settings"
     },
     "sidebar": {
@@ -71,6 +72,10 @@
         "fields": "Fields",
         "members": "Members",
         "acrossAllFarms": "across all farms",
+        "openAlerts": "Open Alerts",
+        "requireAttention": "require attention",
+        "recentAlerts": "Recent Alerts",
+        "viewAllAlerts": "View all alerts →",
         "quickActions": "Quick Actions",
         "createFarm": "Create Farm",
         "addFarmDesc": "Add a new farm to this organization",
@@ -245,9 +250,34 @@
         "failedUpdate": "Failed to update alert"
     },
     "farmAlerts": {
-        "title": "Recent Alerts",
+        "title": "Alerts",
         "noAlerts": "No open alerts across fields.",
-        "viewField": "View Field"
+        "viewField": "View Field",
+        "viewAll": "View all →",
+        "openLabel": "open",
+        "more": "more alerts"
+    },
+    "alertsPage": {
+        "title": "Alerts",
+        "subtitle": "Monitor and manage alerts across all your farms and fields.",
+        "totalOpen": "Total Open",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "filters": "Filters",
+        "allStatuses": "All statuses",
+        "openOnly": "Open",
+        "closedOnly": "Closed",
+        "allSeverities": "All severities",
+        "alertsShown": "alerts",
+        "noAlerts": "No alerts",
+        "noAlertsDesc": "No alerts match your filters. Alerts are generated during NDVI analysis.",
+        "close": "Close",
+        "reopen": "Reopen",
+        "closed": "Closed",
+        "alertClosed": "Alert closed",
+        "alertReopened": "Alert reopened",
+        "failedUpdate": "Failed to update alert"
     },
     "ndviLegend": {
         "title": "NDVI",

@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import dynamic from "next/dynamic";
 import maplibregl from "maplibre-gl";
 import { useOrg } from "@/components/org-context";
-import { fieldsApi } from "@/lib/api";
+import { fieldsApi, alertsApi } from "@/lib/api";
 import type { Field, RasterLayer } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -173,6 +173,18 @@ export default function FieldDetailPage() {
 
     // Alerts
     const [openAlertCount, setOpenAlertCount] = useState(0);
+
+    // Fetch alert count independently (so badge shows without opening alerts tab)
+    useEffect(() => {
+        if (!currentOrg || !fieldId) return;
+        let cancelled = false;
+        alertsApi.listForField(fieldId, 200).then((res) => {
+            if (!cancelled) {
+                setOpenAlertCount(res.items.filter((a) => a.status === "open").length);
+            }
+        }).catch(() => {});
+        return () => { cancelled = true; };
+    }, [currentOrg, fieldId]);
 
     // Keep refs in sync for style.load handler
     useEffect(() => {

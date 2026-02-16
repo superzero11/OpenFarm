@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import {
     LayoutDashboard,
     Tractor,
+    Bell,
     Settings,
     LogOut,
     ChevronDown,
@@ -54,6 +55,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
     { href: "/dashboard" as const, labelKey: "dashboard" as const, icon: LayoutDashboard },
     { href: "/farms" as const, labelKey: "farms" as const, icon: Tractor },
+    { href: "/alerts" as const, labelKey: "alerts" as const, icon: Bell },
     { href: "/settings" as const, labelKey: "settings" as const, icon: Settings },
 ];
 

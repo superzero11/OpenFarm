@@ -14,6 +14,7 @@
     "nav": {
         "dashboard": "Panel",
         "farms": "Fincas",
+        "alerts": "Alertas",
         "settings": "Configuración"
     },
     "sidebar": {
@@ -71,6 +72,10 @@
         "fields": "Campos",
         "members": "Miembros",
         "acrossAllFarms": "en todas las fincas",
+        "openAlerts": "Alertas Abiertas",
+        "requireAttention": "requieren atención",
+        "recentAlerts": "Alertas Recientes",
+        "viewAllAlerts": "Ver todas las alertas →",
         "quickActions": "Acciones Rápidas",
         "createFarm": "Crear Finca",
         "addFarmDesc": "Agrega una nueva finca a esta organización",
@@ -245,9 +250,34 @@
         "failedUpdate": "Error al actualizar alerta"
     },
     "farmAlerts": {
-        "title": "Alertas Recientes",
+        "title": "Alertas",
         "noAlerts": "Sin alertas abiertas en los campos.",
-        "viewField": "Ver Campo"
+        "viewField": "Ver Campo",
+        "viewAll": "Ver todas →",
+        "openLabel": "abiertas",
+        "more": "alertas más"
+    },
+    "alertsPage": {
+        "title": "Alertas",
+        "subtitle": "Monitorea y gestiona alertas en todas tus fincas y campos.",
+        "totalOpen": "Total Abiertas",
+        "high": "Alta",
+        "medium": "Media",
+        "low": "Baja",
+        "filters": "Filtros",
+        "allStatuses": "Todos los estados",
+        "openOnly": "Abiertas",
+        "closedOnly": "Cerradas",
+        "allSeverities": "Todas las severidades",
+        "alertsShown": "alertas",
+        "noAlerts": "Sin alertas",
+        "noAlertsDesc": "No hay alertas que coincidan con tus filtros. Las alertas se generan durante el análisis NDVI.",
+        "close": "Cerrar",
+        "reopen": "Reabrir",
+        "closed": "Cerrada",
+        "alertClosed": "Alerta cerrada",
+        "alertReopened": "Alerta reabierta",
+        "failedUpdate": "Error al actualizar alerta"
     },
     "ndviLegend": {
         "title": "NDVI",

@@ -136,7 +136,7 @@ export default function DashboardPage() {
                             </button>
                         </CreateFarmModal>
                         <Link
-                            href="/settings"
+                            href="/settings?tab=team"
                             className="flex items-center gap-3 rounded-lg border p-4 hover:border-primary/30 hover:bg-primary/5 transition-colors"
                         >
                             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">

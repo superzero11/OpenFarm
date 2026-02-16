@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams, usePathname, useRouter as useNextRouter } from "next/navigation";
 import { useOrg } from "@/components/org-context";
 import { orgsApi } from "@/lib/api";
 import type { Member, Invite } from "@/lib/api";
@@ -107,7 +108,28 @@ const AUDIT_PAGE_SIZE = 20;
 export default function SettingsPage() {
     const t = useTranslations("settings");
     const confirm = useConfirm();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const nextRouter = useNextRouter();
     const { currentOrg, refreshOrgs, user } = useOrg();
+
+    const VALID_TABS = ["workspace", "team", "integrations"] as const;
+    const tabParam = searchParams.get("tab");
+    const activeTab = VALID_TABS.includes(tabParam as any) ? tabParam! : "workspace";
+
+    const setActiveTab = useCallback(
+        (tab: string) => {
+            const params = new URLSearchParams(searchParams.toString());
+            if (tab === "workspace") {
+                params.delete("tab");
+            } else {
+                params.set("tab", tab);
+            }
+            const qs = params.toString();
+            nextRouter.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+        },
+        [searchParams, pathname, nextRouter],
+    );
     const [orgName, setOrgName] = useState("");
     const [members, setMembers] = useState<Member[]>([]);
     const [saving, setSaving] = useState(false);
@@ -329,7 +351,7 @@ export default function SettingsPage() {
                 </p>
             </div>
 
-            <Tabs defaultValue="workspace">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList variant="underline" className="mb-8">
                     <TabsTrigger variant="underline" value="workspace">
                         <Building2 className="h-4 w-4" />

@@ -229,9 +229,36 @@ async def create_invite(
     ctx: Annotated[OrgContext, Depends(require_roles("owner", "admin"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    if body.role not in VALID_ROLES:
+    if body.role not in VALID_ROLES or body.role == "owner":
         raise HTTPException(
-            status_code=400, detail=f"Invalid role. Must be one of: {VALID_ROLES}"
+            status_code=400,
+            detail="Invalid role. Must be one of: admin, member, viewer",
+        )
+
+    # Prevent self-invite
+    if body.email == ctx.user.email:
+        raise HTTPException(status_code=400, detail="Cannot invite yourself")
+
+    # Check if already a member
+    existing_member = await db.execute(
+        select(OrgMember)
+        .join(User, OrgMember.user_id == User.id)
+        .where(OrgMember.org_id == org_id, User.email == body.email)
+    )
+    if existing_member.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="User is already a member")
+
+    # Check for duplicate pending invite
+    existing_invite = await db.execute(
+        select(Invite).where(
+            Invite.org_id == org_id,
+            Invite.email == body.email,
+            Invite.status == "pending",
+        )
+    )
+    if existing_invite.scalar_one_or_none():
+        raise HTTPException(
+            status_code=409, detail="A pending invite already exists for this email"
         )
 
     invite = Invite(

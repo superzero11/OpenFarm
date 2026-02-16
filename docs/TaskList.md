@@ -251,16 +251,16 @@
 | 3.24 | `POST /v1/fields/{fieldId}/share` — create share link | ✅ | Backend: token, scope, expiry |
 | 3.25 | `DELETE /v1/fields/{fieldId}/share/{token}` — revoke | ✅ | Backend complete |
 | 3.26 | `GET /v1/share/{token}` — public report data | ✅ | Backend: field + layers + stats + alerts |
-| 3.27 | `shareApi` client functions in frontend | ⬜ | |
-| 3.28 | Share tab UI — create link (expiry: 7d/30d/never) | ⬜ | Tab exists as placeholder |
-| 3.29 | Share tab UI — list active links, copy URL | ⬜ | |
-| 3.30 | Share tab UI — revoke link | ⬜ | |
-| 3.31 | Public report page (`/share/[token]`) — unauthenticated | ⬜ | No route exists |
-| 3.32 | Public report — field boundary on map | ⬜ | |
-| 3.33 | Public report — latest NDVI snapshot | ⬜ | |
-| 3.34 | Public report — NDVI time-series chart | ⬜ | |
-| 3.35 | Public report — recent alerts | ⬜ | |
-| 3.36 | Public report — recent scouting notes | ⬜ | |
+| 3.27 | `shareApi` client functions in frontend | ✅ | list, create, revoke, getReport in `api.ts` |
+| 3.28 | Share tab UI — create link (expiry: 7d/30d/never) | ✅ | ShareTab component with expiry selector |
+| 3.29 | Share tab UI — list active links, copy URL | ✅ | Full URL display, copy + open buttons |
+| 3.30 | Share tab UI — revoke link | ✅ | Destructive confirm dialog |
+| 3.31 | Public report page (`/share/[token]`) — unauthenticated | ✅ | `/[locale]/share/[token]`, branded layout |
+| 3.32 | Public report — field boundary on map | ✅ | Satellite basemap (Esri), non-interactive |
+| 3.33 | Public report — latest NDVI snapshot | ✅ | Tile proxy through API (no JWT needed) |
+| 3.34 | Public report — NDVI time-series chart | ✅ | Reuses NdviChart, threshold line |
+| 3.35 | Public report — recent alerts | ✅ | Severity badges, open/closed status |
+| 3.36 | Public report — recent scouting notes | ✅ | Photos, tags, map pin icons |
 
 ---
 
@@ -326,10 +326,10 @@
 | **Sprint 0 — Foundation** | 52 | 52 | 0 | 0 |
 | **Sprint 1 — Org/Farm/Field** | 46 | 46 | 0 | 0 |
 | **Sprint 2 — NDVI Monitoring** | 27 | 27 | 0 | 0 |
-| **Sprint 3 — Alerts/Scouting/Share** | 36 | 22 | 0 | 14 |
+| **Sprint 3 — Alerts/Scouting/Share** | 36 | 36 | 0 | 0 |
 | **Sprint 4 — Polish/Security/QA** | 21 | 6 | 3 | 12 |
-| **TOTAL** | **182** | **153 (84%)** | **3 (2%)** | **26 (14%)** |
+| **TOTAL** | **182** | **167 (92%)** | **3 (2%)** | **12 (7%)** |
 
 ### Key Takeaway
 
-**Milestones 0–2 are complete** and **Sprint 3 Alerts + Scouting are now complete** (22/36 tasks done). The remaining 14% is the **Share feature frontend** (10 tasks) and **Sprint 4 QA/polish** (12 tasks). The critical path to MVP is the shareable field health report and polish tasks.
+**Sprints 0–3 are fully complete** (167/182 tasks, 92%). The remaining 8% is **Sprint 4 QA/polish** (12 not started + 3 partial). Key remaining items: RBAC viewer enforcement, audit log UI, backup docs, and testing (API, frontend, E2E).

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import (
     Alert,
     AuditEvent,
@@ -31,6 +31,9 @@ from app.models.tables import (
 from app.schemas.monitoring import ScoutingOut, ShareCreate, ShareOut, ShareReportOut
 
 router = APIRouter()
+
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
 
 # ── Tile proxy helpers ────────────────────────────────────────────────
 
@@ -109,7 +112,7 @@ async def list_share_links(
 async def create_share_link(
     field_id: uuid.UUID,
     body: ShareCreate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     field = await db.get(Field, field_id)
@@ -154,7 +157,7 @@ async def create_share_link(
 async def revoke_share_link(
     field_id: uuid.UUID,
     token: str,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     result = await db.execute(

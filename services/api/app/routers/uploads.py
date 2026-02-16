@@ -5,19 +5,25 @@ from __future__ import annotations
 from typing import Annotated
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.core.rate_limit import limiter
+from app.middleware.auth import OrgContext, require_roles
 from app.schemas.monitoring import PresignedUploadOut, PresignedUploadRequest
 
 router = APIRouter()
 
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
+
 
 @router.post("/uploads/presign", response_model=PresignedUploadOut)
+@limiter.limit("10/minute")
 async def get_presigned_upload(
+    request: Request,
     body: PresignedUploadRequest,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
 ):
     """Generate a presigned PUT URL for direct-to-MinIO upload."""
     from minio import Minio

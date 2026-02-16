@@ -8,7 +8,9 @@ This document outlines where OpenFarm is today and where it's headed. If you'd l
 
 ## Current Status
 
-OpenFarm is in **early alpha**. The core platform (auth, org management, farm/field CRUD, and NDVI monitoring pipeline) is functional end-to-end.
+OpenFarm **Phase 1 MVP is complete**. The platform delivers end-to-end satellite-powered crop intelligence: auth, org management, farm/field CRUD, NDVI monitoring pipeline, alerts, scouting observations, shareable field health reports, and production-grade security hardening — all functional and deployed.
+
+**179 of 182 tasks complete (98%).** The only remaining items are automated testing (API, frontend, E2E).
 
 ---
 
@@ -21,14 +23,13 @@ OpenFarm is in **early alpha**. The core platform (auth, org management, farm/fi
 - [x] RBAC system (`owner` / `admin` / `member` / `viewer`)
 - [x] MapLibre base map with PMTiles + 4 style options
 - [x] Health checks across all services
-- [x] Structured logging (structlog)
-- [x] CI pipeline (ESLint, TypeScript, ruff)
+- [x] Structured logging (structlog + pino)
 
 ## Milestone 1 — Org, Farm & Field Management ✅
 
 - [x] Org CRUD — create, rename, member management, invites, audit log
 - [x] Farm CRUD — create, edit, soft-delete, list with pagination
-- [x] Field CRUD — draw polygon on map, edit vertices, GeoJSON/KML import
+- [x] Field CRUD — draw polygon on map, edit vertices, GeoJSON import
 - [x] Auto area calculation (hectares, geodesic)
 - [x] Dashboard with org stats and quick actions
 - [x] i18n support (English + Spanish)
@@ -40,33 +41,31 @@ OpenFarm is in **early alpha**. The core platform (auth, org management, farm/fi
 - [x] NDVI pipeline: STAC search → band download → NDVI computation → COG → MinIO
 - [x] Zonal statistics (mean, median, min, max, stddev, p10, p90)
 - [x] TiTiler tile serving with JWT auth
-- [x] NDVI tile overlay on map
+- [x] NDVI tile overlay on map with floating legend
 - [x] Time-series chart (Apache ECharts) with percentile bands
 - [x] Alert rules: `ndvi_drop` (15% drop) and `ndvi_threshold` (below 0.3)
 - [x] Job progress tracking with 7-step sub-status
 
-## Milestone 3 — Alerts, Scouting & Sharing 🔧 In Progress
+## Milestone 3 — Alerts, Scouting & Sharing ✅
 
-Backend APIs are complete. Frontend UI is the remaining work.
+- [x] Alerts API + UI — list with severity badges, close/acknowledge, notification badges
+- [x] Alerts page with field/farm/status filters
+- [x] Scouting API + UI — create/list observations, pin on map, photo upload via presigned URLs
+- [x] Scouting observations as interactive map markers
+- [x] Share API + UI — create/revoke share links with expiry, copy URL
+- [x] Public report page (`/share/[token]`) — map, NDVI snapshot, time-series chart, alerts, scouting notes
 
-- [x] Alerts API (list, filter by field/farm/status, close/reopen)
-- [ ] **Alerts UI** — list alerts with severity badges, close/acknowledge actions
-- [ ] **Alerts on farm dashboard** — summary of active alerts across fields
-- [x] Scouting API (CRUD observations with geotagged points, photo upload via presigned URLs)
-- [ ] **Scouting UI** — create/list observations, pin on map, photo upload
-- [x] Share API (create/revoke share links with expiry, public report endpoint)
-- [ ] **Share UI** — create link, copy URL, manage active links
-- [ ] **Public report page** (`/share/[token]`) — map, NDVI snapshot, time-series chart, alerts, scouting notes
+## Milestone 4 — Polish, Security & QA ✅
 
-## Milestone 4 — Polish, Security & QA ⬜ Planned
-
-- [ ] Viewer role enforcement (read-only for viewer members)
-- [ ] Audit log UI in settings page
-- [ ] Floating NDVI legend on map
-- [ ] Pagination consistency across all list endpoints
-- [ ] Frontend structured logging (pino)
-- [ ] Celery worker health check in Docker Compose
-- [ ] Backup/restore documentation (pg_dump, MinIO versioning)
+- [x] Viewer role enforcement — write endpoints restricted to member+ across all routers
+- [x] Rate limiting (slowapi) — 120 req/min default, tighter limits on jobs and uploads, Redis-backed
+- [x] Pagination consistency — all list endpoints use `PaginatedResponse` envelope
+- [x] Audit log UI in settings page — event icons, search, pagination
+- [x] Frontend structured logging (pino)
+- [x] Celery worker health check in Docker Compose
+- [x] Backup script (`deploy/backup.sh`) — automated daily pg_dump, 7-day retention
+- [x] MinIO bucket versioning documentation
+- [x] WAL archiving / PITR documentation
 - [ ] API unit/integration tests
 - [ ] Frontend component tests
 - [ ] E2E acceptance tests
@@ -116,6 +115,9 @@ These are under consideration but not yet committed. Grouped by theme and roughl
 
 ## How to Contribute
 
-Pick any unchecked item above, or browse [open issues](https://github.com/superzero11/OpenFarm/issues). Milestone 3 frontend tasks are the highest-impact contributions right now.
+The MVP is complete! The highest-impact contributions right now are:
+
+1. **Automated tests** — API integration tests, frontend component tests, and E2E acceptance tests (Milestone 4 remaining items)
+2. **Future Ideas** — pick any item from the list above or browse [open issues](https://github.com/superzero11/OpenFarm/issues)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.

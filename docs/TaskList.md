@@ -270,20 +270,20 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.1 | Viewer role enforcement — restrict write endpoints to member+ | ⬜ | Currently any org member can write |
+| 4.1 | Viewer role enforcement — restrict write endpoints to member+ | ✅ | `_writer = require_roles("owner", "admin", "member")` on all write endpoints across 7 routers |
 | 4.2 | Owner can't self-remove validation | ✅ | Implemented in API |
 
 ### Audit Events
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.3 | Audit: login event | 🔧 | User upsert logged, but no explicit "login" event |
+| 4.3 | Audit: login event | ✅ | `login` event inserted in `upsertUser()` (db.ts) on every sign-in |
 | 4.4 | Audit: org created | ✅ | |
 | 4.5 | Audit: member invited | ✅ | |
 | 4.6 | Audit: role changed | ✅ | |
 | 4.7 | Audit: field created | ✅ | |
 | 4.8 | Audit: report shared | ✅ | |
-| 4.9 | Audit log UI in settings | ⬜ | API client wired, no UI |
+| 4.9 | Audit log UI in settings | ✅ | Full audit tab with icons, search, pagination, i18n labels |
 
 ### Content Security Policy
 
@@ -296,9 +296,9 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.12 | `pg_dump` backup documentation/script | ⬜ | PRD: daily cron, 7-day retention |
-| 4.13 | MinIO bucket versioning documentation | ⬜ | |
-| 4.14 | WAL archiving documentation | ⬜ | For production PITR |
+| 4.12 | `pg_dump` backup documentation/script | ✅ | `deploy/backup.sh` — automated daily cron, 7-day retention, optional MinIO upload |
+| 4.13 | MinIO bucket versioning documentation | ✅ | DEPLOYMENT.md — mc versioning enable, lifecycle rules |
+| 4.14 | WAL archiving documentation | ✅ | DEPLOYMENT.md — PITR setup, recovery procedure |
 
 ### Testing
 
@@ -312,24 +312,9 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.18 | Frontend structured logging (pino) | ⬜ | PRD §12 specifies pino |
-| 4.19 | Celery worker Docker healthcheck | ⬜ | compose has no healthcheck |
-| 4.20 | Rate limiting on API endpoints | ⬜ | Not in PRD, but good practice |
-| 4.21 | Pagination on layers/stats/members list endpoints | 🔧 | Some use paginated envelope, some return plain arrays |
+| 4.18 | Frontend structured logging (pino) | ✅ | `pino` logger in `lib/logger.ts` with JSON output, child loggers |
+| 4.19 | Celery worker Docker healthcheck | ✅ | `celery inspect ping` in docker-compose.yml |
+| 4.20 | Rate limiting on API endpoints | ✅ | `slowapi` — 120 req/min default, 5/min job creation, 10/min uploads, Redis-backed |
+| 4.21 | Pagination on layers/stats/members list endpoints | ✅ | All wrapped in `PaginatedResponse` envelope with total count |
 
 ---
-
-## Progress Summary
-
-| Sprint | Total Tasks | ✅ Done | 🔧 Partial | ⬜ Not Started |
-|--------|-------------|---------|-------------|----------------|
-| **Sprint 0 — Foundation** | 52 | 52 | 0 | 0 |
-| **Sprint 1 — Org/Farm/Field** | 46 | 46 | 0 | 0 |
-| **Sprint 2 — NDVI Monitoring** | 27 | 27 | 0 | 0 |
-| **Sprint 3 — Alerts/Scouting/Share** | 36 | 36 | 0 | 0 |
-| **Sprint 4 — Polish/Security/QA** | 21 | 6 | 3 | 12 |
-| **TOTAL** | **182** | **167 (92%)** | **3 (2%)** | **12 (7%)** |
-
-### Key Takeaway
-
-**Sprints 0–3 are fully complete** (167/182 tasks, 92%). The remaining 8% is **Sprint 4 QA/polish** (12 not started + 3 partial). Key remaining items: RBAC viewer enforcement, audit log UI, backup docs, and testing (API, frontend, E2E).

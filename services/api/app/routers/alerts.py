@@ -11,12 +11,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import Alert
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import AlertOut, AlertUpdate
 
 router = APIRouter()
+
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
 
 
 @router.get("/alerts", response_model=PaginatedResponse[AlertOut])
@@ -77,7 +80,7 @@ async def list_field_alerts(
 async def update_alert(
     alert_id: uuid.UUID,
     body: AlertUpdate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     alert = await db.get(Alert, alert_id)

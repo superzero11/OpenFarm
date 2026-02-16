@@ -12,12 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import Farm, Field
 from app.schemas.common import PaginatedResponse
 from app.schemas.farm import FarmCreate, FarmOut, FarmUpdate, FieldOut
 
 router = APIRouter()
+
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
 
 
 def _not_deleted():
@@ -46,7 +49,7 @@ async def list_farms(
 @router.post("/farms", response_model=FarmOut, status_code=status.HTTP_201_CREATED)
 async def create_farm(
     body: FarmCreate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     farm = Farm(
@@ -80,7 +83,7 @@ async def get_farm(
 async def update_farm(
     farm_id: uuid.UUID,
     body: FarmUpdate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     farm = await db.get(Farm, farm_id)
@@ -103,7 +106,7 @@ async def update_farm(
 @router.delete("/farms/{farm_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_farm(
     farm_id: uuid.UUID,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """Soft-delete farm and cascade soft-delete all its fields."""

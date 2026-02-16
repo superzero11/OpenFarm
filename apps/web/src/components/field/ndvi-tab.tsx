@@ -90,15 +90,15 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
     // ── Load layers + stats ──────────────────────────
     const loadData = useCallback(async () => {
         try {
-            const [l, s] = await Promise.all([
+            const [layersRes, statsRes] = await Promise.all([
                 monitoringApi.layers(fieldId),
                 monitoringApi.stats(fieldId),
             ]);
-            setLayers(l);
-            setStats(s);
+            setLayers(layersRes.items);
+            setStats(statsRes.items);
             // Auto-select latest date
-            if (l.length > 0 && !selectedDate) {
-                setSelectedDate(l[l.length - 1].date);
+            if (layersRes.items.length > 0 && !selectedDate) {
+                setSelectedDate(layersRes.items[layersRes.items.length - 1].date);
             }
         } catch {
             // silent — may simply have no data
@@ -373,7 +373,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                     </CardHeader>
                     <CardContent className="px-3 pb-3 pt-0">
                         <div className="space-y-1 max-h-36 overflow-y-auto">
-                            {[...layers].reverse().map((layer) => {
+                            {layers.map((layer) => {
                                 const isSelected = layer.date === selectedDate;
                                 const stat = stats.find((s) => s.date === layer.date);
                                 return (

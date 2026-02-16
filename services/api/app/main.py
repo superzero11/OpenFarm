@@ -3,11 +3,15 @@
 from contextlib import asynccontextmanager
 
 import redis.asyncio as aioredis
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.core.rate_limit import limiter
 from app.routers import (
     alerts,
     farms,
@@ -46,6 +50,21 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Org-Id"],
     max_age=3600,
 )
+
+# ── Rate Limiting ────────────────────────────────────────────────────
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": f"Rate limit exceeded: {exc.detail}"},
+    )
+
+
+app.add_middleware(SlowAPIMiddleware)
+
 
 # ── Routers ──────────────────────────────────────────────────────────
 PREFIX = "/v1"

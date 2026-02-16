@@ -5,23 +5,29 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.core.rate_limit import limiter
+from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import Field, Job
 from app.schemas.monitoring import JobCreateNDVI, JobOut
 
 router = APIRouter()
 
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
+
 
 @router.post("/fields/{field_id}/jobs/ndvi", response_model=JobOut, status_code=201)
+@limiter.limit("5/minute")
 async def create_ndvi_job(
+    request: Request,
     field_id: uuid.UUID,
     body: JobCreateNDVI,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     # Verify field belongs to org

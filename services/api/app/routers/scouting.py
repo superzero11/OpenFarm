@@ -13,12 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import Field, ScoutingObservation
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import ScoutingCreate, ScoutingOut, ScoutingUpdate
 
 router = APIRouter()
+
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
 
 
 def _obs_to_out(obs: ScoutingObservation) -> ScoutingOut:
@@ -79,7 +82,7 @@ async def list_scouting(
 async def create_scouting(
     field_id: uuid.UUID,
     body: ScoutingCreate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     field = await db.get(Field, field_id)
@@ -115,7 +118,7 @@ async def update_scouting(
     field_id: uuid.UUID,
     obs_id: uuid.UUID,
     body: ScoutingUpdate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     obs = await db.get(ScoutingObservation, obs_id)
@@ -139,7 +142,7 @@ async def update_scouting(
 async def delete_scouting(
     field_id: uuid.UUID,
     obs_id: uuid.UUID,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     obs = await db.get(ScoutingObservation, obs_id)

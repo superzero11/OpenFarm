@@ -278,7 +278,7 @@ export const orgsApi = {
     get: (orgId: string) => apiFetch<OrgDetail>(`/orgs/${orgId}`, { orgId }),
     create: (name: string) => apiFetch<Org>("/orgs", { method: "POST", body: JSON.stringify({ name }), skipOrg: true }),
     update: (orgId: string, name: string) => apiFetch<Org>(`/orgs/${orgId}`, { method: "PATCH", body: JSON.stringify({ name }), orgId }),
-    members: (orgId: string) => apiFetch<Member[]>(`/orgs/${orgId}/members`, { orgId }),
+    members: (orgId: string) => apiFetch<Paginated<Member>>(`/orgs/${orgId}/members`, { orgId }),
     changeMemberRole: (orgId: string, userId: string, role: string) =>
         apiFetch(`/orgs/${orgId}/members/${userId}`, { method: "PATCH", body: JSON.stringify({ role }), orgId }),
     removeMember: (orgId: string, userId: string) =>
@@ -332,9 +332,9 @@ export const fieldsApi = {
 
 export const monitoringApi = {
     layers: (fieldId: string, type = "NDVI", limit = 50) =>
-        apiFetch<RasterLayer[]>(`/fields/${fieldId}/layers?type=${type}&limit=${limit}`),
+        apiFetch<Paginated<RasterLayer>>(`/fields/${fieldId}/layers?type=${type}&limit=${limit}`),
     stats: (fieldId: string, type = "NDVI", limit = 200) =>
-        apiFetch<FieldStat[]>(`/fields/${fieldId}/stats?type=${type}&limit=${limit}`),
+        apiFetch<Paginated<FieldStat>>(`/fields/${fieldId}/stats?type=${type}&limit=${limit}`),
 };
 
 // ── Jobs ─────────────────────────────────────────────────────────────

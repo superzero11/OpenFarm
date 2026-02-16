@@ -14,11 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
-from app.middleware.auth import OrgContext, get_org_context
+from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import AuditEvent, Farm, Field
 from app.schemas.farm import FieldCreate, FieldImportResponse, FieldOut, FieldUpdate
 
 router = APIRouter()
+
+# Dependency: restrict write operations to owner/admin/member (viewers are read-only)
+_writer = require_roles("owner", "admin", "member")
 
 
 def _geojson_to_multi(geojson: dict[str, Any]) -> MultiPolygon:
@@ -59,7 +62,7 @@ def _field_to_out(field: Field) -> FieldOut:
 @router.post("/fields", response_model=FieldOut, status_code=status.HTTP_201_CREATED)
 async def create_field(
     body: FieldCreate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     # Verify farm belongs to org
@@ -135,7 +138,7 @@ async def get_field(
 async def update_field(
     field_id: uuid.UUID,
     body: FieldUpdate,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     field = await db.get(Field, field_id)
@@ -174,7 +177,7 @@ async def update_field(
 @router.delete("/fields/{field_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_field(
     field_id: uuid.UUID,
-    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     field = await db.get(Field, field_id)
@@ -188,7 +191,7 @@ async def delete_field(
 async def import_fields(
     file: UploadFile,
     farm_id: uuid.UUID = Query(...),
-    ctx: OrgContext = Depends(get_org_context),
+    ctx: OrgContext = Depends(_writer),
     db: AsyncSession = Depends(get_db),
 ):
     """Bulk import fields from GeoJSON file."""

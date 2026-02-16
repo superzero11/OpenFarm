@@ -159,8 +159,8 @@ export default function SettingsPage() {
     const loadMembers = useCallback(async () => {
         if (!currentOrg) return;
         try {
-            const list = await orgsApi.members(currentOrg.id);
-            setMembers(list);
+            const res = await orgsApi.members(currentOrg.id);
+            setMembers(res.items);
         } catch (err) {
             toast.error(t("failedLoadMembers"));
         }

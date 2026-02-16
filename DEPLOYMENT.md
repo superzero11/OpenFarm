@@ -179,12 +179,138 @@ sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --bui
 
 ### Database Backup
 
+OpenFarm includes an automated backup script at `deploy/backup.sh`.
+
+**Manual backup:**
+
 ```bash
-# Create backup
+# Quick one-liner
 sudo docker compose exec db pg_dump -U openfarm openfarm | gzip > backup_$(date +%Y%m%d).sql.gz
 
-# Restore backup
-gunzip -c backup_20260215.sql.gz | sudo docker compose exec -T db psql -U openfarm openfarm
+# Using the backup script (recommended)
+sudo /opt/openfarm/deploy/backup.sh
+```
+
+**Automated daily backups (cron):**
+
+```bash
+# Add to root crontab
+sudo crontab -e
+
+# Daily at 02:00 UTC, 7-day retention (default)
+0 2 * * * /opt/openfarm/deploy/backup.sh >> /var/log/openfarm-backup.log 2>&1
+```
+
+**Configuration (environment variables):**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BACKUP_DIR` | `/opt/openfarm/backups` | Local backup directory |
+| `RETENTION_DAYS` | `7` | Days to keep local backups |
+| `UPLOAD_TO_MINIO` | `false` | Upload backups to MinIO/S3 |
+| `MINIO_ALIAS` | `local` | mc alias for MinIO |
+| `MINIO_BUCKET` | `openfarm` | Target bucket |
+
+**Restore from backup:**
+
+```bash
+# From custom format (.dump) — recommended
+sudo docker compose exec -T db pg_restore -U openfarm -d openfarm --clean < backups/openfarm_20260215_020000.dump
+
+# From SQL format (.sql.gz)
+gunzip -c backups/openfarm_20260215.sql.gz | sudo docker compose exec -T db psql -U openfarm openfarm
+```
+
+### MinIO Bucket Versioning
+
+Enable versioning to protect against accidental object deletion/overwrite (COG rasters, photos):
+
+```bash
+# Install MinIO client (mc) if not present
+curl -sSL https://dl.min.io/client/mc/release/linux-arm64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
+
+# Configure mc alias
+mc alias set local http://localhost:9000 openfarm openfarm_dev_secret
+
+# Enable versioning on the openfarm bucket
+mc version enable local/openfarm
+
+# Verify
+mc version info local/openfarm
+# Expected: local/openfarm versioning is enabled
+
+# Optional: set lifecycle rule to expire old versions after 30 days
+mc ilm rule add local/openfarm --noncurrent-expire-days 30
+```
+
+**What versioning protects:**
+- `cogs/{org}/{field}/{date}/ndvi.tif` — NDVI raster layers (re-processable but slow)
+- `photos/{org}/{uuid}.{ext}` — Scouting observation photos (not recoverable)
+- `basemap/` — PMTiles basemap (re-downloadable)
+
+### WAL Archiving (Point-in-Time Recovery)
+
+For production deployments requiring point-in-time recovery (PITR), enable PostgreSQL WAL archiving.
+
+**1. Create archive directory:**
+
+```bash
+sudo mkdir -p /opt/openfarm/wal-archive
+sudo chown 999:999 /opt/openfarm/wal-archive  # postgres container UID
+```
+
+**2. Add PostgreSQL config overrides** — create `deploy/postgresql.conf`:
+
+```ini
+# WAL archiving for PITR
+wal_level = replica
+archive_mode = on
+archive_command = 'cp %p /var/lib/postgresql/wal-archive/%f'
+archive_timeout = 300
+```
+
+**3. Mount in Docker Compose** — add to `docker-compose.prod.yml` db service:
+
+```yaml
+db:
+  volumes:
+    - ./deploy/postgresql.conf:/etc/postgresql/conf.d/wal.conf:ro
+    - /opt/openfarm/wal-archive:/var/lib/postgresql/wal-archive
+  command: >
+    postgres
+    -c config_file=/etc/postgresql/postgresql.conf
+    -c include_dir=/etc/postgresql/conf.d
+```
+
+**4. Point-in-Time Recovery procedure:**
+
+```bash
+# Stop the application
+sudo docker compose down
+
+# Create base backup
+sudo docker compose exec db pg_basebackup -U openfarm -D /tmp/basebackup -Ft -z
+
+# To restore to a specific time:
+# 1. Replace the data directory with the base backup
+# 2. Create recovery.signal file
+# 3. Set recovery_target_time in postgresql.conf:
+#    recovery_target_time = '2026-02-15 14:30:00 UTC'
+#    restore_command = 'cp /var/lib/postgresql/wal-archive/%f %p'
+# 4. Start PostgreSQL — it will replay WAL up to the target time
+
+sudo docker compose up -d
+```
+
+**WAL archive maintenance:**
+
+```bash
+# Check archive size
+du -sh /opt/openfarm/wal-archive/
+
+# Prune WAL files older than the oldest base backup (manual)
+# Keep at minimum 7 days of WAL for PITR window
+find /opt/openfarm/wal-archive/ -name "*.gz" -mtime +7 -delete
 ```
 
 ### Restart a Service

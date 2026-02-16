@@ -131,28 +131,45 @@ async def update_org(
 # ── Members ──────────────────────────────────────────────────────────
 
 
-@router.get("/orgs/{org_id}/members", response_model=list[MemberOut])
+@router.get("/orgs/{org_id}/members", response_model=PaginatedResponse[MemberOut])
 async def list_members(
     org_id: uuid.UUID,
     ctx: Annotated[OrgContext, Depends(get_org_context)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
 ):
-    result = await db.execute(
+    base = (
         select(OrgMember, User.email, User.name)
         .join(User, OrgMember.user_id == User.id)
         .where(OrgMember.org_id == org_id)
     )
-    return [
-        MemberOut(
-            id=row.OrgMember.id,
-            user_id=row.OrgMember.user_id,
-            email=row.email,
-            name=row.name,
-            role=row.OrgMember.role,
-            created_at=row.OrgMember.created_at,
+    total = (
+        await db.execute(
+            select(func.count()).select_from(
+                select(OrgMember.id).where(OrgMember.org_id == org_id).subquery()
+            )
         )
-        for row in result.all()
-    ]
+    ).scalar() or 0
+    result = await db.execute(
+        base.order_by(OrgMember.created_at.asc()).limit(limit).offset(offset)
+    )
+    return PaginatedResponse(
+        items=[
+            MemberOut(
+                id=row.OrgMember.id,
+                user_id=row.OrgMember.user_id,
+                email=row.email,
+                name=row.name,
+                role=row.OrgMember.role,
+                created_at=row.OrgMember.created_at,
+            )
+            for row in result.all()
+        ],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.patch("/orgs/{org_id}/members/{user_id}")

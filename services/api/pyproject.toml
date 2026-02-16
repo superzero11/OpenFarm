@@ -27,6 +27,7 @@ dependencies = [
     "rio-cogeo>=5.0.0",
     "numpy>=1.26.0",
     "python-multipart>=0.0.9",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

@@ -5,6 +5,8 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { useOrg } from "@/components/org-context";
+import { orgsApi } from "@/lib/api";
+import { toast } from "sonner";
 import {
     LayoutDashboard,
     Tractor,
@@ -16,6 +18,8 @@ import {
     Menu,
     X,
     Leaf,
+    Plus,
+    Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +30,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
     Tooltip,
@@ -45,12 +59,32 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { currentOrg, orgs, switchOrg, user } = useOrg();
+    const { currentOrg, orgs, switchOrg, user, refreshOrgs } = useOrg();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [expanded, setExpanded] = useState(true);
+    const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [newOrgName, setNewOrgName] = useState("");
+    const [creating, setCreating] = useState(false);
     const tNav = useTranslations("nav");
     const tSidebar = useTranslations("sidebar");
     const tCommon = useTranslations("common");
+
+    const handleCreateWorkspace = async () => {
+        if (!newOrgName.trim()) return;
+        setCreating(true);
+        try {
+            const newOrg = await orgsApi.create(newOrgName.trim());
+            await refreshOrgs();
+            switchOrg(newOrg.id);
+            setCreateDialogOpen(false);
+            setNewOrgName("");
+            toast.success(tSidebar("workspaceCreated"));
+        } catch (err: any) {
+            toast.error(err.detail || tSidebar("failedCreate"));
+        } finally {
+            setCreating(false);
+        }
+    };
 
     return (
         <TooltipProvider delayDuration={0}>
@@ -84,6 +118,7 @@ export function Sidebar() {
                             switchOrg={switchOrg}
                             user={user}
                             onNavigate={() => setMobileOpen(false)}
+                            onCreateWorkspace={() => { setMobileOpen(false); setCreateDialogOpen(true); }}
                             tNav={tNav}
                             tSidebar={tSidebar}
                             tCommon={tCommon}
@@ -168,6 +203,11 @@ export function Sidebar() {
                                         {org.name}
                                     </DropdownMenuItem>
                                 ))}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setCreateDialogOpen(true)}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    {tSidebar("newWorkspace")}
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -268,6 +308,56 @@ export function Sidebar() {
                     </div>
                 </div>
             </aside>
+
+            {/* Create Workspace Dialog */}
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{tSidebar("createWorkspace")}</DialogTitle>
+                        <DialogDescription>
+                            {tSidebar("workspaceName")}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="new-org-name">{tSidebar("workspaceName")}</Label>
+                            <Input
+                                id="new-org-name"
+                                value={newOrgName}
+                                onChange={(e) => setNewOrgName(e.target.value)}
+                                placeholder={tSidebar("workspaceNamePlaceholder")}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleCreateWorkspace();
+                                    }
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => setCreateDialogOpen(false)}
+                            disabled={creating}
+                        >
+                            {tSidebar("cancel")}
+                        </Button>
+                        <Button
+                            onClick={handleCreateWorkspace}
+                            disabled={creating || !newOrgName.trim()}
+                        >
+                            {creating ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                                <Plus className="h-4 w-4 mr-2" />
+                            )}
+                            {creating ? tSidebar("creating") : tSidebar("createWorkspace")}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </TooltipProvider>
     );
 }
@@ -280,6 +370,7 @@ function MobileSidebar({
     switchOrg,
     user,
     onNavigate,
+    onCreateWorkspace,
     tNav,
     tSidebar,
     tCommon,
@@ -290,6 +381,7 @@ function MobileSidebar({
     switchOrg: (id: string) => void;
     user: any;
     onNavigate: () => void;
+    onCreateWorkspace: () => void;
     tNav: (key: string) => string;
     tSidebar: (key: string) => string;
     tCommon: (key: string) => string;
@@ -321,6 +413,11 @@ function MobileSidebar({
                                 {org.name}
                             </DropdownMenuItem>
                         ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={onCreateWorkspace}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            {tSidebar("newWorkspace")}
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>

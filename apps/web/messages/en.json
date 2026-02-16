@@ -20,7 +20,15 @@
         "workspaces": "Workspaces",
         "collapse": "Collapse",
         "expand": "Expand",
-        "selectOrg": "Select org"
+        "selectOrg": "Select org",
+        "newWorkspace": "New Workspace",
+        "createWorkspace": "Create Workspace",
+        "workspaceName": "Workspace Name",
+        "workspaceNamePlaceholder": "e.g. My Farm Team",
+        "creating": "Creating...",
+        "workspaceCreated": "Workspace created",
+        "failedCreate": "Failed to create workspace",
+        "cancel": "Cancel"
     },
     "landing": {
         "badge": "Satellite-powered crop intelligence",
@@ -107,7 +115,21 @@
         "confirmRemove": "Remove {name} from the organization?",
         "memberRemoved": "{name} removed",
         "failedRemove": "Failed to remove member",
-        "failedLoadMembers": "Failed to load members"
+        "failedLoadMembers": "Failed to load members",
+        "auditLog": "Audit Log",
+        "auditLogDesc": "Recent activity in this organization.",
+        "loadMore": "Load More",
+        "noAuditEvents": "No activity recorded yet.",
+        "failedLoadAudit": "Failed to load audit log",
+        "eventLogin": "Signed in",
+        "eventOrgCreated": "Organization created",
+        "eventMemberInvited": "Member invited",
+        "eventRoleChanged": "Role changed",
+        "eventFieldCreated": "Field created",
+        "eventReportShared": "Report shared",
+        "eventMemberRemoved": "Member removed",
+        "eventInviteAccepted": "Invite accepted",
+        "eventUnknown": "Activity"
     },
     "createFarm": {
         "backToFarms": "Back to Farms",

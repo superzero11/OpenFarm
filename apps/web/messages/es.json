@@ -20,7 +20,15 @@
         "workspaces": "Espacios de trabajo",
         "collapse": "Contraer",
         "expand": "Expandir",
-        "selectOrg": "Seleccionar org"
+        "selectOrg": "Seleccionar org",
+        "newWorkspace": "Nuevo Espacio",
+        "createWorkspace": "Crear Espacio de Trabajo",
+        "workspaceName": "Nombre del Espacio",
+        "workspaceNamePlaceholder": "ej. Mi Equipo Agrícola",
+        "creating": "Creando...",
+        "workspaceCreated": "Espacio de trabajo creado",
+        "failedCreate": "Error al crear espacio de trabajo",
+        "cancel": "Cancelar"
     },
     "landing": {
         "badge": "Inteligencia agrícola satelital",
@@ -107,7 +115,21 @@
         "confirmRemove": "¿Eliminar a {name} de la organización?",
         "memberRemoved": "{name} eliminado",
         "failedRemove": "Error al eliminar miembro",
-        "failedLoadMembers": "Error al cargar miembros"
+        "failedLoadMembers": "Error al cargar miembros",
+        "auditLog": "Registro de Actividad",
+        "auditLogDesc": "Actividad reciente en esta organización.",
+        "loadMore": "Cargar Más",
+        "noAuditEvents": "No hay actividad registrada aún.",
+        "failedLoadAudit": "Error al cargar registro de actividad",
+        "eventLogin": "Inició sesión",
+        "eventOrgCreated": "Organización creada",
+        "eventMemberInvited": "Miembro invitado",
+        "eventRoleChanged": "Rol cambiado",
+        "eventFieldCreated": "Campo creado",
+        "eventReportShared": "Informe compartido",
+        "eventMemberRemoved": "Miembro eliminado",
+        "eventInviteAccepted": "Invitación aceptada",
+        "eventUnknown": "Actividad"
     },
     "createFarm": {
         "backToFarms": "Volver a Fincas",

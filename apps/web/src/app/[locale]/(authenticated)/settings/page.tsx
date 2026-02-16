@@ -12,6 +12,15 @@ import {
     UserPlus,
     Trash2,
     Shield,
+    ScrollText,
+    LogIn,
+    Building2,
+    UserCog,
+    MapPin,
+    Share2,
+    UserMinus,
+    UserCheck,
+    Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +41,38 @@ const ROLE_COLORS: Record<string, string> = {
     viewer: "bg-muted text-muted-foreground",
 };
 
+const EVENT_ICONS: Record<string, typeof Activity> = {
+    login: LogIn,
+    org_created: Building2,
+    member_invited: UserPlus,
+    role_changed: UserCog,
+    field_created: MapPin,
+    report_shared: Share2,
+    member_removed: UserMinus,
+    invite_accepted: UserCheck,
+};
+
+const EVENT_LABEL_KEYS: Record<string, string> = {
+    login: "eventLogin",
+    org_created: "eventOrgCreated",
+    member_invited: "eventMemberInvited",
+    role_changed: "eventRoleChanged",
+    field_created: "eventFieldCreated",
+    report_shared: "eventReportShared",
+    member_removed: "eventMemberRemoved",
+    invite_accepted: "eventInviteAccepted",
+};
+
+interface AuditEvent {
+    id: string;
+    user_id: string;
+    event_type: string;
+    metadata_json: Record<string, any> | null;
+    created_at: string;
+}
+
+const AUDIT_PAGE_SIZE = 20;
+
 export default function SettingsPage() {
     const t = useTranslations("settings");
     const { currentOrg, refreshOrgs, user } = useOrg();
@@ -45,6 +86,12 @@ export default function SettingsPage() {
     const [inviteRole, setInviteRole] = useState("member");
     const [inviting, setInviting] = useState(false);
 
+    // Audit log
+    const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+    const [auditTotal, setAuditTotal] = useState(0);
+    const [auditLoading, setAuditLoading] = useState(false);
+    const [auditOffset, setAuditOffset] = useState(0);
+
     const loadMembers = useCallback(async () => {
         if (!currentOrg) return;
         try {
@@ -55,12 +102,27 @@ export default function SettingsPage() {
         }
     }, [currentOrg]);
 
+    const loadAuditEvents = useCallback(async (offset = 0, append = false) => {
+        if (!currentOrg) return;
+        setAuditLoading(true);
+        try {
+            const res = await orgsApi.auditEvents(currentOrg.id, AUDIT_PAGE_SIZE, offset);
+            setAuditEvents((prev) => (append ? [...prev, ...res.items] : res.items));
+            setAuditTotal(res.total);
+            setAuditOffset(offset + res.items.length);
+        } catch (err) {
+            toast.error(t("failedLoadAudit"));
+        } finally {
+            setAuditLoading(false);
+        }
+    }, [currentOrg, t]);
+
     useEffect(() => {
         if (!currentOrg) return;
         setOrgName(currentOrg.name);
         setLoading(true);
-        loadMembers().finally(() => setLoading(false));
-    }, [currentOrg, loadMembers]);
+        Promise.all([loadMembers(), loadAuditEvents(0)]).finally(() => setLoading(false));
+    }, [currentOrg, loadMembers, loadAuditEvents]);
 
     const handleSaveName = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -277,6 +339,78 @@ export default function SettingsPage() {
                                     {t("sendInvite")}
                                 </Button>
                             </form>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Audit Log */}
+                {canManage && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ScrollText className="h-5 w-5" />
+                                {t("auditLog")}
+                            </CardTitle>
+                            <CardDescription>{t("auditLogDesc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {auditEvents.length === 0 && !auditLoading ? (
+                                <p className="text-sm text-muted-foreground py-4 text-center">
+                                    {t("noAuditEvents")}
+                                </p>
+                            ) : (
+                                <div className="space-y-0">
+                                    {auditEvents.map((event, index) => {
+                                        const Icon = EVENT_ICONS[event.event_type] || Activity;
+                                        const labelKey = EVENT_LABEL_KEYS[event.event_type] || "eventUnknown";
+                                        const meta = event.metadata_json;
+                                        const detail = meta?.email || meta?.name || meta?.role || null;
+                                        return (
+                                            <React.Fragment key={event.id}>
+                                                {index > 0 && <Separator />}
+                                                <div className="flex items-center gap-3 py-2.5">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                                                        <Icon className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium">
+                                                            {t(labelKey as any)}
+                                                        </p>
+                                                        {detail && (
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {detail}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <time className="text-xs text-muted-foreground whitespace-nowrap">
+                                                        {new Date(event.created_at).toLocaleDateString(undefined, {
+                                                            month: "short",
+                                                            day: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })}
+                                                    </time>
+                                                </div>
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {auditOffset < auditTotal && (
+                                <div className="pt-4 flex justify-center">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => loadAuditEvents(auditOffset, true)}
+                                        disabled={auditLoading}
+                                    >
+                                        {auditLoading ? (
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                        ) : null}
+                                        {t("loadMore")}
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 )}

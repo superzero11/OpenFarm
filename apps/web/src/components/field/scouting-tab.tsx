@@ -837,34 +837,42 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                             </div>
                         )}
 
-                        {/* Tags + Alert badge */}
-                        <div className="flex flex-wrap items-center gap-1 mt-2">
-                            {obs.tags?.map((tag) => (
-                                <Badge
-                                    key={tag}
-                                    variant="secondary"
-                                    className="text-[9px] px-1.5 py-0 h-4"
-                                >
-                                    {tag}
-                                </Badge>
-                            ))}
-                            {obs.alert_id && (() => {
-                                const linked = fieldAlerts.find((a) => a.id === obs.alert_id);
-                                return (
+                        {/* Tags */}
+                        {obs.tags && obs.tags.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 mt-2">
+                                {obs.tags.map((tag) => (
                                     <Badge
-                                        variant="outline"
-                                        className="text-[9px] px-1.5 py-0.5 h-auto border-amber-300 text-amber-600 dark:text-amber-400 max-w-full whitespace-normal"
+                                        key={tag}
+                                        variant="secondary"
+                                        className="text-[9px] px-1.5 py-0 h-4"
                                     >
-                                        <AlertTriangle className="h-2.5 w-2.5 mr-0.5 shrink-0 mt-px" />
-                                        <span>
-                                            {linked
-                                                ? `[${linked.severity}] ${linked.message}`
-                                                : t("linkedAlert")}
-                                        </span>
+                                        {tag}
                                     </Badge>
-                                );
-                            })()}
-                        </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Linked alert card */}
+                        {obs.alert_id && (() => {
+                            const linked = fieldAlerts.find((a) => a.id === obs.alert_id);
+                            return (
+                                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-2">
+                                    <div className="flex items-start gap-1.5">
+                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                                                {t("linkedAlert")}
+                                            </p>
+                                            <p className="text-xs text-amber-800 dark:text-amber-200 mt-0.5 leading-relaxed">
+                                                {linked
+                                                    ? `[${linked.severity}] ${linked.message}`
+                                                    : t("linkedAlert")}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 ))}
             </div>

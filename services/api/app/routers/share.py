@@ -23,7 +23,7 @@ from app.models.tables import (
     ScoutingObservation,
     ShareLink,
 )
-from app.schemas.monitoring import ShareCreate, ShareOut, ShareReportOut
+from app.schemas.monitoring import ScoutingOut, ShareCreate, ShareOut, ShareReportOut
 
 router = APIRouter()
 
@@ -192,10 +192,34 @@ async def get_shared_report(
     )
     scouting_entries = scouting_result.scalars().all()
 
+    # Convert scouting WKBElement geom_point → GeoJSON dict (same as _obs_to_out in scouting router)
+    scouting_out = []
+    for obs in scouting_entries:
+        geom_json = None
+        if obs.geom_point is not None:
+            try:
+                geom_json = mapping(to_shape(obs.geom_point))
+            except Exception:
+                pass
+        scouting_out.append(
+            ScoutingOut(
+                id=obs.id,
+                field_id=obs.field_id,
+                alert_id=obs.alert_id,
+                geom_point=geom_json,
+                title=obs.title,
+                note=obs.note,
+                tags=obs.tags_json,
+                photo_uri=obs.photo_uri,
+                created_by=obs.created_by,
+                created_at=obs.created_at,
+            )
+        )
+
     return ShareReportOut(
         field=field_data,
         latest_layer=latest_layer,
         stats=stats,
         alerts=alerts,
-        scouting=scouting_entries,
+        scouting=scouting_out,
     )

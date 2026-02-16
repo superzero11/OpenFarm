@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     # MinIO
     minio_endpoint: str = "minio:9000"
+    # Browser-reachable endpoint for presigned URLs (empty = use minio_endpoint)
+    minio_public_endpoint: str = ""
     minio_access_key: str = "openfarm"
     minio_secret_key: str = "openfarm_dev_secret"
     minio_bucket: str = "openfarm"

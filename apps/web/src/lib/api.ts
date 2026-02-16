@@ -228,6 +228,43 @@ export interface Alert {
     created_at: string;
 }
 
+// ── Scouting Types ───────────────────────────────────────────────
+
+export interface ScoutingObservation {
+    id: string;
+    field_id: string;
+    alert_id: string | null;
+    geom_point: GeoJSON.Point | null;
+    title: string;
+    note: string | null;
+    tags: string[] | null;
+    photo_uri: string | null;
+    created_by: string;
+    created_at: string;
+}
+
+export interface ScoutingCreate {
+    geom_point: { type: "Point"; coordinates: [number, number] };
+    title: string;
+    note?: string;
+    tags?: string[];
+    photo_uri?: string;
+    alert_id?: string;
+}
+
+export interface ScoutingUpdate {
+    title?: string;
+    note?: string;
+    tags?: string[];
+}
+
+// ── Upload Types ─────────────────────────────────────────────────
+
+export interface PresignedUpload {
+    upload_url: string;
+    object_key: string;
+}
+
 // ── Users ────────────────────────────────────────────────────────────
 
 export const usersApi = {
@@ -328,5 +365,57 @@ export const alertsApi = {
     update: (alertId: string, data: { status: string }) =>
         apiFetch<Alert>(`/alerts/${alertId}`, { method: "PATCH", body: JSON.stringify(data) }),
 };
+
+// ── Scouting ─────────────────────────────────────────────────────
+
+export const scoutingApi = {
+    list: (fieldId: string, limit = 50, offset = 0) =>
+        apiFetch<Paginated<ScoutingObservation>>(
+            `/fields/${fieldId}/scouting?limit=${limit}&offset=${offset}`,
+        ),
+    create: (fieldId: string, data: ScoutingCreate) =>
+        apiFetch<ScoutingObservation>(`/fields/${fieldId}/scouting`, {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
+    update: (fieldId: string, obsId: string, data: ScoutingUpdate) =>
+        apiFetch<ScoutingObservation>(`/fields/${fieldId}/scouting/${obsId}`, {
+            method: "PATCH",
+            body: JSON.stringify(data),
+        }),
+    delete: (fieldId: string, obsId: string) =>
+        apiFetch(`/fields/${fieldId}/scouting/${obsId}`, { method: "DELETE" }),
+};
+
+// ── Uploads ──────────────────────────────────────────────────────
+
+const MINIO_URL = process.env.NEXT_PUBLIC_MINIO_URL || "http://localhost:9000/openfarm";
+
+export const uploadsApi = {
+    presign: (filename: string, contentType = "image/jpeg") =>
+        apiFetch<PresignedUpload>("/uploads/presign", {
+            method: "POST",
+            body: JSON.stringify({ filename, content_type: contentType }),
+        }),
+    /** Upload file to MinIO via presigned URL, returns the object key. */
+    async upload(file: File): Promise<string> {
+        const ext = file.name.split(".").pop() || "jpg";
+        const ct = file.type || "image/jpeg";
+        const { upload_url, object_key } = await this.presign(file.name, ct);
+        // PUT directly to MinIO (presigned URL)
+        const res = await fetch(upload_url, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": ct },
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        return object_key;
+    },
+};
+
+/** Construct a public URL for a photo stored in MinIO. */
+export function getPhotoUrl(objectKey: string): string {
+    return `${MINIO_URL}/${objectKey}`;
+}
 
 export default apiFetch;

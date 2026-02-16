@@ -220,11 +220,11 @@
 | 3.3 | `PATCH /v1/alerts/{alertId}` — close/reopen alert | ✅ | Backend complete |
 | 3.4 | Alert rules: `ndvi_drop` (15% drop vs rolling avg of 4) | ✅ | Runs in NDVI job pipeline |
 | 3.5 | Alert rules: `ndvi_threshold` (below 0.3) | ✅ | Runs in NDVI job pipeline |
-| 3.6 | `alertsApi` client functions in frontend | ✅ | `listForField`, `update` |
-| 3.7 | Alerts tab UI — list alerts with severity badges | ⬜ | Tab exists as placeholder |
-| 3.8 | Alerts tab UI — close/acknowledge alert action | ⬜ | |
-| 3.9 | Alerts list on farm dashboard | ⬜ | PRD mentions farm-level alerts summary |
-| 3.10 | Alert notification indicator (badge on tab) | ⬜ | |
+| 3.6 | `alertsApi` client functions in frontend | ✅ | `listForField`, `listForFarm`, `list`, `update` |
+| 3.7 | Alerts tab UI — list alerts with severity badges | ✅ | Shared `AlertRow` component, compact mode for sidebar |
+| 3.8 | Alerts tab UI — close/acknowledge alert action | ✅ | Toggle open/closed with spinner |
+| 3.9 | Alerts list on farm dashboard | ✅ | Dedicated `/alerts` page with filters; removed from farm detail per UX simplification |
+| 3.10 | Alert notification indicator (badge on tab) | ✅ | Badge on field tab + sidebar nav (desktop/mobile) |
 
 ### Scouting
 
@@ -235,13 +235,13 @@
 | 3.13 | `PATCH /v1/fields/{fieldId}/scouting/{id}` — update | ✅ | Backend complete |
 | 3.14 | `DELETE /v1/fields/{fieldId}/scouting/{id}` — delete | ✅ | Backend complete |
 | 3.15 | `POST /v1/uploads/presign` — presigned upload URL | ✅ | Backend complete |
-| 3.16 | `scoutingApi` client functions in frontend | ⬜ | |
-| 3.17 | `uploadsApi` client functions in frontend | ⬜ | |
-| 3.18 | Scouting tab UI — list observations | ⬜ | Tab exists as placeholder |
-| 3.19 | Scouting tab UI — create observation form (point on map, title, note, tags) | ⬜ | |
-| 3.20 | Scouting photo upload (presigned URL to MinIO) | ⬜ | |
-| 3.21 | Scouting observations as map markers | ⬜ | |
-| 3.22 | Associate scouting observation with alert | ⬜ | Backend supports alert_id FK |
+| 3.16 | `scoutingApi` client functions in frontend | ✅ | list, create, update, delete in `api.ts` |
+| 3.17 | `uploadsApi` client functions in frontend | ✅ | presign + upload helper with public MinIO endpoint |
+| 3.18 | Scouting tab UI — list observations | ✅ | ScoutingTab component with cards, tags, photo thumbnails |
+| 3.19 | Scouting tab UI — create observation form (point on map, title, note, tags) | ✅ | Map click-to-pick point, title, note, tags fields |
+| 3.20 | Scouting photo upload (presigned URL to MinIO) | ✅ | Presigned PUT upload, preview, public display URL |
+| 3.21 | Scouting observations as map markers | ✅ | GeoJSON circle markers, click-to-highlight, fly-to |
+| 3.22 | Associate scouting observation with alert | ✅ | Alert dropdown in create form, linked badge in list |
 
 ### Share (Shareable Field Health Report)
 
@@ -326,10 +326,10 @@
 | **Sprint 0 — Foundation** | 52 | 52 | 0 | 0 |
 | **Sprint 1 — Org/Farm/Field** | 46 | 46 | 0 | 0 |
 | **Sprint 2 — NDVI Monitoring** | 27 | 27 | 0 | 0 |
-| **Sprint 3 — Alerts/Scouting/Share** | 36 | 11 | 0 | 25 |
+| **Sprint 3 — Alerts/Scouting/Share** | 36 | 22 | 0 | 14 |
 | **Sprint 4 — Polish/Security/QA** | 21 | 6 | 3 | 12 |
-| **TOTAL** | **182** | **142 (78%)** | **3 (2%)** | **37 (20%)** |
+| **TOTAL** | **182** | **153 (84%)** | **3 (2%)** | **26 (14%)** |
 
 ### Key Takeaway
 
-**Milestones 0–2 are essentially complete** (96% done). The backend is 100% implemented for all PRD features including Milestone 3. The remaining 22% is almost entirely **frontend UI for Sprint 3** (Alerts, Scouting, Share — 25 tasks) and **Sprint 4 QA/polish** (12 tasks). The critical path to MVP completion is building the three remaining frontend features and the public share report page.
+**Milestones 0–2 are complete** and **Sprint 3 Alerts + Scouting are now complete** (22/36 tasks done). The remaining 14% is the **Share feature frontend** (10 tasks) and **Sprint 4 QA/polish** (12 tasks). The critical path to MVP is the shareable field health report and polish tasks.

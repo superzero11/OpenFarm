@@ -25,6 +25,8 @@ services:
   api:
     ports:
       - "8000:8000"
+    environment:
+      MINIO_PUBLIC_ENDPOINT: localhost:9000
 
   tiler:
     ports:

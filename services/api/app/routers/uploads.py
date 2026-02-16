@@ -23,8 +23,10 @@ async def get_presigned_upload(
     from minio import Minio
     from app.core.config import settings
 
+    # Use public endpoint for presigned URLs so the browser can reach MinIO
+    endpoint = settings.minio_public_endpoint or settings.minio_endpoint
     client = Minio(
-        settings.minio_endpoint,
+        endpoint,
         access_key=settings.minio_access_key,
         secret_key=settings.minio_secret_key,
         secure=settings.minio_secure,

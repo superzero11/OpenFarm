@@ -23,10 +23,9 @@ async def get_presigned_upload(
     from minio import Minio
     from app.core.config import settings
 
-    # Use public endpoint for presigned URLs so the browser can reach MinIO
-    endpoint = settings.minio_public_endpoint or settings.minio_endpoint
+    # Connect using internal endpoint (reachable from this container)
     client = Minio(
-        endpoint,
+        settings.minio_endpoint,
         access_key=settings.minio_access_key,
         secret_key=settings.minio_secret_key,
         secure=settings.minio_secure,
@@ -43,6 +42,13 @@ async def get_presigned_upload(
         object_key,
         expires=timedelta(minutes=15),
     )
+
+    # Rewrite URL to use browser-reachable endpoint if configured
+    if settings.minio_public_endpoint:
+        url = url.replace(
+            f"http://{settings.minio_endpoint}",
+            f"http://{settings.minio_public_endpoint}",
+        )
 
     logger.info("presigned_upload", object_key=object_key, org_id=str(ctx.org_id))
     return PresignedUploadOut(upload_url=url, object_key=object_key)

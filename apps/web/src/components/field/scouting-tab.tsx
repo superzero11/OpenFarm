@@ -629,25 +629,31 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                 )}
 
                 {/* Link to alert (only for new observations) */}
-                {!editingObs && fieldAlerts.length > 0 && (
+                {!editingObs && (
                     <div className="space-y-1.5">
                         <Label htmlFor="scout-alert" className="text-xs">
                             {t("alertLabel")}
                         </Label>
-                        <select
-                            id="scout-alert"
-                            value={alertId}
-                            onChange={(e) => setAlertId(e.target.value)}
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">{t("alertPlaceholder")}</option>
-                            {fieldAlerts.map((a) => (
-                                <option key={a.id} value={a.id}>
-                                    [{a.severity}] {a.message.substring(0, 60)}
-                                    {a.message.length > 60 ? "…" : ""}
-                                </option>
-                            ))}
-                        </select>
+                        {fieldAlerts.length > 0 ? (
+                            <select
+                                id="scout-alert"
+                                value={alertId}
+                                onChange={(e) => setAlertId(e.target.value)}
+                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                                <option value="">{t("alertPlaceholder")}</option>
+                                {fieldAlerts.map((a) => (
+                                    <option key={a.id} value={a.id}>
+                                        [{a.severity}] {a.message.substring(0, 60)}
+                                        {a.message.length > 60 ? "…" : ""}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <p className="text-xs text-muted-foreground italic px-1">
+                                {t("noOpenAlerts")}
+                            </p>
+                        )}
                     </div>
                 )}
 

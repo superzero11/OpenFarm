@@ -853,12 +853,12 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                                 return (
                                     <Badge
                                         variant="outline"
-                                        className="text-[9px] px-1.5 py-0 h-4 border-amber-300 text-amber-600 dark:text-amber-400 max-w-full"
+                                        className="text-[9px] px-1.5 py-0.5 h-auto border-amber-300 text-amber-600 dark:text-amber-400 max-w-full whitespace-normal"
                                     >
-                                        <AlertTriangle className="h-2.5 w-2.5 mr-0.5 shrink-0" />
-                                        <span className="truncate">
+                                        <AlertTriangle className="h-2.5 w-2.5 mr-0.5 shrink-0 mt-px" />
+                                        <span>
                                             {linked
-                                                ? `[${linked.severity}] ${linked.message.substring(0, 40)}${linked.message.length > 40 ? "…" : ""}`
+                                                ? `[${linked.severity}] ${linked.message}`
                                                 : t("linkedAlert")}
                                         </span>
                                     </Badge>

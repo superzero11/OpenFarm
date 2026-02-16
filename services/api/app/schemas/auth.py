@@ -90,9 +90,14 @@ class InviteOut(BaseModel):
     email: str
     role: str
     status: str
+    invited_by_name: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class TransferOwnershipRequest(BaseModel):
+    new_owner_user_id: uuid.UUID
 
 
 # Rebuild forward refs

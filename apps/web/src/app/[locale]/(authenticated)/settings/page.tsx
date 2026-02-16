@@ -23,6 +23,11 @@ import {
     Activity,
     Search,
     Link2,
+    MoreVertical,
+    Crown,
+    Mail,
+    X,
+    Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +38,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -54,6 +77,7 @@ const EVENT_ICONS: Record<string, typeof Activity> = {
     member_removed: UserMinus,
     invite_accepted: UserCheck,
     invite_cancelled: UserMinus,
+    ownership_transferred: Crown,
 };
 
 const EVENT_LABEL_KEYS: Record<string, string> = {
@@ -66,6 +90,7 @@ const EVENT_LABEL_KEYS: Record<string, string> = {
     member_removed: "eventMemberRemoved",
     invite_accepted: "eventInviteAccepted",
     invite_cancelled: "eventInviteCancelled",
+    ownership_transferred: "eventOwnershipTransferred",
 };
 
 interface AuditEvent {
@@ -90,9 +115,15 @@ export default function SettingsPage() {
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteRole, setInviteRole] = useState("member");
     const [inviting, setInviting] = useState(false);
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
     // Pending invites
     const [pendingInvites, setPendingInvites] = useState<Invite[]>([]);
+
+    // Transfer ownership
+    const [transferModalOpen, setTransferModalOpen] = useState(false);
+    const [transferTarget, setTransferTarget] = useState<string>("");
+    const [transferring, setTransferring] = useState(false);
 
     // Audit log
     const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
@@ -167,6 +198,7 @@ export default function SettingsPage() {
             toast.success(t("inviteSent", { email: inviteEmail }));
             setInviteEmail("");
             setInviteRole("member");
+            setInviteModalOpen(false);
             await loadInvites();
         } catch (err: any) {
             toast.error(err.detail || t("failedInvite"));
@@ -207,6 +239,25 @@ export default function SettingsPage() {
             await loadInvites();
         } catch (err: any) {
             toast.error(err.detail || t("failedCancelInvite"));
+        }
+    };
+
+    const handleTransferOwnership = async () => {
+        if (!currentOrg || !transferTarget) return;
+        const target = members.find((m) => m.user_id === transferTarget);
+        if (!target) return;
+        if (!confirm(t("confirmTransfer", { name: target.name }))) return;
+        setTransferring(true);
+        try {
+            await orgsApi.transferOwnership(currentOrg.id, transferTarget);
+            toast.success(t("ownershipTransferred", { name: target.name }));
+            setTransferModalOpen(false);
+            setTransferTarget("");
+            await Promise.all([loadMembers(), refreshOrgs()]);
+        } catch (err: any) {
+            toast.error(err.detail || t("failedTransfer"));
+        } finally {
+            setTransferring(false);
         }
     };
 
@@ -386,155 +437,237 @@ export default function SettingsPage() {
                 </TabsContent>
 
                 {/* ─── Team Tab ─── */}
-                <TabsContent value="team" className="space-y-8">
+                <TabsContent value="team" className="space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                {t("membersTitle", { count: members.length })}
-                            </CardTitle>
-                            <CardDescription>{t("teamDesc")}</CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Users className="h-5 w-5" />
+                                        {t("teamTitle")}
+                                    </CardTitle>
+                                    <CardDescription className="mt-1">{t("memberCount", { count: members.length })}</CardDescription>
+                                </div>
+                                {canManage && (
+                                    <Button variant="outline" onClick={() => setInviteModalOpen(true)}>
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        {t("inviteMember")}
+                                    </Button>
+                                )}
+                            </div>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-0">
                             {/* Member list */}
-                            {members.map((member, index) => (
-                                <React.Fragment key={member.id}>
-                                    {index > 0 && <Separator />}
-                                    <div className="flex items-center justify-between py-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                                                {member.name?.charAt(0)?.toUpperCase() || "?"}
+                            {members.map((member, index) => {
+                                const isCurrentUser = member.user_id === user?.id;
+                                const isOwner = member.role === "owner";
+                                return (
+                                    <React.Fragment key={member.id}>
+                                        {index > 0 && <Separator />}
+                                        <div className="flex items-center justify-between py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
+                                                    {member.name?.charAt(0)?.toUpperCase() || "?"}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium">
+                                                        {member.name}
+                                                        {isCurrentUser && (
+                                                            <span className="ml-1.5 text-xs text-muted-foreground font-normal">({t("you")})</span>
+                                                        )}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-medium">{member.name}</p>
-                                                <p className="text-xs text-muted-foreground">{member.email}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {canManage && member.user_id !== user?.id ? (
-                                                <>
-                                                    <Select
-                                                        value={member.role}
-                                                        onValueChange={(value) => handleRoleChange(member.user_id, value)}
-                                                    >
-                                                        <SelectTrigger className="w-28 h-8 text-xs">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {ROLE_OPTIONS.map((r) => (
-                                                                <SelectItem key={r} value={r}>{r}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => handleRemoveMember(member.user_id, member.name)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </>
-                                            ) : (
-                                                <Badge variant="secondary" className={cn(ROLE_COLORS[member.role] || ROLE_COLORS.viewer)}>
-                                                    <Shield className="h-3 w-3 mr-1" />
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary" className={cn("capitalize", ROLE_COLORS[member.role] || ROLE_COLORS.viewer)}>
                                                     {member.role}
                                                 </Badge>
-                                            )}
+                                                {canManage && !isCurrentUser && !isOwner && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuSub>
+                                                                <DropdownMenuSubTrigger>
+                                                                    <Shield className="h-4 w-4 mr-2" />
+                                                                    {t("changeRole")}
+                                                                </DropdownMenuSubTrigger>
+                                                                <DropdownMenuSubContent>
+                                                                    {["viewer", "member", "admin"].map((r) => (
+                                                                        <DropdownMenuItem
+                                                                            key={r}
+                                                                            disabled={r === member.role}
+                                                                            onClick={() => handleRoleChange(member.user_id, r)}
+                                                                            className="capitalize"
+                                                                        >
+                                                                            {r === member.role && <span className="mr-2">✓</span>}
+                                                                            {r}
+                                                                        </DropdownMenuItem>
+                                                                    ))}
+                                                                </DropdownMenuSubContent>
+                                                            </DropdownMenuSub>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                className="text-destructive focus:text-destructive"
+                                                                onClick={() => handleRemoveMember(member.user_id, member.name)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                                {t("removeMember")}
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                </React.Fragment>
-                            ))}
+                                    </React.Fragment>
+                                );
+                            })}
 
-                            {/* Invite form (inline) */}
-                            {canManage && (
+                            {/* Pending invites */}
+                            {canManage && pendingInvites.length > 0 && (
                                 <>
-                                    <Separator className="my-4" />
-                                    <div className="pt-2">
-                                        <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
-                                            <UserPlus className="h-4 w-4" />
-                                            {t("inviteMember")}
+                                    <Separator className="my-2" />
+                                    <div className="pt-3">
+                                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                            <Clock className="h-3.5 w-3.5" />
+                                            {t("pendingInvites", { count: pendingInvites.length })}
                                         </h3>
-                                        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row items-end gap-3">
-                                            <div className="flex-1 w-full space-y-1">
-                                                <Label htmlFor="invite-email">{t("email")}</Label>
-                                                <Input
-                                                    id="invite-email"
-                                                    type="email"
-                                                    value={inviteEmail}
-                                                    onChange={(e) => setInviteEmail(e.target.value)}
-                                                    placeholder="colleague@example.com"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="w-full sm:w-32 space-y-1">
-                                                <Label>{t("role")}</Label>
-                                                <Select value={inviteRole} onValueChange={setInviteRole}>
-                                                    <SelectTrigger>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {ROLE_OPTIONS.filter((r) => r !== "owner").map((r) => (
-                                                            <SelectItem key={r} value={r}>{r}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <Button type="submit" disabled={inviting} className="w-full sm:w-auto">
-                                                {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                                                {t("sendInvite")}
-                                            </Button>
-                                        </form>
-                                    </div>
-
-                                    {/* Pending invites */}
-                                    {pendingInvites.length > 0 && (
-                                        <>
-                                            <Separator className="my-4" />
-                                            <div className="pt-2">
-                                                <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
-                                                    <UserPlus className="h-4 w-4" />
-                                                    {t("pendingInvites", { count: pendingInvites.length })}
-                                                </h3>
-                                                {pendingInvites.map((invite, index) => (
-                                                    <React.Fragment key={invite.id}>
-                                                        {index > 0 && <Separator />}
-                                                        <div className="flex items-center justify-between py-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground border border-dashed">
-                                                                    {invite.email.charAt(0).toUpperCase()}
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-sm font-medium text-muted-foreground">{invite.email}</p>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        {t("invitedAs", { role: invite.role })} · {new Date(invite.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50">
-                                                                    pending
-                                                                </Badge>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 text-xs text-destructive hover:text-destructive"
-                                                                    onClick={() => handleCancelInvite(invite.id, invite.email)}
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                                                                    {t("cancelInvite")}
-                                                                </Button>
-                                                            </div>
+                                        {pendingInvites.map((invite, index) => (
+                                            <React.Fragment key={invite.id}>
+                                                {index > 0 && <Separator />}
+                                                <div className="flex items-center justify-between py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 text-sm font-medium text-muted-foreground border border-dashed">
+                                                            <Mail className="h-4 w-4" />
                                                         </div>
-                                                    </React.Fragment>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
+                                                        <div>
+                                                            <p className="text-sm font-medium text-muted-foreground">{invite.email}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {invite.invited_by_name
+                                                                    ? t("invitedBy", { name: invite.invited_by_name })
+                                                                    : t("invitedAs", { role: invite.role })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="secondary" className="capitalize">
+                                                            {invite.role}
+                                                        </Badge>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:text-destructive"
+                                                            onClick={() => handleCancelInvite(invite.id, invite.email)}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
                                 </>
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Transfer Ownership */}
+                    {currentMember?.role === "owner" && members.filter((m) => m.user_id !== user?.id).length > 0 && (
+                        <div className="pt-2">
+                            <Button variant="outline" onClick={() => setTransferModalOpen(true)}>
+                                <Crown className="h-4 w-4 mr-2" />
+                                {t("transferOwnership")}
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* ── Invite Modal ── */}
+                    <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>{t("inviteModalTitle")}</DialogTitle>
+                                <DialogDescription>{t("inviteModalDesc")}</DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleInvite} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="invite-email">{t("emailAddress")}</Label>
+                                    <Input
+                                        id="invite-email"
+                                        type="email"
+                                        value={inviteEmail}
+                                        onChange={(e) => setInviteEmail(e.target.value)}
+                                        placeholder="colleague@company.com"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>{t("role")}</Label>
+                                    <Select value={inviteRole} onValueChange={setInviteRole}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {ROLE_OPTIONS.filter((r) => r !== "owner").map((r) => (
+                                                <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <DialogFooter>
+                                    <Button type="submit" disabled={inviting}>
+                                        {inviting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                                        {t("sendInvite")}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* ── Transfer Ownership Modal ── */}
+                    <Dialog open={transferModalOpen} onOpenChange={setTransferModalOpen}>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>{t("transferOwnership")}</DialogTitle>
+                                <DialogDescription>{t("transferOwnershipDesc")}</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>{t("selectNewOwner")}</Label>
+                                    <Select value={transferTarget} onValueChange={setTransferTarget}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t("selectNewOwner")} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {members
+                                                .filter((m) => m.user_id !== user?.id)
+                                                .map((m) => (
+                                                    <SelectItem key={m.user_id} value={m.user_id}>
+                                                        {m.name} ({m.email})
+                                                    </SelectItem>
+                                                ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <DialogFooter className="gap-2 sm:gap-0">
+                                <Button variant="outline" onClick={() => setTransferModalOpen(false)}>
+                                    {t("cancel")}
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    disabled={!transferTarget || transferring}
+                                    onClick={handleTransferOwnership}
+                                >
+                                    {transferring && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                                    {t("transfer")}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </TabsContent>
 
                 {/* ─── Integrations Tab (placeholder) ─── */}

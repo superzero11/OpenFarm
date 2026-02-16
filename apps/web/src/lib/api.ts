@@ -138,6 +138,7 @@ export interface Invite {
     email: string;
     role: string;
     status: string;
+    invited_by_name: string | null;
     created_at: string;
 }
 
@@ -251,6 +252,8 @@ export const orgsApi = {
         apiFetch<Invite[]>(`/orgs/${orgId}/invites?status=${status}`, { orgId }),
     cancelInvite: (orgId: string, inviteId: string) =>
         apiFetch(`/orgs/${orgId}/invites/${inviteId}`, { method: "DELETE", orgId }),
+    transferOwnership: (orgId: string, newOwnerUserId: string) =>
+        apiFetch(`/orgs/${orgId}/transfer-ownership`, { method: "POST", body: JSON.stringify({ new_owner_user_id: newOwnerUserId }), orgId }),
     auditEvents: (orgId: string, limit = 50, offset = 0) =>
         apiFetch<Paginated<any>>(`/orgs/${orgId}/audit-events?limit=${limit}&offset=${offset}`, { orgId }),
 };

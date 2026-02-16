@@ -81,7 +81,7 @@ services:
       TITILER_PUBLIC_URL: ${TITILER_PUBLIC_URL:-http://localhost:8080}
       STAC_API_URL: ${STAC_API_URL}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-OpenFarm <noreply@openfarm.app>}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-OpenFarm <noreply@openfarm.earth>}
       APP_URL: ${APP_URL:-http://localhost:3000}
     depends_on:
       db:
@@ -118,7 +118,11 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "celery -A app.worker inspect ping --timeout 5 2>/dev/null | grep -q OK"]
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.worker inspect ping --timeout 5 2>/dev/null | grep -q OK",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

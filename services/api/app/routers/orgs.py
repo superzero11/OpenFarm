@@ -28,6 +28,7 @@ from app.schemas.auth import (
     OrgDetailOut,
     OrgOut,
     OrgUpdate,
+    TransferOwnershipRequest,
 )
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import AuditEventOut
@@ -302,12 +303,27 @@ async def list_org_invites(
     status_filter: str = Query("pending", alias="status"),
 ):
     """List invites for an org, filtered by status (default: pending)."""
-    query = select(Invite).where(Invite.org_id == org_id)
+    query = (
+        select(Invite, User.name.label("inviter_name"))
+        .outerjoin(User, Invite.invited_by == User.id)
+        .where(Invite.org_id == org_id)
+    )
     if status_filter != "all":
         query = query.where(Invite.status == status_filter)
     query = query.order_by(Invite.created_at.desc())
     result = await db.execute(query)
-    return result.scalars().all()
+    return [
+        InviteOut(
+            id=row.Invite.id,
+            org_id=row.Invite.org_id,
+            email=row.Invite.email,
+            role=row.Invite.role,
+            status=row.Invite.status,
+            invited_by_name=row.inviter_name,
+            created_at=row.Invite.created_at,
+        )
+        for row in result.all()
+    ]
 
 
 @router.delete(
@@ -382,6 +398,68 @@ async def accept_invite(
     from datetime import datetime, timezone
 
     invite.accepted_at = datetime.now(timezone.utc)
+    await db.flush()
+    return {"ok": True}
+
+
+# ── Transfer Ownership ────────────────────────────────────────────────
+
+
+@router.post("/orgs/{org_id}/transfer-ownership")
+async def transfer_ownership(
+    org_id: uuid.UUID,
+    body: TransferOwnershipRequest,
+    ctx: Annotated[OrgContext, Depends(require_roles("owner"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Transfer org ownership to another member. Only the current owner can do this."""
+    if body.new_owner_user_id == ctx.user.id:
+        raise HTTPException(status_code=400, detail="You are already the owner")
+
+    # Find the target member
+    result = await db.execute(
+        select(OrgMember).where(
+            OrgMember.org_id == org_id,
+            OrgMember.user_id == body.new_owner_user_id,
+        )
+    )
+    new_owner = result.scalar_one_or_none()
+    if not new_owner:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    # Find the current owner membership
+    result = await db.execute(
+        select(OrgMember).where(
+            OrgMember.org_id == org_id, OrgMember.user_id == ctx.user.id
+        )
+    )
+    current_owner = result.scalar_one_or_none()
+    if not current_owner:
+        raise HTTPException(
+            status_code=404, detail="Current owner membership not found"
+        )
+
+    # Swap roles atomically
+    old_role = new_owner.role
+    new_owner.role = "owner"
+    current_owner.role = "admin"
+
+    db.add(
+        AuditEvent(
+            org_id=org_id,
+            user_id=ctx.user.id,
+            event_type="ownership_transferred",
+            metadata_json={
+                "new_owner_id": str(body.new_owner_user_id),
+                "previous_role": old_role,
+            },
+        )
+    )
+    logger.info(
+        "ownership_transferred",
+        org_id=str(org_id),
+        new_owner=str(body.new_owner_user_id),
+    )
     await db.flush()
     return {"ok": True}
 

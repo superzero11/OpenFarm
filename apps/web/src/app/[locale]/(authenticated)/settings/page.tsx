@@ -53,6 +53,7 @@ const EVENT_ICONS: Record<string, typeof Activity> = {
     report_shared: Share2,
     member_removed: UserMinus,
     invite_accepted: UserCheck,
+    invite_cancelled: UserMinus,
 };
 
 const EVENT_LABEL_KEYS: Record<string, string> = {
@@ -64,6 +65,7 @@ const EVENT_LABEL_KEYS: Record<string, string> = {
     report_shared: "eventReportShared",
     member_removed: "eventMemberRemoved",
     invite_accepted: "eventInviteAccepted",
+    invite_cancelled: "eventInviteCancelled",
 };
 
 interface AuditEvent {
@@ -89,6 +91,9 @@ export default function SettingsPage() {
     const [inviteRole, setInviteRole] = useState("member");
     const [inviting, setInviting] = useState(false);
 
+    // Pending invites
+    const [pendingInvites, setPendingInvites] = useState<Invite[]>([]);
+
     // Audit log
     const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
     const [auditTotal, setAuditTotal] = useState(0);
@@ -104,7 +109,17 @@ export default function SettingsPage() {
         } catch (err) {
             toast.error(t("failedLoadMembers"));
         }
-    }, [currentOrg]);
+    }, [currentOrg, t]);
+
+    const loadInvites = useCallback(async () => {
+        if (!currentOrg) return;
+        try {
+            const list = await orgsApi.listInvites(currentOrg.id);
+            setPendingInvites(list);
+        } catch (err) {
+            toast.error(t("failedLoadInvites"));
+        }
+    }, [currentOrg, t]);
 
     const loadAuditEvents = useCallback(async (offset = 0, append = false) => {
         if (!currentOrg) return;
@@ -125,8 +140,8 @@ export default function SettingsPage() {
         if (!currentOrg) return;
         setOrgName(currentOrg.name);
         setLoading(true);
-        Promise.all([loadMembers(), loadAuditEvents(0)]).finally(() => setLoading(false));
-    }, [currentOrg, loadMembers, loadAuditEvents]);
+        Promise.all([loadMembers(), loadInvites(), loadAuditEvents(0)]).finally(() => setLoading(false));
+    }, [currentOrg, loadMembers, loadInvites, loadAuditEvents]);
 
     const handleSaveName = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -152,6 +167,7 @@ export default function SettingsPage() {
             toast.success(t("inviteSent", { email: inviteEmail }));
             setInviteEmail("");
             setInviteRole("member");
+            await loadInvites();
         } catch (err: any) {
             toast.error(err.detail || t("failedInvite"));
         } finally {
@@ -179,6 +195,18 @@ export default function SettingsPage() {
             await loadMembers();
         } catch (err: any) {
             toast.error(err.detail || t("failedRemove"));
+        }
+    };
+
+    const handleCancelInvite = async (inviteId: string, email: string) => {
+        if (!currentOrg) return;
+        if (!confirm(t("confirmCancelInvite", { email }))) return;
+        try {
+            await orgsApi.cancelInvite(currentOrg.id, inviteId);
+            toast.success(t("inviteCancelled"));
+            await loadInvites();
+        } catch (err: any) {
+            toast.error(err.detail || t("failedCancelInvite"));
         }
     };
 
@@ -458,6 +486,51 @@ export default function SettingsPage() {
                                             </Button>
                                         </form>
                                     </div>
+
+                                    {/* Pending invites */}
+                                    {pendingInvites.length > 0 && (
+                                        <>
+                                            <Separator className="my-4" />
+                                            <div className="pt-2">
+                                                <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
+                                                    <UserPlus className="h-4 w-4" />
+                                                    {t("pendingInvites", { count: pendingInvites.length })}
+                                                </h3>
+                                                {pendingInvites.map((invite, index) => (
+                                                    <React.Fragment key={invite.id}>
+                                                        {index > 0 && <Separator />}
+                                                        <div className="flex items-center justify-between py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground border border-dashed">
+                                                                    {invite.email.charAt(0).toUpperCase()}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-medium text-muted-foreground">{invite.email}</p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {t("invitedAs", { role: invite.role })} · {new Date(invite.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50">
+                                                                    pending
+                                                                </Badge>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-8 text-xs text-destructive hover:text-destructive"
+                                                                    onClick={() => handleCancelInvite(invite.id, invite.email)}
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                                                    {t("cancelInvite")}
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    </React.Fragment>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </CardContent>

@@ -247,6 +247,10 @@ export const orgsApi = {
         apiFetch(`/orgs/${orgId}/members/${userId}`, { method: "DELETE", orgId }),
     invite: (orgId: string, email: string, role: string) =>
         apiFetch<Invite>(`/orgs/${orgId}/invites`, { method: "POST", body: JSON.stringify({ email, role }), orgId }),
+    listInvites: (orgId: string, status = "pending") =>
+        apiFetch<Invite[]>(`/orgs/${orgId}/invites?status=${status}`, { orgId }),
+    cancelInvite: (orgId: string, inviteId: string) =>
+        apiFetch(`/orgs/${orgId}/invites/${inviteId}`, { method: "DELETE", orgId }),
     auditEvents: (orgId: string, limit = 50, offset = 0) =>
         apiFetch<Paginated<any>>(`/orgs/${orgId}/audit-events?limit=${limit}&offset=${offset}`, { orgId }),
 };

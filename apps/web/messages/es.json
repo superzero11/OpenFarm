@@ -135,7 +135,17 @@
         "eventReportShared": "Informe compartido",
         "eventMemberRemoved": "Miembro eliminado",
         "eventInviteAccepted": "Invitación aceptada",
-        "eventUnknown": "Actividad"
+        "eventInviteCancelled": "Invitación cancelada",
+        "eventUnknown": "Actividad",
+        "pendingInvites": "Invitaciones pendientes ({count})",
+        "noPendingInvites": "No hay invitaciones pendientes.",
+        "cancelInvite": "Cancelar",
+        "confirmCancelInvite": "¿Cancelar invitación para {email}?",
+        "inviteCancelled": "Invitación cancelada",
+        "failedCancelInvite": "Error al cancelar invitación",
+        "failedLoadInvites": "Error al cargar invitaciones",
+        "invitedAs": "Invitado como {role}",
+        "invitedOn": "Invitado el {date}"
     },
     "createFarm": {
         "backToFarms": "Volver a Fincas",

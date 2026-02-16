@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     titiler_internal_url: str = "http://tiler:80"
     titiler_public_url: str = "http://localhost:8080"
 
+    # Email (Resend)
+    resend_api_key: str = ""
+    resend_from_email: str = "OpenFarm <noreply@openfarm.app>"
+    app_url: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
         extra = "ignore"

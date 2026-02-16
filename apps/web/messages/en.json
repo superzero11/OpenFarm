@@ -135,7 +135,17 @@
         "eventReportShared": "Report shared",
         "eventMemberRemoved": "Member removed",
         "eventInviteAccepted": "Invite accepted",
-        "eventUnknown": "Activity"
+        "eventInviteCancelled": "Invite cancelled",
+        "eventUnknown": "Activity",
+        "pendingInvites": "Pending Invites ({count})",
+        "noPendingInvites": "No pending invitations.",
+        "cancelInvite": "Cancel",
+        "confirmCancelInvite": "Cancel invite for {email}?",
+        "inviteCancelled": "Invite cancelled",
+        "failedCancelInvite": "Failed to cancel invite",
+        "failedLoadInvites": "Failed to load invites",
+        "invitedAs": "Invited as {role}",
+        "invitedOn": "Invited {date}"
     },
     "createFarm": {
         "backToFarms": "Back to Farms",

@@ -276,7 +276,69 @@ async def create_invite(
     )
     logger.info("member_invited", org_id=str(org_id), email=body.email, role=body.role)
     await db.flush()
+
+    # Send invite email (best-effort — don't fail the request)
+    try:
+        from app.core.email import send_invite_email
+
+        org = await db.get(Org, org_id)
+        await send_invite_email(
+            to_email=body.email,
+            org_name=org.name if org else "OpenFarm",
+            role=body.role,
+            invited_by_name=ctx.user.name,
+        )
+    except Exception as exc:
+        logger.warning("invite_email_failed", email=body.email, error=str(exc))
+
     return invite
+
+
+@router.get("/orgs/{org_id}/invites", response_model=list[InviteOut])
+async def list_org_invites(
+    org_id: uuid.UUID,
+    ctx: Annotated[OrgContext, Depends(require_roles("owner", "admin"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    status_filter: str = Query("pending", alias="status"),
+):
+    """List invites for an org, filtered by status (default: pending)."""
+    query = select(Invite).where(Invite.org_id == org_id)
+    if status_filter != "all":
+        query = query.where(Invite.status == status_filter)
+    query = query.order_by(Invite.created_at.desc())
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+@router.delete(
+    "/orgs/{org_id}/invites/{invite_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def cancel_invite(
+    org_id: uuid.UUID,
+    invite_id: uuid.UUID,
+    ctx: Annotated[OrgContext, Depends(require_roles("owner", "admin"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Cancel (delete) a pending invite."""
+    invite = await db.get(Invite, invite_id)
+    if not invite or invite.org_id != org_id:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    if invite.status != "pending":
+        raise HTTPException(
+            status_code=400, detail="Only pending invites can be cancelled"
+        )
+    await db.delete(invite)
+
+    db.add(
+        AuditEvent(
+            org_id=org_id,
+            user_id=ctx.user.id,
+            event_type="invite_cancelled",
+            metadata_json={"email": invite.email, "role": invite.role},
+        )
+    )
+    logger.info("invite_cancelled", org_id=str(org_id), email=invite.email)
+    await db.flush()
 
 
 @router.get("/invites/pending", response_model=list[InviteOut])

@@ -231,6 +231,10 @@
         "scoutingPlaceholder": "Las notas de campo estarán disponibles en el Hito 3.",
         "sharePlaceholder": "Los enlaces compartidos estarán disponibles en el Hito 3."
     },
+    "ndviLegend": {
+        "title": "NDVI",
+        "fieldRange": "Rango del campo"
+    },
     "language": {
         "label": "Idioma",
         "en": "English",

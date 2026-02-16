@@ -231,6 +231,10 @@
         "scoutingPlaceholder": "Scouting notes will be available in Milestone 3.",
         "sharePlaceholder": "Share links will be available in Milestone 3."
     },
+    "ndviLegend": {
+        "title": "NDVI",
+        "fieldRange": "Field range"
+    },
     "language": {
         "label": "Language",
         "en": "English",

@@ -66,6 +66,10 @@ const MapStyleSwitcher = dynamic(() => import("@/components/map/map-style-switch
     ssr: false,
 });
 
+const NdviLegend = dynamic(() => import("@/components/field/ndvi-legend"), {
+    ssr: false,
+});
+
 /* ── NDVI overlay helpers ──────────────────────────────────── */
 
 const NDVI_SOURCE = "ndvi-tiles";
@@ -368,6 +372,13 @@ export default function FieldDetailPage() {
                 <MapStyleSwitcher currentStyle={mapStyle} onStyleChange={handleStyleChange} />
                 <LocationSearch onSelect={handleLocationSelect} />
             </div>
+
+            {/* NDVI Legend — bottom-left, visible when NDVI overlay is active */}
+            {ndviLayer && (
+                <div className="absolute bottom-6 left-4 z-20 transition-opacity duration-200">
+                    <NdviLegend layer={ndviLayer} />
+                </div>
+            )}
 
             {/* Sidebar toggle button — always visible */}
             <button

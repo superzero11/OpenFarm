@@ -231,6 +231,24 @@
         "scoutingPlaceholder": "Scouting notes will be available in Milestone 3.",
         "sharePlaceholder": "Share links will be available in Milestone 3."
     },
+    "alertsTab": {
+        "noAlerts": "No alerts",
+        "noAlertsDesc": "This field has no anomaly alerts. Alerts are generated during NDVI analysis.",
+        "open": "open",
+        "closed": "closed",
+        "showClosed": "Show closed",
+        "hideClosed": "Hide closed",
+        "close": "Close",
+        "reopen": "Reopen",
+        "alertClosed": "Alert closed",
+        "alertReopened": "Alert reopened",
+        "failedUpdate": "Failed to update alert"
+    },
+    "farmAlerts": {
+        "title": "Recent Alerts",
+        "noAlerts": "No open alerts across fields.",
+        "viewField": "View Field"
+    },
     "ndviLegend": {
         "title": "NDVI",
         "fieldRange": "Field range"

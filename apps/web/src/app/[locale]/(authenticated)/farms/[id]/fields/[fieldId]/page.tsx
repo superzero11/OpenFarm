@@ -70,6 +70,15 @@ const NdviLegend = dynamic(() => import("@/components/field/ndvi-legend"), {
     ssr: false,
 });
 
+const AlertsTab = dynamic(() => import("@/components/field/alerts-tab"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+    ),
+});
+
 /* ── NDVI overlay helpers ──────────────────────────────────── */
 
 const NDVI_SOURCE = "ndvi-tiles";
@@ -161,6 +170,9 @@ export default function FieldDetailPage() {
     const [ndviLayer, setNdviLayer] = useState<RasterLayer | null>(null);
     const ndviLayerRef = useRef<RasterLayer | null>(null);
     const fieldRef = useRef<Field | null>(null);
+
+    // Alerts
+    const [openAlertCount, setOpenAlertCount] = useState(0);
 
     // Keep refs in sync for style.load handler
     useEffect(() => {
@@ -417,11 +429,15 @@ export default function FieldDetailPage() {
                             </TabsTrigger>
                             <TabsTrigger
                                 value="alerts"
-                                disabled
                                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
                             >
                                 <Bell className="h-3.5 w-3.5" />
                                 {t("tabAlerts")}
+                                {openAlertCount > 0 && (
+                                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 -mr-1">
+                                        {openAlertCount}
+                                    </span>
+                                )}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="scouting"
@@ -597,12 +613,8 @@ export default function FieldDetailPage() {
                                         <NdviTab fieldId={fieldId} onShowLayer={handleShowLayer} />
                                     </TabsContent>
 
-                                    <TabsContent value="alerts" className="mt-0">
-                                        <div className="flex flex-col items-center justify-center text-center py-12">
-                                            <p className="text-sm text-muted-foreground">
-                                                {t("alertsPlaceholder")}
-                                            </p>
-                                        </div>
+                                    <TabsContent value="alerts" className="mt-0 p-4">
+                                        <AlertsTab fieldId={fieldId} onOpenCountChange={setOpenAlertCount} />
                                     </TabsContent>
 
                                     <TabsContent value="scouting" className="mt-0">

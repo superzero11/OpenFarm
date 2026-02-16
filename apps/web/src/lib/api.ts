@@ -316,6 +316,8 @@ export const jobsApi = {
 export const alertsApi = {
     listForField: (fieldId: string, limit = 50) =>
         apiFetch<Paginated<Alert>>(`/alerts?field_id=${fieldId}&limit=${limit}`),
+    listForFarm: (farmId: string, limit = 50) =>
+        apiFetch<Paginated<Alert>>(`/alerts?farm_id=${farmId}&limit=${limit}`),
     update: (alertId: string, data: { status: string }) =>
         apiFetch<Alert>(`/alerts/${alertId}`, { method: "PATCH", body: JSON.stringify(data) }),
 };

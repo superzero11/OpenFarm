@@ -4,11 +4,13 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useOrg } from "@/components/org-context";
-import { farmsApi, fieldsApi } from "@/lib/api";
-import type { Farm, Field } from "@/lib/api";
+import { farmsApi, fieldsApi, alertsApi } from "@/lib/api";
+import type { Farm, Field, Alert } from "@/lib/api";
 import { toast } from "sonner";
 import {
+    AlertTriangle,
     ArrowLeft,
+    Bell,
     ChevronRight,
     Edit2,
     Loader2,
@@ -16,6 +18,7 @@ import {
     MapPin,
     Plus,
     Save,
+    ShieldAlert,
     Trash2,
     Upload,
     X,
@@ -29,15 +32,31 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useTranslations } from "next-intl";
+
+/* ── Alert severity helpers ─────────────────────────── */
+
+const SEVERITY_ICON: Record<string, React.ReactNode> = {
+    high: <ShieldAlert className="h-4 w-4 text-destructive" />,
+    medium: <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
+    low: <Bell className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />,
+};
+
+const RULE_LABELS: Record<string, string> = {
+    ndvi_drop: "NDVI Drop",
+    ndvi_threshold: "Low NDVI",
+};
 
 export default function FarmDetailPage() {
     const params = useParams();
     const router = useRouter();
     const farmId = params.id as string;
     const { currentOrg } = useOrg();
+    const tAlerts = useTranslations("farmAlerts");
 
     const [farm, setFarm] = useState<Farm | null>(null);
     const [fields, setFields] = useState<Field[]>([]);
+    const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Edit mode
@@ -71,9 +90,16 @@ export default function FarmDetailPage() {
             setFields(fieldsRes.items);
         } catch (err) {
             console.error("Failed to load fields:", err);
-        } finally {
-            setLoading(false);
         }
+
+        try {
+            const alertsRes = await alertsApi.listForFarm(farmId, 10);
+            setAlerts(alertsRes.items.filter((a) => a.status === "open"));
+        } catch {
+            // silent
+        }
+
+        setLoading(false);
     }, [farmId, router]);
 
     useEffect(() => {
@@ -250,6 +276,68 @@ export default function FarmDetailPage() {
                     </CardHeader>
                 )}
             </Card>
+
+            {/* Alerts Summary */}
+            {alerts.length > 0 && (
+                <Card className="mb-6 border-amber-500/20 bg-amber-500/5">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            {tAlerts("title")}
+                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0 ml-auto">
+                                {alerts.length}
+                            </Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-2">
+                        {alerts.slice(0, 5).map((alert) => {
+                            const fieldName = fields.find((f) => f.id === alert.field_id)?.name;
+                            return (
+                                <div
+                                    key={alert.id}
+                                    className="flex items-start gap-2 text-xs"
+                                >
+                                    <div className="mt-0.5 shrink-0">
+                                        {SEVERITY_ICON[alert.severity] || SEVERITY_ICON.low}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <Badge
+                                                variant={alert.severity === "high" ? "destructive" : "secondary"}
+                                                className="text-[9px] px-1 py-0"
+                                            >
+                                                {alert.severity}
+                                            </Badge>
+                                            <span className="text-muted-foreground text-[10px]">
+                                                {RULE_LABELS[alert.rule_name] || alert.rule_name}
+                                            </span>
+                                            <span className="text-muted-foreground text-[10px] ml-auto shrink-0">
+                                                {alert.date}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs mt-0.5 text-muted-foreground truncate">
+                                            {alert.message}
+                                        </p>
+                                        {fieldName && (
+                                            <Link
+                                                href={`/farms/${farmId}/fields/${alert.field_id}`}
+                                                className="text-[10px] text-primary hover:underline"
+                                            >
+                                                {fieldName} →
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {alerts.length > 5 && (
+                            <p className="text-[10px] text-muted-foreground text-center pt-1">
+                                +{alerts.length - 5} more
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Fields Section */}
             <div>

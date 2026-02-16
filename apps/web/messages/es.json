@@ -231,6 +231,24 @@
         "scoutingPlaceholder": "Las notas de campo estarán disponibles en el Hito 3.",
         "sharePlaceholder": "Los enlaces compartidos estarán disponibles en el Hito 3."
     },
+    "alertsTab": {
+        "noAlerts": "Sin alertas",
+        "noAlertsDesc": "Este campo no tiene alertas de anomalías. Las alertas se generan durante el análisis NDVI.",
+        "open": "abiertas",
+        "closed": "cerradas",
+        "showClosed": "Mostrar cerradas",
+        "hideClosed": "Ocultar cerradas",
+        "close": "Cerrar",
+        "reopen": "Reabrir",
+        "alertClosed": "Alerta cerrada",
+        "alertReopened": "Alerta reabierta",
+        "failedUpdate": "Error al actualizar alerta"
+    },
+    "farmAlerts": {
+        "title": "Alertas Recientes",
+        "noAlerts": "Sin alertas abiertas en los campos.",
+        "viewField": "Ver Campo"
+    },
     "ndviLegend": {
         "title": "NDVI",
         "fieldRange": "Rango del campo"

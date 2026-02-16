@@ -57,6 +57,7 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
 
 const ROLE_OPTIONS = ["owner", "admin", "member", "viewer"];
@@ -105,6 +106,7 @@ const AUDIT_PAGE_SIZE = 20;
 
 export default function SettingsPage() {
     const t = useTranslations("settings");
+    const confirm = useConfirm();
     const { currentOrg, refreshOrgs, user } = useOrg();
     const [orgName, setOrgName] = useState("");
     const [members, setMembers] = useState<Member[]>([]);
@@ -228,7 +230,13 @@ export default function SettingsPage() {
 
     const handleRemoveMember = async (userId: string, name: string) => {
         if (!currentOrg) return;
-        if (!confirm(t("confirmRemove", { name }))) return;
+        const ok = await confirm({
+            title: t("removeMember"),
+            description: t("confirmRemove", { name }),
+            confirmLabel: t("removeMember"),
+            variant: "destructive",
+        });
+        if (!ok) return;
         try {
             await orgsApi.removeMember(currentOrg.id, userId);
             toast.success(t("memberRemoved", { name }));
@@ -240,7 +248,13 @@ export default function SettingsPage() {
 
     const handleCancelInvite = async (inviteId: string, email: string) => {
         if (!currentOrg) return;
-        if (!confirm(t("confirmCancelInvite", { email }))) return;
+        const ok = await confirm({
+            title: t("cancelInvite"),
+            description: t("confirmCancelInvite", { email }),
+            confirmLabel: t("cancelInvite"),
+            variant: "destructive",
+        });
+        if (!ok) return;
         try {
             await orgsApi.cancelInvite(currentOrg.id, inviteId);
             toast.success(t("inviteCancelled"));
@@ -254,7 +268,13 @@ export default function SettingsPage() {
         if (!currentOrg || !transferTarget) return;
         const target = members.find((m) => m.user_id === transferTarget);
         if (!target) return;
-        if (!confirm(t("confirmTransfer", { name: target.name }))) return;
+        const ok = await confirm({
+            title: t("transferOwnership"),
+            description: t("confirmTransfer", { name: target.name }),
+            confirmLabel: t("transfer"),
+            variant: "destructive",
+        });
+        if (!ok) return;
         setTransferring(true);
         try {
             await orgsApi.transferOwnership(currentOrg.id, transferTarget);

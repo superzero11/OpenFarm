@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
 
@@ -129,6 +130,7 @@ function computeGeomBounds(geom: GeoJSON.Geometry): [number, number, number, num
 
 export default function FieldDetailPage() {
     const t = useTranslations("fieldDetail");
+    const confirm = useConfirm();
     const params = useParams();
     const router = useRouter();
     const { currentOrg } = useOrg();
@@ -313,7 +315,13 @@ export default function FieldDetailPage() {
     };
 
     const handleDelete = async () => {
-        if (!confirm(t("confirmDelete"))) return;
+        const ok = await confirm({
+            title: t("delete"),
+            description: t("confirmDelete"),
+            confirmLabel: t("delete"),
+            variant: "destructive",
+        });
+        if (!ok) return;
         try {
             await fieldsApi.delete(fieldId);
             toast.success(t("fieldDeleted"));

@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export default function FarmDetailPage() {
     const params = useParams();
@@ -49,6 +50,7 @@ export default function FarmDetailPage() {
 
     // Import
     const [importing, setImporting] = useState(false);
+    const confirm = useConfirm();
 
     const loadData = useCallback(async () => {
         try {
@@ -99,7 +101,13 @@ export default function FarmDetailPage() {
     };
 
     const handleDelete = async () => {
-        if (!confirm("Delete this farm? All its fields will also be deleted. This cannot be undone.")) return;
+        const ok = await confirm({
+            title: "Delete Farm",
+            description: "Delete this farm? All its fields will also be deleted. This cannot be undone.",
+            confirmLabel: "Delete",
+            variant: "destructive",
+        });
+        if (!ok) return;
         try {
             await farmsApi.delete(farmId);
             toast.success("Farm deleted");
@@ -129,7 +137,13 @@ export default function FarmDetailPage() {
     };
 
     const handleDeleteField = async (fieldId: string, fieldName: string) => {
-        if (!confirm(`Delete field "${fieldName}"?`)) return;
+        const ok = await confirm({
+            title: "Delete Field",
+            description: `Delete field "${fieldName}"? This cannot be undone.`,
+            confirmLabel: "Delete",
+            variant: "destructive",
+        });
+        if (!ok) return;
         try {
             await fieldsApi.delete(fieldId);
             toast.success("Field deleted");

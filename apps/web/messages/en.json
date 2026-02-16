@@ -139,7 +139,7 @@
         "eventUnknown": "Activity",
         "pendingInvites": "Pending Invites ({count})",
         "noPendingInvites": "No pending invitations.",
-        "cancelInvite": "Cancel",
+        "cancelInvite": "Cancel Invite",
         "confirmCancelInvite": "Cancel invite for {email}?",
         "inviteCancelled": "Invite cancelled",
         "failedCancelInvite": "Failed to cancel invite",

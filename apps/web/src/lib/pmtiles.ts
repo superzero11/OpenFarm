@@ -34,12 +34,13 @@ export const PMTILES_BASEMAP_URL =
 /**
  * Returns a MapLibre style spec.
  *
- * Always returns the OSM raster fallback for instant map display.
+ * Returns satellite (Esri) raster tiles by default for instant map display.
  * Use `tryUpgradeToPMTiles(map)` after map creation to switch to
  * PMTiles vector tiles if the basemap file is available.
  */
 export function getBasemapStyle(): maplibregl.StyleSpecification {
-    return getOsmFallbackStyle();
+    const satellite = MAP_STYLES.find((s) => s.id === "satellite");
+    return satellite?.style ?? getOsmFallbackStyle();
 }
 
 /**

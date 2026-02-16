@@ -29,12 +29,12 @@ async def create_ndvi_job(
     if not field or field.org_id != ctx.org_id or field.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Field not found")
 
-    # Max 60-day range
+    # Max 180-day range
     delta = (body.date_to - body.date_from).days
     if delta < 0:
         raise HTTPException(status_code=400, detail="date_to must be >= date_from")
-    if delta > 60:
-        raise HTTPException(status_code=400, detail="Date range max 60 days")
+    if delta > 180:
+        raise HTTPException(status_code=400, detail="Date range max 180 days")
 
     job = Job(
         org_id=ctx.org_id,

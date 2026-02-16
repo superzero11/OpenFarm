@@ -148,7 +148,7 @@ export default function FieldDetailPage() {
 
     // Map
     const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
-    const [mapStyle, setMapStyle] = useState<MapStyleId>("street");
+    const [mapStyle, setMapStyle] = useState<MapStyleId>("satellite");
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     // NDVI overlay

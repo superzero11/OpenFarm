@@ -45,7 +45,7 @@ export default function NewFieldPage() {
     const [saving, setSaving] = useState(false);
     const [panelOpen, setPanelOpen] = useState(true);
     const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
-    const [mapStyle, setMapStyle] = useState<MapStyleId>("street");
+    const [mapStyle, setMapStyle] = useState<MapStyleId>("satellite");
 
     const handleGeomChange = useCallback((geom: GeoJSON.Geometry | null) => {
         setGeometry(geom);

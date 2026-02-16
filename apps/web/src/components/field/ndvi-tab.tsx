@@ -253,7 +253,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                                     />
                                 </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">Maximum 60-day range.</p>
+                            <p className="text-xs text-muted-foreground">Maximum 180-day range.</p>
                             <Button
                                 onClick={handleSubmitJob}
                                 disabled={submitting || !!activeJob}

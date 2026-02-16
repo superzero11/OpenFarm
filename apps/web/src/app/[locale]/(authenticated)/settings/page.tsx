@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useOrg } from "@/components/org-context";
 import { orgsApi } from "@/lib/api";
 import type { Member, Invite } from "@/lib/api";
@@ -21,6 +21,8 @@ import {
     UserMinus,
     UserCheck,
     Activity,
+    Search,
+    Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
@@ -91,6 +94,7 @@ export default function SettingsPage() {
     const [auditTotal, setAuditTotal] = useState(0);
     const [auditLoading, setAuditLoading] = useState(false);
     const [auditOffset, setAuditOffset] = useState(0);
+    const [auditSearch, setAuditSearch] = useState("");
 
     const loadMembers = useCallback(async () => {
         if (!currentOrg) return;
@@ -178,6 +182,18 @@ export default function SettingsPage() {
         }
     };
 
+    const filteredAuditEvents = useMemo(() => {
+        if (!auditSearch.trim()) return auditEvents;
+        const q = auditSearch.toLowerCase();
+        return auditEvents.filter((event) => {
+            const labelKey = EVENT_LABEL_KEYS[event.event_type] || "eventUnknown";
+            const label = t(labelKey as any)?.toLowerCase() || "";
+            const meta = event.metadata_json;
+            const detail = (meta?.email || meta?.name || meta?.role || "").toLowerCase();
+            return label.includes(q) || detail.includes(q) || event.event_type.includes(q);
+        });
+    }, [auditEvents, auditSearch, t]);
+
     if (loading) {
         return (
             <div className="p-6 lg:p-8 max-w-6xl mx-auto">
@@ -199,222 +215,273 @@ export default function SettingsPage() {
 
     return (
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-            <div className="mb-8">
+            <div className="mb-6">
                 <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     {t("description")}
                 </p>
             </div>
 
-            <div className="space-y-8">
+            <Tabs defaultValue="workspace">
+                <TabsList variant="underline" className="mb-8">
+                    <TabsTrigger variant="underline" value="workspace">
+                        <Building2 className="h-4 w-4" />
+                        {t("tabWorkspace")}
+                    </TabsTrigger>
+                    <TabsTrigger variant="underline" value="team">
+                        <Users className="h-4 w-4" />
+                        {t("tabTeam")}
+                    </TabsTrigger>
+                    <TabsTrigger variant="underline" value="integrations">
+                        <Link2 className="h-4 w-4" />
+                        {t("tabIntegrations")}
+                    </TabsTrigger>
+                </TabsList>
 
-                {/* Org Name */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t("general")}</CardTitle>
-                        <CardDescription>{t("generalDesc")}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSaveName} className="flex items-end gap-3">
-                            <div className="flex-1">
-                                <Label htmlFor="org-name">{t("orgName")}</Label>
-                                <Input
-                                    id="org-name"
-                                    type="text"
-                                    value={orgName}
-                                    onChange={(e) => setOrgName(e.target.value)}
-                                    disabled={!canManage}
-                                    className="mt-1"
-                                />
-                            </div>
-                            {canManage && (
-                                <Button type="submit" disabled={saving}>
-                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                    {t("save")}
-                                </Button>
-                            )}
-                        </form>
-                    </CardContent>
-                </Card>
+                {/* ─── Workspace Tab ─── */}
+                <TabsContent value="workspace" className="space-y-8">
+                    {/* Workspace Name */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t("general")}</CardTitle>
+                            <CardDescription>{t("generalDesc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleSaveName} className="flex items-end gap-3">
+                                <div className="flex-1 space-y-1.5">
+                                    <Label htmlFor="org-name">{t("orgName")}</Label>
+                                    <Input
+                                        id="org-name"
+                                        type="text"
+                                        value={orgName}
+                                        onChange={(e) => setOrgName(e.target.value)}
+                                        disabled={!canManage}
+                                    />
+                                </div>
+                                {canManage && (
+                                    <Button type="submit" disabled={saving}>
+                                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                        {t("save")}
+                                    </Button>
+                                )}
+                            </form>
+                        </CardContent>
+                    </Card>
 
-                {/* Members */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Users className="h-5 w-5" />
-                            {t("membersTitle", { count: members.length })}
-                        </CardTitle>
-                        <CardDescription>{t("membersDesc")}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {members.map((member, index) => (
-                            <React.Fragment key={member.id}>
-                                {index > 0 && <Separator />}
-                                <div className="flex items-center justify-between py-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                                            {member.name?.charAt(0)?.toUpperCase() || "?"}
+                    {/* Audit Log */}
+                    {canManage && (
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <ScrollText className="h-5 w-5" />
+                                            {t("auditLog")}
+                                        </CardTitle>
+                                        <CardDescription className="mt-1">{t("auditLogDesc")}</CardDescription>
+                                    </div>
+                                    <div className="relative w-64 shrink-0">
+                                        <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            type="text"
+                                            placeholder={t("searchAudit")}
+                                            value={auditSearch}
+                                            onChange={(e) => setAuditSearch(e.target.value)}
+                                            className="pl-8 h-9"
+                                        />
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="h-80 overflow-y-auto px-6">
+                                    {filteredAuditEvents.length === 0 && !auditLoading ? (
+                                        <p className="text-sm text-muted-foreground py-8 text-center">
+                                            {t("noAuditEvents")}
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-0">
+                                            {filteredAuditEvents.map((event, index) => {
+                                                const Icon = EVENT_ICONS[event.event_type] || Activity;
+                                                const labelKey = EVENT_LABEL_KEYS[event.event_type] || "eventUnknown";
+                                                const meta = event.metadata_json;
+                                                const detail = meta?.email || meta?.name || meta?.role || null;
+                                                return (
+                                                    <React.Fragment key={event.id}>
+                                                        {index > 0 && <Separator />}
+                                                        <div className="flex items-center gap-3 py-2.5">
+                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                                                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium">
+                                                                    {t(labelKey as any)}
+                                                                </p>
+                                                                {detail && (
+                                                                    <p className="text-xs text-muted-foreground truncate">
+                                                                        {detail}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <time className="text-xs text-muted-foreground whitespace-nowrap">
+                                                                {new Date(event.created_at).toLocaleDateString(undefined, {
+                                                                    month: "short",
+                                                                    day: "numeric",
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                })}
+                                                            </time>
+                                                        </div>
+                                                    </React.Fragment>
+                                                );
+                                            })}
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium">{member.name}</p>
-                                            <p className="text-xs text-muted-foreground">{member.email}</p>
+                                    )}
+                                </div>
+                                {auditOffset < auditTotal && (
+                                    <div className="border-t px-6 py-3 flex justify-center">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => loadAuditEvents(auditOffset, true)}
+                                            disabled={auditLoading}
+                                        >
+                                            {auditLoading ? (
+                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            ) : null}
+                                            {t("loadMore")}
+                                        </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+                </TabsContent>
+
+                {/* ─── Team Tab ─── */}
+                <TabsContent value="team" className="space-y-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="h-5 w-5" />
+                                {t("membersTitle", { count: members.length })}
+                            </CardTitle>
+                            <CardDescription>{t("teamDesc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {/* Member list */}
+                            {members.map((member, index) => (
+                                <React.Fragment key={member.id}>
+                                    {index > 0 && <Separator />}
+                                    <div className="flex items-center justify-between py-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
+                                                {member.name?.charAt(0)?.toUpperCase() || "?"}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">{member.name}</p>
+                                                <p className="text-xs text-muted-foreground">{member.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {canManage && member.user_id !== user?.id ? (
+                                                <>
+                                                    <Select
+                                                        value={member.role}
+                                                        onValueChange={(value) => handleRoleChange(member.user_id, value)}
+                                                    >
+                                                        <SelectTrigger className="w-28 h-8 text-xs">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {ROLE_OPTIONS.map((r) => (
+                                                                <SelectItem key={r} value={r}>{r}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={() => handleRemoveMember(member.user_id, member.name)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <Badge variant="secondary" className={cn(ROLE_COLORS[member.role] || ROLE_COLORS.viewer)}>
+                                                    <Shield className="h-3 w-3 mr-1" />
+                                                    {member.role}
+                                                </Badge>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        {canManage && member.user_id !== user?.id ? (
-                                            <>
-                                                <Select
-                                                    value={member.role}
-                                                    onValueChange={(value) => handleRoleChange(member.user_id, value)}
-                                                >
-                                                    <SelectTrigger className="w-28 h-8 text-xs">
+                                </React.Fragment>
+                            ))}
+
+                            {/* Invite form (inline) */}
+                            {canManage && (
+                                <>
+                                    <Separator className="my-4" />
+                                    <div className="pt-2">
+                                        <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
+                                            <UserPlus className="h-4 w-4" />
+                                            {t("inviteMember")}
+                                        </h3>
+                                        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row items-end gap-3">
+                                            <div className="flex-1 w-full space-y-1">
+                                                <Label htmlFor="invite-email">{t("email")}</Label>
+                                                <Input
+                                                    id="invite-email"
+                                                    type="email"
+                                                    value={inviteEmail}
+                                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                                    placeholder="colleague@example.com"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-32 space-y-1">
+                                                <Label>{t("role")}</Label>
+                                                <Select value={inviteRole} onValueChange={setInviteRole}>
+                                                    <SelectTrigger>
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {ROLE_OPTIONS.map((r) => (
+                                                        {ROLE_OPTIONS.filter((r) => r !== "owner").map((r) => (
                                                             <SelectItem key={r} value={r}>{r}</SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleRemoveMember(member.user_id, member.name)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <Badge variant="secondary" className={cn(ROLE_COLORS[member.role] || ROLE_COLORS.viewer)}>
-                                                <Shield className="h-3 w-3 mr-1" />
-                                                {member.role}
-                                            </Badge>
-                                        )}
+                                            </div>
+                                            <Button type="submit" disabled={inviting} className="w-full sm:w-auto">
+                                                {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                                                {t("sendInvite")}
+                                            </Button>
+                                        </form>
                                     </div>
-                                </div>
-                            </React.Fragment>
-                        ))}
-                    </CardContent>
-                </Card>
-
-                {/* Invite */}
-                {canManage && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <UserPlus className="h-5 w-5" />
-                                {t("inviteMember")}
-                            </CardTitle>
-                            <CardDescription>{t("inviteDesc")}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleInvite} className="flex flex-col sm:flex-row items-end gap-3">
-                                <div className="flex-1 w-full space-y-1">
-                                    <Label htmlFor="invite-email">{t("email")}</Label>
-                                    <Input
-                                        id="invite-email"
-                                        type="email"
-                                        value={inviteEmail}
-                                        onChange={(e) => setInviteEmail(e.target.value)}
-                                        placeholder="colleague@example.com"
-                                        required
-                                    />
-                                </div>
-                                <div className="w-full sm:w-32 space-y-1">
-                                    <Label>{t("role")}</Label>
-                                    <Select value={inviteRole} onValueChange={setInviteRole}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {ROLE_OPTIONS.filter((r) => r !== "owner").map((r) => (
-                                                <SelectItem key={r} value={r}>{r}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <Button type="submit" disabled={inviting} className="w-full sm:w-auto">
-                                    {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                                    {t("sendInvite")}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Audit Log */}
-                {canManage && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <ScrollText className="h-5 w-5" />
-                                {t("auditLog")}
-                            </CardTitle>
-                            <CardDescription>{t("auditLogDesc")}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {auditEvents.length === 0 && !auditLoading ? (
-                                <p className="text-sm text-muted-foreground py-4 text-center">
-                                    {t("noAuditEvents")}
-                                </p>
-                            ) : (
-                                <div className="space-y-0">
-                                    {auditEvents.map((event, index) => {
-                                        const Icon = EVENT_ICONS[event.event_type] || Activity;
-                                        const labelKey = EVENT_LABEL_KEYS[event.event_type] || "eventUnknown";
-                                        const meta = event.metadata_json;
-                                        const detail = meta?.email || meta?.name || meta?.role || null;
-                                        return (
-                                            <React.Fragment key={event.id}>
-                                                {index > 0 && <Separator />}
-                                                <div className="flex items-center gap-3 py-2.5">
-                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                                                        <Icon className="h-4 w-4 text-muted-foreground" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium">
-                                                            {t(labelKey as any)}
-                                                        </p>
-                                                        {detail && (
-                                                            <p className="text-xs text-muted-foreground truncate">
-                                                                {detail}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <time className="text-xs text-muted-foreground whitespace-nowrap">
-                                                        {new Date(event.created_at).toLocaleDateString(undefined, {
-                                                            month: "short",
-                                                            day: "numeric",
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        })}
-                                                    </time>
-                                                </div>
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                            {auditOffset < auditTotal && (
-                                <div className="pt-4 flex justify-center">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => loadAuditEvents(auditOffset, true)}
-                                        disabled={auditLoading}
-                                    >
-                                        {auditLoading ? (
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                        ) : null}
-                                        {t("loadMore")}
-                                    </Button>
-                                </div>
+                                </>
                             )}
                         </CardContent>
                     </Card>
-                )}
-            </div>
+                </TabsContent>
+
+                {/* ─── Integrations Tab (placeholder) ─── */}
+                <TabsContent value="integrations">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Link2 className="h-5 w-5" />
+                                {t("tabIntegrations")}
+                            </CardTitle>
+                            <CardDescription>Coming soon.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground py-4 text-center">
+                                No integrations available yet.
+                            </p>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

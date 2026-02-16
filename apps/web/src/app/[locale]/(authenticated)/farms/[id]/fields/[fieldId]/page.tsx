@@ -421,10 +421,10 @@ export default function FieldDetailPage() {
 
             {/* Floating tabbed sidebar — right */}
             <div
-                className={`absolute top-4 right-4 z-10 w-80 max-h-[calc(100%-2rem)] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
+                className={`absolute top-4 right-4 bottom-4 z-10 w-80 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
                     }`}
             >
-                <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col">
+                <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col h-full">
                     <Tabs defaultValue="info" className="flex flex-col flex-1 overflow-hidden">
                         <TabsList className="grid w-full grid-cols-5 rounded-none border-b border-border/50 bg-transparent h-auto p-0 shrink-0">
                             <TabsTrigger

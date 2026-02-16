@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CreateFarmModal } from "@/components/create-farm-modal";
-import { AlertRow } from "@/components/alert-row";
 
 export default function DashboardPage() {
     const t = useTranslations("dashboard");
@@ -124,31 +123,6 @@ export default function DashboardPage() {
                     sublabel={t("requireAttention")}
                 />
             </div>
-
-            {/* Open Alerts */}
-            {openAlerts.length > 0 && (
-                <Card className="mb-8">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Bell className="h-5 w-5 text-primary" />
-                            {t("recentAlerts")}
-                        </CardTitle>
-                        <Button variant="link" className="h-auto p-0 text-xs" asChild>
-                            <Link href="/alerts">{t("viewAllAlerts")}</Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            {openAlerts.slice(0, 5).map((alert) => (
-                                <AlertRow
-                                    key={alert.id}
-                                    alert={alert}
-                                />
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
 
             {/* Quick Actions */}
             <Card className="mb-8">

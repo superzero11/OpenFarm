@@ -86,23 +86,75 @@ export function AlertRow({
     const severity = SEVERITY_CONFIG[alert.severity] || SEVERITY_CONFIG.low;
     const isClosed = alert.status === "closed";
 
+    /* ── Compact layout (field detail sidebar — narrow) ───── */
+    if (compact) {
+        return (
+            <div
+                className={cn(
+                    "rounded-lg border p-2.5 transition-colors",
+                    isClosed ? "opacity-60 bg-muted/30" : "hover:border-primary/20",
+                )}
+            >
+                {/* Top row: icon + badge + rule + date */}
+                <div className="flex items-center gap-1.5">
+                    <span className={cn("shrink-0", severity.textClass)}>
+                        {severity.icon}
+                    </span>
+                    <Badge
+                        variant={alert.severity === "high" && !isClosed ? "destructive" : "secondary"}
+                        className="text-[9px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+                    >
+                        {alert.severity}
+                    </Badge>
+                    <span className="text-xs font-medium text-muted-foreground truncate">
+                        {RULE_LABELS[alert.rule_name] || alert.rule_name}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground ml-auto shrink-0">
+                        {new Date(alert.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    </span>
+                </div>
+
+                {/* Message */}
+                <p className="text-xs leading-relaxed text-foreground/90 mt-1 truncate">
+                    {alert.message}
+                </p>
+
+                {/* Action row */}
+                {showActions && onToggleStatus && (
+                    <div className="flex items-center justify-end mt-1.5">
+                        <Button
+                            variant={isClosed ? "outline" : "secondary"}
+                            size="sm"
+                            className="h-6 px-2 text-[10px]"
+                            disabled={togglingId === alert.id}
+                            onClick={() => onToggleStatus(alert)}
+                        >
+                            {togglingId === alert.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : isClosed ? (
+                                <><RotateCcw className="h-3 w-3 mr-1" />{actionLabels?.reopen ?? "Reopen"}</>
+                            ) : (
+                                <><CheckCircle2 className="h-3 w-3 mr-1" />{actionLabels?.close ?? "Close"}</>
+                            )}
+                        </Button>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    /* ── Normal layout (dashboard, alerts page, farm page) ── */
     return (
         <div
             className={cn(
-                "flex items-start gap-3 rounded-lg border transition-colors",
-                compact ? "p-2.5" : "p-3",
+                "flex items-start gap-3 rounded-lg border p-3 transition-colors",
                 isClosed
                     ? "opacity-60 bg-muted/30"
                     : "hover:border-primary/20",
             )}
         >
             {/* Severity icon */}
-            <div
-                className={cn(
-                    "mt-0.5 shrink-0",
-                    severity.textClass,
-                )}
-            >
+            <div className={cn("mt-0.5 shrink-0", severity.textClass)}>
                 {severity.icon}
             </div>
 
@@ -138,12 +190,7 @@ export function AlertRow({
                     </span>
                 </div>
 
-                <p
-                    className={cn(
-                        "mt-1 leading-relaxed text-foreground/90 truncate",
-                        compact ? "text-xs" : "text-sm",
-                    )}
-                >
+                <p className="mt-1 text-sm leading-relaxed text-foreground/90 truncate">
                     {alert.message}
                 </p>
 

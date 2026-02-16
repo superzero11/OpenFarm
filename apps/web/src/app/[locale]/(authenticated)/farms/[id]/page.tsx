@@ -4,12 +4,11 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useOrg } from "@/components/org-context";
-import { farmsApi, fieldsApi, alertsApi } from "@/lib/api";
-import type { Farm, Field, Alert } from "@/lib/api";
+import { farmsApi, fieldsApi } from "@/lib/api";
+import type { Farm, Field } from "@/lib/api";
 import { toast } from "sonner";
 import {
     ArrowLeft,
-    Bell,
     ChevronRight,
     Edit2,
     Loader2,
@@ -30,21 +29,16 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm-dialog";
-import { useTranslations } from "next-intl";
-import { AlertRow } from "@/components/alert-row";
 
-/* ── (severity helpers moved to alert-row.tsx) ─────────────── */
 
 export default function FarmDetailPage() {
     const params = useParams();
     const router = useRouter();
     const farmId = params.id as string;
     const { currentOrg } = useOrg();
-    const tAlerts = useTranslations("farmAlerts");
 
     const [farm, setFarm] = useState<Farm | null>(null);
     const [fields, setFields] = useState<Field[]>([]);
-    const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Edit mode
@@ -78,13 +72,6 @@ export default function FarmDetailPage() {
             setFields(fieldsRes.items);
         } catch (err) {
             console.error("Failed to load fields:", err);
-        }
-
-        try {
-            const alertsRes = await alertsApi.listForFarm(farmId, 10);
-            setAlerts(alertsRes.items.filter((a) => a.status === "open"));
-        } catch {
-            // silent
         }
 
         setLoading(false);
@@ -264,50 +251,6 @@ export default function FarmDetailPage() {
                     </CardHeader>
                 )}
             </Card>
-
-            {/* Alerts Summary */}
-            {alerts.length > 0 && (
-                <Card className="mb-6">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Bell className="h-5 w-5 text-primary" />
-                            {tAlerts("title")}
-                        </CardTitle>
-                        <div className="flex items-center gap-2">
-                            <Badge variant="destructive" className="text-xs px-2 py-0.5">
-                                {alerts.length} {tAlerts("openLabel")}
-                            </Badge>
-                            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-                                <Link href="/alerts">{tAlerts("viewAll")}</Link>
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <div className="space-y-2">
-                            {alerts.slice(0, 5).map((alert) => {
-                                const fieldName = fields.find((f) => f.id === alert.field_id)?.name;
-                                return (
-                                    <AlertRow
-                                        key={alert.id}
-                                        alert={alert}
-                                        fieldName={fieldName}
-                                        farmId={farmId}
-                                    />
-                                );
-                            })}
-                        </div>
-                        {alerts.length > 5 && (
-                            <div className="mt-3 text-center">
-                                <Button variant="link" size="sm" className="text-xs h-auto p-0" asChild>
-                                    <Link href="/alerts">
-                                        +{alerts.length - 5} {tAlerts("more")} →
-                                    </Link>
-                                </Button>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
 
             {/* Fields Section */}
             <div>

@@ -403,10 +403,11 @@ export const uploadsApi = {
         const ct = file.type || "image/jpeg";
         const { upload_url, object_key } = await this.presign(file.name, ct);
         // PUT directly to MinIO (presigned URL)
+        // Do NOT send Content-Type header — it's not part of the signed
+        // headers so MinIO would reject the request with 403.
         const res = await fetch(upload_url, {
             method: "PUT",
             body: file,
-            headers: { "Content-Type": ct },
         });
         if (!res.ok) throw new Error("Upload failed");
         return object_key;

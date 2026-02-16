@@ -387,6 +387,31 @@ export const scoutingApi = {
         apiFetch(`/fields/${fieldId}/scouting/${obsId}`, { method: "DELETE" }),
 };
 
+// ── Share Types ──────────────────────────────────────────────────
+
+export interface ShareLink {
+    id: string;
+    field_id: string;
+    token: string;
+    scope: string;
+    expires_at: string | null;
+    created_at: string;
+}
+
+export interface ShareReport {
+    field: {
+        id: string;
+        name: string;
+        area_ha: number | null;
+        crop_type: string | null;
+        geom: GeoJSON.Geometry | null;
+    };
+    latest_layer: RasterLayer | null;
+    stats: FieldStat[];
+    alerts: Alert[];
+    scouting: ScoutingObservation[];
+}
+
 // ── Uploads ──────────────────────────────────────────────────────
 
 const MINIO_URL = process.env.NEXT_PUBLIC_MINIO_URL || "http://localhost:9000/openfarm";
@@ -418,5 +443,27 @@ export const uploadsApi = {
 export function getPhotoUrl(objectKey: string): string {
     return `${MINIO_URL}/${objectKey}`;
 }
+
+// ── Share Links ──────────────────────────────────────────────────
+
+export const shareApi = {
+    list: (fieldId: string) =>
+        apiFetch<ShareLink[]>(`/fields/${fieldId}/share`),
+    create: (fieldId: string, expiresInDays: number | null) =>
+        apiFetch<ShareLink>(`/fields/${fieldId}/share`, {
+            method: "POST",
+            body: JSON.stringify({ expires_in_days: expiresInDays }),
+        }),
+    revoke: (fieldId: string, token: string) =>
+        apiFetch(`/fields/${fieldId}/share/${token}`, { method: "DELETE" }),
+    /** Public endpoint — no auth required. Uses plain fetch. */
+    async getReport(token: string): Promise<ShareReport> {
+        const res = await fetch(`${API_BASE}/share/${token}`);
+        if (res.status === 410) throw new Error("expired");
+        if (res.status === 404) throw new Error("not_found");
+        if (!res.ok) throw new Error(`Report fetch failed: ${res.status}`);
+        return res.json();
+    },
+};
 
 export default apiFetch;

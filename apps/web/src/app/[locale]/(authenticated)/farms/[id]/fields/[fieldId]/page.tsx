@@ -87,6 +87,15 @@ const ScoutingTab = dynamic(() => import("@/components/field/scouting-tab"), {
     ),
 });
 
+const ShareTab = dynamic(() => import("@/components/field/share-tab"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+    ),
+});
+
 /* ── NDVI overlay helpers ──────────────────────────────────── */
 
 const NDVI_SOURCE = "ndvi-tiles";
@@ -468,7 +477,6 @@ export default function FieldDetailPage() {
                             </TabsTrigger>
                             <TabsTrigger
                                 value="share"
-                                disabled
                                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
                             >
                                 <Share2 className="h-3.5 w-3.5" />
@@ -641,11 +649,7 @@ export default function FieldDetailPage() {
                                     </TabsContent>
 
                                     <TabsContent value="share" className="mt-0">
-                                        <div className="flex flex-col items-center justify-center text-center py-12">
-                                            <p className="text-sm text-muted-foreground">
-                                                {t("sharePlaceholder")}
-                                            </p>
-                                        </div>
+                                        <ShareTab fieldId={fieldId} />
                                     </TabsContent>
                                 </>
                             )}

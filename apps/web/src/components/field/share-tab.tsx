@@ -185,60 +185,58 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                         {links.map((link) => (
                             <div
                                 key={link.id}
-                                className="rounded-lg border bg-card shadow-sm p-3 space-y-2"
+                                className="rounded-lg border bg-card shadow-sm p-3 space-y-2.5"
                             >
-                                {/* URL row */}
-                                <div className="flex items-center gap-2">
-                                    <code className="flex-1 text-xs bg-muted px-2 py-1.5 rounded font-mono truncate select-all">
-                                        {getShareUrl(link.token)}
-                                    </code>
+                                {/* URL — allow wrapping so it's fully visible */}
+                                <code className="block text-[11px] bg-muted px-2.5 py-2 rounded font-mono break-all select-all leading-relaxed">
+                                    {getShareUrl(link.token)}
+                                </code>
+
+                                {/* Expiry */}
+                                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                    <Clock className="h-3 w-3 shrink-0" />
+                                    {formatExpiry(link.expires_at)}
                                 </div>
 
-                                {/* Actions row */}
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                        <Clock className="h-3 w-3" />
-                                        {formatExpiry(link.expires_at)}
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 gap-1 text-xs"
-                                            onClick={() => handleCopy(link.token)}
+                                {/* Actions — full-width row of equal buttons */}
+                                <div className="flex gap-1.5">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-8 gap-1.5 text-xs"
+                                        onClick={() => handleCopy(link.token)}
+                                    >
+                                        {copiedToken === link.token ? (
+                                            <Check className="h-3.5 w-3.5 text-green-600" />
+                                        ) : (
+                                            <Copy className="h-3.5 w-3.5" />
+                                        )}
+                                        {copiedToken === link.token ? t("copied") : t("copyLink")}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-8 gap-1.5 text-xs"
+                                        asChild
+                                    >
+                                        <a
+                                            href={getShareUrl(link.token)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                         >
-                                            {copiedToken === link.token ? (
-                                                <Check className="h-3 w-3 text-green-600" />
-                                            ) : (
-                                                <Copy className="h-3 w-3" />
-                                            )}
-                                            {copiedToken === link.token ? t("copied") : t("copyLink")}
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 gap-1 text-xs"
-                                            asChild
-                                        >
-                                            <a
-                                                href={getShareUrl(link.token)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <ExternalLink className="h-3 w-3" />
-                                                {t("open")}
-                                            </a>
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-                                            onClick={() => handleRevoke(link.token)}
-                                        >
-                                            <Trash2 className="h-3 w-3" />
-                                            {t("revoke")}
-                                        </Button>
-                                    </div>
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            {t("open")}
+                                        </a>
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-8 gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                                        onClick={() => handleRevoke(link.token)}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        {t("revoke")}
+                                    </Button>
                                 </div>
                             </div>
                         ))}

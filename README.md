@@ -6,7 +6,7 @@
 
 ### Open Intelligence for Every Farm
 
-Satellite-powered crop intelligence platform — self-hostable, reproducible, and open.
+Open source self-hostable and reproducible Crop Intelligence Platform
 
 [![CI](https://github.com/superzero11/OpenFarm/actions/workflows/ci.yml/badge.svg)](https://github.com/superzero11/OpenFarm/actions/workflows/ci.yml)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)

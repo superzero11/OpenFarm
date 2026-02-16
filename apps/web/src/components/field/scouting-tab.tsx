@@ -837,21 +837,6 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                             </div>
                         )}
 
-                        {/* Tags */}
-                        {obs.tags && obs.tags.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1 mt-2">
-                                {obs.tags.map((tag) => (
-                                    <Badge
-                                        key={tag}
-                                        variant="secondary"
-                                        className="text-[9px] px-1.5 py-0 h-4"
-                                    >
-                                        {tag}
-                                    </Badge>
-                                ))}
-                            </div>
-                        )}
-
                         {/* Linked alert card */}
                         {obs.alert_id && (() => {
                             const linked = fieldAlerts.find((a) => a.id === obs.alert_id);
@@ -873,6 +858,21 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                                 </div>
                             );
                         })()}
+
+                        {/* Tags */}
+                        {obs.tags && obs.tags.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 mt-2">
+                                {obs.tags.map((tag) => (
+                                    <Badge
+                                        key={tag}
+                                        variant="secondary"
+                                        className="text-[9px] px-1.5 py-0 h-4"
+                                    >
+                                        {tag}
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

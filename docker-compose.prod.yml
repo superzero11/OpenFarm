@@ -50,6 +50,9 @@ services:
       celery -A app.worker worker
       --loglevel=info
       --concurrency=2
+    healthcheck:
+      interval: 60s
+      start_period: 45s
     deploy:
       resources:
         limits:

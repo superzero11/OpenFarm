@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { logger as rootLogger } from "@/lib/logger";
+
+const logger = rootLogger.child({ component: "health" });
 
 /**
  * GET /api/health
@@ -26,6 +29,7 @@ export async function GET() {
     }
 
     if (errors.length > 0) {
+        logger.warn({ errors }, "health_check_failed");
         return NextResponse.json({ status: "unhealthy", errors }, { status: 503 });
     }
 

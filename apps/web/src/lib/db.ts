@@ -1,4 +1,7 @@
 import { Pool } from "pg";
+import { logger as rootLogger } from "@/lib/logger";
+
+const logger = rootLogger.child({ component: "db" });
 
 /**
  * Direct Postgres connection — used ONLY for user upsert in NextAuth callback.
@@ -48,6 +51,7 @@ export async function upsertUser(
     );
 
     const user = userResult.rows[0];
+    logger.info({ userId: user.id, email }, "user_upserted");
 
     // Check if user has any org membership
     const membershipResult = await db.query(
@@ -76,6 +80,7 @@ export async function upsertUser(
        VALUES ($1, $2, 'org_created', $3)`,
             [orgId, user.id, JSON.stringify({ name: orgName, auto_created: true })]
         );
+        logger.info({ userId: user.id, orgId, orgName }, "default_org_created");
     }
 
     // Accept any pending invites for this email

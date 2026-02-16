@@ -37,13 +37,28 @@ router = APIRouter()
 _http_client: httpx.AsyncClient | None = None
 
 
-# 1×1 transparent PNG (67 bytes) — returned for tiles outside COG extent
-_EMPTY_TILE = (
-    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
-    b"\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
-    b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01"
-    b"\r\n\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
-)
+def _make_empty_tile() -> bytes:
+    """Generate a valid 256×256 transparent PNG at import time."""
+    import struct
+    import zlib
+
+    width, height = 256, 256
+
+    def _chunk(ctype: bytes, data: bytes) -> bytes:
+        c = ctype + data
+        crc = struct.pack(">I", zlib.crc32(c) & 0xFFFFFFFF)
+        return struct.pack(">I", len(data)) + c + crc
+
+    sig = b"\x89PNG\r\n\x1a\n"
+    ihdr = _chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+    scanline = b"\x00" + b"\x00\x00\x00\x00" * width
+    raw = scanline * height
+    idat = _chunk(b"IDAT", zlib.compress(raw))
+    iend = _chunk(b"IEND", b"")
+    return sig + ihdr + idat + iend
+
+
+_EMPTY_TILE = _make_empty_tile()
 
 
 def _get_http_client() -> httpx.AsyncClient:

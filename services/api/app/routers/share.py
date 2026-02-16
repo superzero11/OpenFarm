@@ -37,6 +37,15 @@ router = APIRouter()
 _http_client: httpx.AsyncClient | None = None
 
 
+# 1×1 transparent PNG (67 bytes) — returned for tiles outside COG extent
+_EMPTY_TILE = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+    b"\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+    b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01"
+    b"\r\n\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
 def _get_http_client() -> httpx.AsyncClient:
     global _http_client
     if _http_client is None:
@@ -304,8 +313,14 @@ async def proxy_share_tile(
             headers={"Authorization": f"Bearer {service_token}"},
         )
         if resp.status_code != 200:
-            raise HTTPException(
-                status_code=resp.status_code, detail="Tile not available"
+            # Return transparent tile for missing/out-of-bounds tiles
+            return Response(
+                content=_EMPTY_TILE,
+                media_type="image/png",
+                headers={
+                    "Cache-Control": "public, max-age=86400",
+                    "Access-Control-Allow-Origin": "*",
+                },
             )
         return Response(
             content=resp.content,

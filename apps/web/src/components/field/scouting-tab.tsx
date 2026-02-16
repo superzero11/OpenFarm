@@ -123,13 +123,15 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
         loadObservations();
     }, [loadObservations]);
 
-    // Load field alerts for linking
+    // Load field alerts (all — for linked alert display; open subset for dropdown)
     useEffect(() => {
         alertsApi
             .listForField(fieldId, 200)
-            .then((res) => setFieldAlerts(res.items.filter((a) => a.status === "open")))
+            .then((res) => setFieldAlerts(res.items))
             .catch(() => { });
     }, [fieldId]);
+
+    const openAlerts = fieldAlerts.filter((a) => a.status === "open");
 
     /* ── Map markers ───────────────────────────────────────── */
 
@@ -661,7 +663,7 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                         <Label htmlFor="scout-alert" className="text-xs">
                             {t("alertLabel")}
                         </Label>
-                        {fieldAlerts.length > 0 ? (
+                        {openAlerts.length > 0 ? (
                             <Select
                                 value={alertId}
                                 onValueChange={(val) => setAlertId(val === "__none__" ? "" : val)}
@@ -673,7 +675,7 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                                     <SelectItem value="__none__">
                                         {t("alertPlaceholder")}
                                     </SelectItem>
-                                    {fieldAlerts.map((a) => (
+                                    {openAlerts.map((a) => (
                                         <SelectItem key={a.id} value={a.id}>
                                             [{a.severity}] {a.message.substring(0, 60)}
                                             {a.message.length > 60 ? "…" : ""}
@@ -840,14 +842,25 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                         {/* Linked alert card */}
                         {obs.alert_id && (() => {
                             const linked = fieldAlerts.find((a) => a.id === obs.alert_id);
+                            const isClosed = linked?.status === "closed";
                             return (
                                 <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-2">
                                     <div className="flex items-start gap-1.5">
                                         <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                                        <div className="min-w-0">
-                                            <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
-                                                {t("linkedAlert")}
-                                            </p>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                                                    {t("linkedAlert")}
+                                                </p>
+                                                {linked && (
+                                                    <Badge
+                                                        variant={isClosed ? "outline" : "secondary"}
+                                                        className={`text-[8px] px-1 py-0 h-3.5 ${isClosed ? "text-muted-foreground" : "bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-200"}`}
+                                                    >
+                                                        {isClosed ? "Closed" : "Open"}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                             <p className="text-xs text-amber-800 dark:text-amber-200 mt-0.5 leading-relaxed">
                                                 {linked
                                                     ? `[${linked.severity}] ${linked.message}`

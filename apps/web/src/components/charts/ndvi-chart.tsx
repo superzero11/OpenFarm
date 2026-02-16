@@ -137,7 +137,7 @@ export default function NdviChart({
                             {
                                 yAxis: 0.3,
                                 lineStyle: { color: "#ef4444", type: "dashed" as const, width: 1 },
-                                label: { formatter: "T", fontSize: 9, position: "insideEndTop" as const },
+                                label: { formatter: "Threshold", fontSize: 9, position: "insideMiddleBottom" as const },
                             },
                         ],
                     },

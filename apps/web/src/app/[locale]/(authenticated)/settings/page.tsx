@@ -142,6 +142,10 @@ export default function SettingsPage() {
         }
     }, [currentOrg, t]);
 
+    // Derive current user's role from user.orgs (available immediately, no API call needed)
+    const myRole = user?.orgs?.find((o) => o.id === currentOrg?.id)?.role;
+    const isAdminOrOwner = myRole === "owner" || myRole === "admin";
+
     const loadInvites = useCallback(async () => {
         if (!currentOrg) return;
         try {
@@ -171,8 +175,12 @@ export default function SettingsPage() {
         if (!currentOrg) return;
         setOrgName(currentOrg.name);
         setLoading(true);
-        Promise.all([loadMembers(), loadInvites(), loadAuditEvents(0)]).finally(() => setLoading(false));
-    }, [currentOrg, loadMembers, loadInvites, loadAuditEvents]);
+        const promises: Promise<void>[] = [loadMembers()];
+        if (isAdminOrOwner) {
+            promises.push(loadInvites(), loadAuditEvents(0));
+        }
+        Promise.all(promises).finally(() => setLoading(false));
+    }, [currentOrg, isAdminOrOwner, loadMembers, loadInvites, loadAuditEvents]);
 
     const handleSaveName = async (e: React.FormEvent) => {
         e.preventDefault();

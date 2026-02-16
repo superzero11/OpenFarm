@@ -72,7 +72,7 @@ export default function FarmsListPage() {
                 </div>
                 <CreateFarmModal>
                     <Button>
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 mr-2" />
                         {t("newFarm")}
                     </Button>
                 </CreateFarmModal>
@@ -88,7 +88,7 @@ export default function FarmsListPage() {
                         </p>
                         <CreateFarmModal>
                             <Button className="mt-6">
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-4 w-4 mr-2" />
                                 {t("createFarm")}
                             </Button>
                         </CreateFarmModal>

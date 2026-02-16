@@ -260,9 +260,9 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                                 className="w-full"
                             >
                                 {submitting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 ) : (
-                                    <PlayCircle className="h-4 w-4" />
+                                    <PlayCircle className="h-4 w-4 mr-2" />
                                 )}
                                 {submitting ? "Starting…" : "Start Processing"}
                             </Button>

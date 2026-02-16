@@ -347,7 +347,7 @@ export default function SettingsPage() {
                                 </div>
                                 {canManage && (
                                     <Button type="submit" disabled={saving}>
-                                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                        {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                                         {t("save")}
                                     </Button>
                                 )}
@@ -457,7 +457,7 @@ export default function SettingsPage() {
                                     <CardDescription className="mt-1">{t("memberCount", { count: members.length })}</CardDescription>
                                 </div>
                                 {canManage && (
-                                    <Button variant="outline" onClick={() => setInviteModalOpen(true)}>
+                                    <Button onClick={() => setInviteModalOpen(true)}>
                                         <UserPlus className="h-4 w-4 mr-2" />
                                         {t("inviteMember")}
                                     </Button>

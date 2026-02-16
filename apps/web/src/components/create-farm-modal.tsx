@@ -136,7 +136,7 @@ export function CreateFarmModal({ children, onCreated }: CreateFarmModalProps) {
                             {t("cancel")}
                         </Button>
                         <Button type="submit" disabled={saving || !name.trim()}>
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                             {t("createFarm")}
                         </Button>
                     </DialogFooter>

@@ -470,9 +470,9 @@ export default function FieldDetailPage() {
                                                 disabled={saving}
                                             >
                                                 {saving ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                                 ) : (
-                                                    <Save className="h-4 w-4" />
+                                                    <Save className="h-4 w-4 mr-2" />
                                                 )}
                                                 {t("save")}
                                             </Button>
@@ -481,7 +481,7 @@ export default function FieldDetailPage() {
                                                 className="flex-1 h-9"
                                                 onClick={() => setEditing(false)}
                                             >
-                                                <X className="h-4 w-4" /> {t("cancel")}
+                                                <X className="h-4 w-4 mr-2" /> {t("cancel")}
                                             </Button>
                                         </div>
                                     </div>
@@ -547,7 +547,7 @@ export default function FieldDetailPage() {
                                             className="w-full"
                                             onClick={() => setEditing(true)}
                                         >
-                                            <Edit2 className="h-3.5 w-3.5" />
+                                            <Edit2 className="h-3.5 w-3.5 mr-2" />
                                             {t("edit")}
                                         </Button>
 
@@ -567,7 +567,7 @@ export default function FieldDetailPage() {
                                                     className="h-7 px-3 text-xs shrink-0"
                                                     onClick={handleDelete}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-3 w-3 mr-2" />
                                                     {t("delete")}
                                                 </Button>
                                             </div>

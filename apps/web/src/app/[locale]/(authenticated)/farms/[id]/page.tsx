@@ -202,11 +202,11 @@ export default function FarmDetailPage() {
                             <Separator />
                             <div className="flex gap-2">
                                 <Button onClick={handleSave} disabled={saving}>
-                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                    {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                                     Save
                                 </Button>
                                 <Button variant="outline" onClick={() => setEditing(false)}>
-                                    <X className="h-4 w-4" /> Cancel
+                                    <X className="h-4 w-4 mr-2" /> Cancel
                                 </Button>
                             </div>
                         </div>
@@ -227,10 +227,10 @@ export default function FarmDetailPage() {
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                                <Edit2 className="h-4 w-4" /> Edit
+                                <Edit2 className="h-4 w-4 mr-2" /> Edit
                             </Button>
                             <Button variant="destructive" size="sm" onClick={handleDelete}>
-                                <Trash2 className="h-4 w-4" /> Delete
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete
                             </Button>
                         </div>
                     </CardHeader>
@@ -246,14 +246,14 @@ export default function FarmDetailPage() {
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
                             <label className="cursor-pointer">
-                                {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                {importing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
                                 Import GeoJSON
                                 <input type="file" accept=".json,.geojson" className="hidden" onChange={handleImport} />
                             </label>
                         </Button>
                         <Button asChild>
                             <Link href={`/farms/${farmId}/fields/new`}>
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-4 w-4 mr-2" />
                                 Draw Field
                             </Link>
                         </Button>
@@ -271,13 +271,13 @@ export default function FarmDetailPage() {
                             <div className="mt-4 flex justify-center gap-3">
                                 <Button variant="outline" asChild>
                                     <label className="cursor-pointer">
-                                        <Upload className="h-4 w-4" /> Import GeoJSON
+                                        <Upload className="h-4 w-4 mr-2" /> Import GeoJSON
                                         <input type="file" accept=".json,.geojson" className="hidden" onChange={handleImport} />
                                     </label>
                                 </Button>
                                 <Button asChild>
                                     <Link href={`/farms/${farmId}/fields/new`}>
-                                        <Plus className="h-4 w-4" /> Draw Field
+                                        <Plus className="h-4 w-4 mr-2" /> Draw Field
                                     </Link>
                                 </Button>
                             </div>

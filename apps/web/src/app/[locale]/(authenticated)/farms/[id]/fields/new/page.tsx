@@ -183,7 +183,7 @@ export default function NewFieldPage() {
                                     disabled={saving || !geometry || !name.trim()}
                                     className="w-full h-9"
                                 >
-                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                                    {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                                     {t("createField")}
                                 </Button>
                             </form>

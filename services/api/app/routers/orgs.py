@@ -190,6 +190,23 @@ async def change_member_role(
     logger.info(
         "role_changed", org_id=str(org_id), target_user=str(user_id), new_role=body.role
     )
+
+    # Notify the affected member (best-effort)
+    try:
+        from app.core.email import send_role_changed_email
+
+        target_user = await db.get(User, user_id)
+        org = await db.get(Org, org_id)
+        if target_user:
+            await send_role_changed_email(
+                to_email=target_user.email,
+                org_name=org.name if org else "OpenFarm",
+                new_role=body.role,
+                changed_by_name=ctx.user.name,
+            )
+    except Exception as exc:
+        logger.warning("role_changed_email_failed", error=str(exc))
+
     return {"ok": True}
 
 
@@ -356,6 +373,18 @@ async def cancel_invite(
     logger.info("invite_cancelled", org_id=str(org_id), email=invite.email)
     await db.flush()
 
+    # Notify the invited person (best-effort)
+    try:
+        from app.core.email import send_invite_cancelled_email
+
+        org = await db.get(Org, org_id)
+        await send_invite_cancelled_email(
+            to_email=invite.email,
+            org_name=org.name if org else "OpenFarm",
+        )
+    except Exception as exc:
+        logger.warning("invite_cancelled_email_failed", error=str(exc))
+
 
 @router.get("/invites/pending", response_model=list[InviteOut])
 async def list_pending_invites(
@@ -399,6 +428,35 @@ async def accept_invite(
 
     invite.accepted_at = datetime.now(timezone.utc)
     await db.flush()
+
+    # Send email to both parties (best-effort)
+    try:
+        from app.core.email import send_invite_accepted_email
+
+        org = await db.get(Org, invite.org_id)
+        org_name = org.name if org else "OpenFarm"
+        # Email to the user who accepted
+        await send_invite_accepted_email(
+            to_email=current_user.email,
+            org_name=org_name,
+            accepted_by_name=current_user.name,
+            role=invite.role,
+            notify_admin=False,
+        )
+        # Email to the person who sent the invite
+        if invite.invited_by:
+            inviter = await db.get(User, invite.invited_by)
+            if inviter:
+                await send_invite_accepted_email(
+                    to_email=inviter.email,
+                    org_name=org_name,
+                    accepted_by_name=current_user.name,
+                    role=invite.role,
+                    notify_admin=True,
+                )
+    except Exception as exc:
+        logger.warning("invite_accepted_email_failed", error=str(exc))
+
     return {"ok": True}
 
 
@@ -461,6 +519,32 @@ async def transfer_ownership(
         new_owner=str(body.new_owner_user_id),
     )
     await db.flush()
+
+    # Send email to both parties (best-effort)
+    try:
+        from app.core.email import send_ownership_transferred_email
+
+        org = await db.get(Org, org_id)
+        org_name = org.name if org else "OpenFarm"
+        new_owner_user = await db.get(User, body.new_owner_user_id)
+        # Email to new owner
+        if new_owner_user:
+            await send_ownership_transferred_email(
+                to_email=new_owner_user.email,
+                org_name=org_name,
+                is_new_owner=True,
+                other_party_name=ctx.user.name,
+            )
+        # Email to previous owner
+        await send_ownership_transferred_email(
+            to_email=ctx.user.email,
+            org_name=org_name,
+            is_new_owner=False,
+            other_party_name=new_owner_user.name if new_owner_user else "Unknown",
+        )
+    except Exception as exc:
+        logger.warning("ownership_transfer_email_failed", error=str(exc))
+
     return {"ok": True}
 
 

@@ -14,7 +14,6 @@ import {
     Loader2,
     MapPin,
     ShieldAlert,
-    Sprout,
     XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -105,7 +104,7 @@ export default function ShareReportPage() {
             <header className="border-b bg-background">
                 <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Sprout className="h-6 w-6 text-primary" />
+                        <Leaf className="h-7 w-7 text-primary" />
                         <span className="font-bold text-lg">OpenFarm</span>
                     </div>
                     <span className="text-xs text-muted-foreground">{t("poweredBy")}</span>
@@ -116,8 +115,7 @@ export default function ShareReportPage() {
             <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
                 {/* Title */}
                 <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <Leaf className="h-6 w-6 text-green-600" />
+                    <h1 className="text-2xl font-bold">
                         {t("fieldHealthReport")}
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">

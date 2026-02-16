@@ -91,7 +91,7 @@ export function AlertRow({
         return (
             <div
                 className={cn(
-                    "rounded-lg border p-2.5 transition-colors",
+                    "rounded-lg border bg-card shadow-sm p-2.5 transition-colors",
                     isClosed ? "opacity-60 bg-muted/30" : "hover:border-primary/20",
                 )}
             >
@@ -147,7 +147,7 @@ export function AlertRow({
     return (
         <div
             className={cn(
-                "flex items-start gap-3 rounded-lg border p-3 transition-colors",
+                "flex items-start gap-3 rounded-lg border bg-card shadow-sm p-3 transition-colors",
                 isClosed
                     ? "opacity-60 bg-muted/30"
                     : "hover:border-primary/20",

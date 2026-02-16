@@ -26,7 +26,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
@@ -543,9 +542,9 @@ export default function FieldDetailPage() {
                                 </div>
                             ) : (
                                 <>
-                                    <TabsContent value="info" className="mt-0 p-4">
-                                        {/* Field header */}
-                                        <div className="mb-4">
+                                    <TabsContent value="info" className="mt-0 p-4 space-y-3">
+                                        {/* Field header card */}
+                                        <div className="rounded-lg border bg-card shadow-sm p-3">
                                             <h2 className="text-base font-bold">{field.name}</h2>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 {field.area_ha
@@ -556,44 +555,44 @@ export default function FieldDetailPage() {
                                             </p>
                                         </div>
 
-                                        {/* Field info */}
-                                        <dl className="space-y-2.5">
-                                            <InfoRow label={t("name")} value={field.name} />
-                                            <InfoRow
-                                                label={t("area")}
-                                                value={
-                                                    field.area_ha
-                                                        ? `${field.area_ha.toFixed(2)} ha`
-                                                        : "—"
-                                                }
-                                            />
-                                            <InfoRow
-                                                label={t("cropType")}
-                                                value={field.crop_type || "—"}
-                                            />
-                                            <InfoRow
-                                                label={t("season")}
-                                                value={field.season || "—"}
-                                            />
-                                            <InfoRow
-                                                label={t("tags")}
-                                                value={field.tags?.join(", ") || "—"}
-                                            />
-                                            <InfoRow
-                                                label={t("created")}
-                                                value={new Date(
-                                                    field.created_at,
-                                                ).toLocaleDateString()}
-                                            />
-                                            <InfoRow
-                                                label={t("updated")}
-                                                value={new Date(
-                                                    field.updated_at,
-                                                ).toLocaleDateString()}
-                                            />
-                                        </dl>
-
-                                        <Separator className="my-4" />
+                                        {/* Field details card */}
+                                        <div className="rounded-lg border bg-card shadow-sm p-3">
+                                            <dl className="space-y-2.5">
+                                                <InfoRow label={t("name")} value={field.name} />
+                                                <InfoRow
+                                                    label={t("area")}
+                                                    value={
+                                                        field.area_ha
+                                                            ? `${field.area_ha.toFixed(2)} ha`
+                                                            : "—"
+                                                    }
+                                                />
+                                                <InfoRow
+                                                    label={t("cropType")}
+                                                    value={field.crop_type || "—"}
+                                                />
+                                                <InfoRow
+                                                    label={t("season")}
+                                                    value={field.season || "—"}
+                                                />
+                                                <InfoRow
+                                                    label={t("tags")}
+                                                    value={field.tags?.join(", ") || "—"}
+                                                />
+                                                <InfoRow
+                                                    label={t("created")}
+                                                    value={new Date(
+                                                        field.created_at,
+                                                    ).toLocaleDateString()}
+                                                />
+                                                <InfoRow
+                                                    label={t("updated")}
+                                                    value={new Date(
+                                                        field.updated_at,
+                                                    ).toLocaleDateString()}
+                                                />
+                                            </dl>
+                                        </div>
 
                                         {/* Actions */}
                                         <Button
@@ -606,7 +605,7 @@ export default function FieldDetailPage() {
                                             {t("edit")}
                                         </Button>
 
-                                        <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                                        <div className="rounded-lg border border-destructive/20 bg-destructive/5 shadow-sm p-3">
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="text-xs font-medium text-destructive">

@@ -21,6 +21,12 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { useConfirm } from "@/components/confirm-dialog";
+import {
     Plus,
     Trash2,
     Edit3,
@@ -65,11 +71,16 @@ interface ScoutingTabProps {
 
 export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) {
     const t = useTranslations("scoutingTab");
+    const confirm = useConfirm();
 
     // Data
     const [observations, setObservations] = useState<ScoutingObservation[]>([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
+
+    // Lightbox state
+    const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+    const [lightboxTitle, setLightboxTitle] = useState("");
 
     // Form state
     const [formOpen, setFormOpen] = useState(false);
@@ -434,6 +445,15 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
     /* ── Delete ─────────────────────────────────────────────── */
 
     const handleDelete = async (obsId: string) => {
+        const confirmed = await confirm({
+            title: t("delete"),
+            description: t("confirmDelete"),
+            confirmLabel: t("delete"),
+            cancelLabel: t("cancel"),
+            variant: "destructive",
+        });
+        if (!confirmed) return;
+
         setDeletingId(obsId);
         try {
             await scoutingApi.delete(fieldId, obsId);
@@ -738,7 +758,7 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                     <div
                         key={obs.id}
                         id={`scouting-obs-${obs.id}`}
-                        className="rounded-lg border bg-card p-3 transition-all hover:shadow-sm"
+                        className="rounded-lg border bg-card shadow-sm p-3 transition-all hover:shadow-md"
                     >
                         {/* Header row */}
                         <div className="flex items-start justify-between gap-2">
@@ -808,7 +828,10 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                                     src={getPhotoUrl(obs.photo_uri)}
                                     alt={obs.title}
                                     className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                    onClick={() => window.open(getPhotoUrl(obs.photo_uri!), "_blank")}
+                                    onClick={() => {
+                                        setLightboxUrl(getPhotoUrl(obs.photo_uri!));
+                                        setLightboxTitle(obs.title);
+                                    }}
                                     loading="lazy"
                                 />
                             </div>
@@ -825,19 +848,41 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                                     {tag}
                                 </Badge>
                             ))}
-                            {obs.alert_id && (
-                                <Badge
-                                    variant="outline"
-                                    className="text-[9px] px-1.5 py-0 h-4 border-amber-300 text-amber-600 dark:text-amber-400"
-                                >
-                                    <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-                                    {t("linkedAlert")}
-                                </Badge>
-                            )}
+                            {obs.alert_id && (() => {
+                                const linked = fieldAlerts.find((a) => a.id === obs.alert_id);
+                                return (
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[9px] px-1.5 py-0 h-4 border-amber-300 text-amber-600 dark:text-amber-400 max-w-full"
+                                    >
+                                        <AlertTriangle className="h-2.5 w-2.5 mr-0.5 shrink-0" />
+                                        <span className="truncate">
+                                            {linked
+                                                ? `[${linked.severity}] ${linked.message.substring(0, 40)}${linked.message.length > 40 ? "…" : ""}`
+                                                : t("linkedAlert")}
+                                        </span>
+                                    </Badge>
+                                );
+                            })()}
                         </div>
                     </div>
                 ))}
             </div>
+
+            {/* Photo lightbox */}
+            <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
+                <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black/95 border-none [&>button]:text-white [&>button]:hover:bg-white/20">
+                    <DialogTitle className="sr-only">{lightboxTitle}</DialogTitle>
+                    {lightboxUrl && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                            src={lightboxUrl}
+                            alt={lightboxTitle}
+                            className="w-full max-h-[80vh] object-contain"
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

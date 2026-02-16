@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { useOrg } from "@/components/org-context";
-import { orgsApi } from "@/lib/api";
+import { orgsApi, alertsApi } from "@/lib/api";
 import { toast } from "sonner";
 import {
     LayoutDashboard,
@@ -71,6 +71,17 @@ export function Sidebar() {
     const tSidebar = useTranslations("sidebar");
     const tCommon = useTranslations("common");
 
+    // Fetch open alert count for badge
+    const [openAlertCount, setOpenAlertCount] = useState(0);
+    useEffect(() => {
+        if (!currentOrg) return;
+        let cancelled = false;
+        alertsApi.list({ status: "open", limit: 1 }).then((res) => {
+            if (!cancelled) setOpenAlertCount(res.total);
+        }).catch(() => {});
+        return () => { cancelled = true; };
+    }, [currentOrg]);
+
     const handleCreateWorkspace = async () => {
         if (!newOrgName.trim()) return;
         setCreating(true);
@@ -119,6 +130,7 @@ export function Sidebar() {
                             orgs={orgs}
                             switchOrg={switchOrg}
                             user={user}
+                            openAlertCount={openAlertCount}
                             onNavigate={() => setMobileOpen(false)}
                             onCreateWorkspace={() => { setMobileOpen(false); setCreateDialogOpen(true); }}
                             tNav={tNav}
@@ -219,23 +231,38 @@ export function Sidebar() {
                     <nav className={cn("flex-1 space-y-1 py-4", expanded ? "px-3" : "flex flex-col items-center px-1")}>
                         {NAV_ITEMS.map((item) => {
                             const active = pathname.startsWith(item.href);
+                            const showBadge = item.labelKey === "alerts" && openAlertCount > 0;
                             const btn = (
                                 <Button
                                     key={item.href}
                                     variant={active ? "secondary" : "ghost"}
                                     className={cn(
-                                        "gap-3 overflow-hidden",
+                                        "gap-3 overflow-hidden relative",
                                         expanded ? "w-full justify-start" : "h-10 w-10 justify-center p-0",
                                         active && "bg-primary/10 text-primary"
                                     )}
                                     asChild
                                 >
                                     <Link href={item.href}>
-                                        <item.icon className="h-5 w-5 shrink-0" />
+                                        <span className="relative shrink-0">
+                                            <item.icon className="h-5 w-5" />
+                                            {showBadge && !expanded && (
+                                                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1">
+                                                    {openAlertCount > 99 ? "99+" : openAlertCount}
+                                                </span>
+                                            )}
+                                        </span>
                                         {expanded && (
-                                            <span className="whitespace-nowrap">
-                                                {tNav(item.labelKey)}
-                                            </span>
+                                            <>
+                                                <span className="whitespace-nowrap flex-1">
+                                                    {tNav(item.labelKey)}
+                                                </span>
+                                                {showBadge && (
+                                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1.5">
+                                                        {openAlertCount > 99 ? "99+" : openAlertCount}
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                     </Link>
                                 </Button>
@@ -371,6 +398,7 @@ function MobileSidebar({
     orgs,
     switchOrg,
     user,
+    openAlertCount,
     onNavigate,
     onCreateWorkspace,
     tNav,
@@ -382,6 +410,7 @@ function MobileSidebar({
     orgs: any[];
     switchOrg: (id: string) => void;
     user: any;
+    openAlertCount: number;
     onNavigate: () => void;
     onCreateWorkspace: () => void;
     tNav: (key: string) => string;
@@ -427,6 +456,7 @@ function MobileSidebar({
             <nav className="flex-1 space-y-1 px-3 py-4">
                 {NAV_ITEMS.map((item) => {
                     const active = pathname.startsWith(item.href);
+                    const showBadge = item.labelKey === "alerts" && openAlertCount > 0;
                     return (
                         <Button
                             key={item.href}
@@ -439,7 +469,12 @@ function MobileSidebar({
                         >
                             <Link href={item.href} onClick={onNavigate}>
                                 <item.icon className="h-5 w-5" />
-                                {tNav(item.labelKey)}
+                                <span className="flex-1">{tNav(item.labelKey)}</span>
+                                {showBadge && (
+                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1.5">
+                                        {openAlertCount > 99 ? "99+" : openAlertCount}
+                                    </span>
+                                )}
                             </Link>
                         </Button>
                     );

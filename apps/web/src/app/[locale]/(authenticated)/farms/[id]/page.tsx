@@ -31,19 +31,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
+import { AlertRow } from "@/components/alert-row";
 
-/* ── Alert severity helpers ─────────────────────────── */
-
-const SEVERITY_DOT: Record<string, string> = {
-    high: "bg-red-500",
-    medium: "bg-amber-500",
-    low: "bg-yellow-500",
-};
-
-const RULE_LABELS: Record<string, string> = {
-    ndvi_drop: "NDVI Drop",
-    ndvi_threshold: "Low NDVI",
-};
+/* ── (severity helpers moved to alert-row.tsx) ─────────────── */
 
 export default function FarmDetailPage() {
     const params = useParams();
@@ -296,53 +286,13 @@ export default function FarmDetailPage() {
                         <div className="space-y-2">
                             {alerts.slice(0, 5).map((alert) => {
                                 const fieldName = fields.find((f) => f.id === alert.field_id)?.name;
-                                const severity = SEVERITY_DOT[alert.severity] || SEVERITY_DOT.low;
                                 return (
-                                    <div
+                                    <AlertRow
                                         key={alert.id}
-                                        className="flex items-center gap-3 rounded-lg border p-3 hover:border-primary/20 transition-colors"
-                                    >
-                                        {/* Severity dot */}
-                                        <div className="shrink-0">
-                                            <span className={cn("block h-2.5 w-2.5 rounded-full", severity)} />
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-medium truncate">
-                                                    {RULE_LABELS[alert.rule_name] || alert.rule_name}
-                                                </span>
-                                                <Badge
-                                                    variant={alert.severity === "high" ? "destructive" : "secondary"}
-                                                    className="text-[9px] px-1.5 py-0 uppercase tracking-wider shrink-0"
-                                                >
-                                                    {alert.severity}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                                {alert.message}
-                                            </p>
-                                        </div>
-
-                                        {/* Field link + date */}
-                                        <div className="shrink-0 text-right">
-                                            <p className="text-[11px] text-muted-foreground">
-                                                {new Date(alert.date).toLocaleDateString(undefined, {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                })}
-                                            </p>
-                                            {fieldName && (
-                                                <Link
-                                                    href={`/farms/${farmId}/fields/${alert.field_id}`}
-                                                    className="text-[11px] text-primary hover:underline font-medium"
-                                                >
-                                                    {fieldName} →
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </div>
+                                        alert={alert}
+                                        fieldName={fieldName}
+                                        farmId={farmId}
+                                    />
                                 );
                             })}
                         </div>

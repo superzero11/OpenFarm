@@ -10,10 +10,7 @@ import {
     AlertTriangle,
     Bell,
     CheckCircle2,
-    ChevronRight,
     Filter,
-    Loader2,
-    RotateCcw,
     ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,43 +26,9 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { AlertRow } from "@/components/alert-row";
 
-/* ── Severity config ─────────────────────────────────────────── */
-
-const SEVERITY_CONFIG: Record<string, {
-    dotClass: string;
-    bgClass: string;
-    textClass: string;
-    icon: React.ReactNode;
-    label: string;
-}> = {
-    high: {
-        dotClass: "bg-red-500",
-        bgClass: "bg-red-500/8 border-red-500/20 hover:border-red-500/40",
-        textClass: "text-red-700 dark:text-red-400",
-        icon: <ShieldAlert className="h-4 w-4" />,
-        label: "High",
-    },
-    medium: {
-        dotClass: "bg-amber-500",
-        bgClass: "bg-amber-500/8 border-amber-500/20 hover:border-amber-500/40",
-        textClass: "text-amber-700 dark:text-amber-400",
-        icon: <AlertTriangle className="h-4 w-4" />,
-        label: "Medium",
-    },
-    low: {
-        dotClass: "bg-yellow-500",
-        bgClass: "bg-yellow-500/8 border-yellow-500/20 hover:border-yellow-500/40",
-        textClass: "text-yellow-700 dark:text-yellow-400",
-        icon: <Bell className="h-4 w-4" />,
-        label: "Low",
-    },
-};
-
-const RULE_LABELS: Record<string, string> = {
-    ndvi_drop: "NDVI Drop",
-    ndvi_threshold: "Low NDVI",
-};
+/* ── (severity config and rule labels moved to alert-row.tsx) ─── */
 
 export default function AlertsPage() {
     const t = useTranslations("alertsPage");
@@ -264,106 +227,23 @@ export default function AlertsPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {filteredAlerts.map((alert) => {
-                        const severity = SEVERITY_CONFIG[alert.severity] || SEVERITY_CONFIG.low;
                         const field = fieldMap[alert.field_id];
                         const farm = field ? farmMap[field.farm_id] : null;
-                        const isClosed = alert.status === "closed";
 
                         return (
-                            <Card
+                            <AlertRow
                                 key={alert.id}
-                                className={cn(
-                                    "transition-all duration-200 border",
-                                    isClosed ? "opacity-60 bg-muted/30" : severity.bgClass,
-                                )}
-                            >
-                                <CardContent className="p-4">
-                                    <div className="flex items-start gap-4">
-                                        {/* Severity indicator */}
-                                        <div className={cn(
-                                            "mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                                            isClosed ? "bg-muted" : `${severity.dotClass}/15`,
-                                        )}>
-                                            <span className={cn(isClosed ? "text-muted-foreground" : severity.textClass)}>
-                                                {severity.icon}
-                                            </span>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <Badge
-                                                    variant={alert.severity === "high" && !isClosed ? "destructive" : "secondary"}
-                                                    className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
-                                                >
-                                                    {alert.severity}
-                                                </Badge>
-                                                <span className="text-xs font-medium text-muted-foreground">
-                                                    {RULE_LABELS[alert.rule_name] || alert.rule_name}
-                                                </span>
-                                                {isClosed && (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground"
-                                                    >
-                                                        {t("closed")}
-                                                    </Badge>
-                                                )}
-                                                <span className="text-xs text-muted-foreground ml-auto shrink-0">
-                                                    {new Date(alert.date).toLocaleDateString(undefined, {
-                                                        year: "numeric",
-                                                        month: "short",
-                                                        day: "numeric",
-                                                    })}
-                                                </span>
-                                            </div>
-
-                                            <p className="text-sm mt-1.5 leading-relaxed text-foreground/90">
-                                                {alert.message}
-                                            </p>
-
-                                            {/* Context: field + farm */}
-                                            <div className="flex items-center gap-3 mt-2">
-                                                {field && (
-                                                    <Link
-                                                        href={`/farms/${field.farm_id}/fields/${field.id}`}
-                                                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                                                    >
-                                                        {field.name}
-                                                        <ChevronRight className="h-3 w-3" />
-                                                    </Link>
-                                                )}
-                                                {farm && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {farm.name}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Action */}
-                                        <div className="shrink-0">
-                                            <Button
-                                                variant={isClosed ? "outline" : "secondary"}
-                                                size="sm"
-                                                className="h-8 text-xs"
-                                                disabled={togglingId === alert.id}
-                                                onClick={() => toggleStatus(alert)}
-                                            >
-                                                {togglingId === alert.id ? (
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                ) : isClosed ? (
-                                                    <><RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t("reopen")}</>
-                                                ) : (
-                                                    <><CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />{t("close")}</>
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                alert={alert}
+                                fieldName={field?.name}
+                                farmId={field?.farm_id}
+                                farmName={farm?.name}
+                                showActions
+                                onToggleStatus={toggleStatus}
+                                togglingId={togglingId}
+                                actionLabels={{ close: t("close"), reopen: t("reopen") }}
+                            />
                         );
                     })}
                 </div>

@@ -8,7 +8,6 @@ import type { Farm, OrgDetail, Alert } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Tractor,
     Map,
@@ -16,11 +15,10 @@ import {
     Plus,
     ChevronRight,
     Bell,
-    ShieldAlert,
-    AlertTriangle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CreateFarmModal } from "@/components/create-farm-modal";
+import { AlertRow } from "@/components/alert-row";
 
 export default function DashboardPage() {
     const t = useTranslations("dashboard");
@@ -141,37 +139,12 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">
-                            {openAlerts.slice(0, 5).map((alert) => {
-                                const sevIcon =
-                                    alert.severity === "high" ? <ShieldAlert className="h-4 w-4 text-red-500" /> :
-                                    alert.severity === "medium" ? <AlertTriangle className="h-4 w-4 text-amber-500" /> :
-                                    <Bell className="h-4 w-4 text-yellow-500" />;
-                                return (
-                                    <div
-                                        key={alert.id}
-                                        className="flex items-center gap-3 rounded-lg border p-3 hover:border-primary/20 transition-colors"
-                                    >
-                                        <div className="shrink-0">{sevIcon}</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">{alert.message}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <Badge
-                                                    variant={alert.severity === "high" ? "destructive" : "secondary"}
-                                                    className="text-[9px] px-1.5 py-0 uppercase tracking-wider"
-                                                >
-                                                    {alert.severity}
-                                                </Badge>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(alert.date).toLocaleDateString(undefined, {
-                                                        month: "short", day: "numeric",
-                                                    })}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    </div>
-                                );
-                            })}
+                            {openAlerts.slice(0, 5).map((alert) => (
+                                <AlertRow
+                                    key={alert.id}
+                                    alert={alert}
+                                />
+                            ))}
                         </div>
                     </CardContent>
                 </Card>

@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+
+# ── Index Type ───────────────────────────────────────────────────────
+
+IndexType = Literal["ndvi", "evi", "savi", "ndwi"]
 
 
 # ── Raster / NDVI Layers ─────────────────────────────────────────────
@@ -22,6 +27,7 @@ class RasterLayerOut(BaseModel):
     tile_url: str | None = None
     min: float | None = None
     max: float | None = None
+    params_json: dict[str, Any] | None = None
     provenance_json: dict[str, Any] | None = None
     created_at: datetime
 
@@ -56,6 +62,24 @@ class JobCreateNDVI(BaseModel):
     date_to: date
 
 
+class JobCreateIndex(BaseModel):
+    """Generalized job creation for any vegetation index."""
+
+    index_type: IndexType
+    date_from: date
+    date_to: date
+    savi_l: float | None = None  # only for SAVI, default 0.5
+
+    @field_validator("savi_l")
+    @classmethod
+    def validate_savi_l(cls, v, info):
+        if v is not None and info.data.get("index_type") != "savi":
+            raise ValueError("savi_l is only valid when index_type is 'savi'")
+        if v is not None and not (0.0 <= v <= 1.0):
+            raise ValueError("savi_l must be between 0.0 and 1.0")
+        return v
+
+
 class JobOut(BaseModel):
     id: uuid.UUID
     field_id: uuid.UUID
@@ -80,6 +104,7 @@ class AlertOut(BaseModel):
     severity: str
     rule_name: str
     rule_params_json: dict[str, Any] | None = None
+    index_type: str | None = None
     message: str
     status: str
     created_at: datetime
@@ -148,7 +173,10 @@ class ShareReportOut(BaseModel):
 
     field: dict[str, Any]
     latest_layer: RasterLayerOut | None = None
+    layers_by_type: dict[str, RasterLayerOut] = {}
+    available_index_types: list[str] = []
     stats: list[FieldStatOut] = []
+    stats_by_type: dict[str, list[FieldStatOut]] = {}
     alerts: list[AlertOut] = []
     scouting: list[ScoutingOut] = []
 

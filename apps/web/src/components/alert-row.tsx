@@ -46,6 +46,12 @@ const SEVERITY_CONFIG: Record<
 const RULE_LABELS: Record<string, string> = {
     ndvi_drop: "NDVI Drop",
     ndvi_threshold: "Low NDVI",
+    evi_drop: "EVI Drop",
+    evi_threshold: "Low EVI",
+    savi_drop: "SAVI Drop",
+    savi_threshold: "Low SAVI",
+    ndwi_drop: "NDWI Drop",
+    ndwi_threshold: "Low NDWI",
 };
 
 /* ── Props ─────────────────────────────────────────────────── */

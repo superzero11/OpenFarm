@@ -26,5 +26,5 @@ celery_app.conf.update(
     result_serializer="json",
     accept_content=["json"],
     # Task discovery
-    include=["app.tasks.ndvi"],
+    include=["app.tasks.ndvi", "app.tasks.vegetation"],
 )

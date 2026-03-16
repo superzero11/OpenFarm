@@ -6,8 +6,9 @@ import { Link, useRouter } from "@/i18n/navigation";
 import dynamic from "next/dynamic";
 import maplibregl from "maplibre-gl";
 import { useOrg } from "@/components/org-context";
-import { fieldsApi, alertsApi } from "@/lib/api";
-import type { Field, RasterLayer } from "@/lib/api";
+import { fieldsApi, alertsApi, INDEX_CONFIG, ALL_INDEX_TYPES, monitoringApi } from "@/lib/api";
+import type { Field, RasterLayer, IndexType } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
     ArrowLeft,
@@ -96,33 +97,46 @@ const ShareTab = dynamic(() => import("@/components/field/share-tab"), {
     ),
 });
 
-/* ── NDVI overlay helpers ──────────────────────────────────── */
+/* ── Index overlay helpers ───────────────────────────────────── */
 
-const NDVI_SOURCE = "ndvi-tiles";
-const NDVI_LAYER = "ndvi-raster";
-
-function removeNdviOverlay(map: maplibregl.Map) {
-    if (map.getLayer(NDVI_LAYER)) map.removeLayer(NDVI_LAYER);
-    if (map.getSource(NDVI_SOURCE)) map.removeSource(NDVI_SOURCE);
+function indexSourceId(indexType: IndexType) {
+    return `${indexType.toLowerCase()}-tiles`;
+}
+function indexLayerId(indexType: IndexType) {
+    return `${indexType.toLowerCase()}-raster`;
 }
 
-function addNdviOverlay(map: maplibregl.Map, layer: RasterLayer, field: Field) {
+function removeIndexOverlay(map: maplibregl.Map, indexType: IndexType) {
+    const layerId = indexLayerId(indexType);
+    const sourceId = indexSourceId(indexType);
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+}
+
+function removeAllIndexOverlays(map: maplibregl.Map) {
+    const types: IndexType[] = ["NDVI", "EVI", "SAVI", "NDWI"];
+    for (const t of types) removeIndexOverlay(map, t);
+}
+
+function addIndexOverlay(map: maplibregl.Map, layer: RasterLayer, field: Field, indexType: IndexType) {
     if (!layer.tile_url || !field.geom) return;
+    const sourceId = indexSourceId(indexType);
+    const layerId = indexLayerId(indexType);
     const bounds = computeGeomBounds(field.geom);
-    if (!map.getSource(NDVI_SOURCE)) {
-        map.addSource(NDVI_SOURCE, {
+    if (!map.getSource(sourceId)) {
+        map.addSource(sourceId, {
             type: "raster",
             tiles: [layer.tile_url],
             tileSize: 256,
             ...(bounds ? { bounds } : {}),
         });
     }
-    if (!map.getLayer(NDVI_LAYER)) {
+    if (!map.getLayer(layerId)) {
         map.addLayer(
             {
-                id: NDVI_LAYER,
+                id: layerId,
                 type: "raster",
-                source: NDVI_SOURCE,
+                source: sourceId,
                 paint: { "raster-opacity": 0.75 },
                 minzoom: 10,
                 maxzoom: 18,
@@ -182,11 +196,17 @@ export default function FieldDetailPage() {
     const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
     const [mapStyle, setMapStyle] = useState<MapStyleId>("satellite");
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [activeTab, setActiveTab] = useState("info");
 
-    // NDVI overlay
-    const [ndviLayer, setNdviLayer] = useState<RasterLayer | null>(null);
-    const ndviLayerRef = useRef<RasterLayer | null>(null);
+    // Index overlay
+    const [indexLayer, setIndexLayer] = useState<RasterLayer | null>(null);
+    const [activeIndexType, setActiveIndexType] = useState<IndexType>("NDVI");
+    const indexLayerRef = useRef<RasterLayer | null>(null);
+    const activeIndexTypeRef = useRef<IndexType>("NDVI");
     const fieldRef = useRef<Field | null>(null);
+
+    // Available index types (only indices with computed layers)
+    const [availableTypes, setAvailableTypes] = useState<IndexType[]>([]);
 
     // Alerts
     const [openAlertCount, setOpenAlertCount] = useState(0);
@@ -203,10 +223,27 @@ export default function FieldDetailPage() {
         return () => { cancelled = true; };
     }, [currentOrg, fieldId]);
 
+    // Fetch which index types have computed layers
+    const refreshAvailableTypes = useCallback(() => {
+        if (!fieldId) return;
+        monitoringApi.layerTypes(fieldId).then((types) => {
+            const upper = new Set(types.map((t) => t.toUpperCase() as IndexType));
+            const sorted = ALL_INDEX_TYPES.filter((t) => upper.has(t));
+            setAvailableTypes(sorted);
+        }).catch(() => { });
+    }, [fieldId]);
+
+    useEffect(() => {
+        refreshAvailableTypes();
+    }, [refreshAvailableTypes]);
+
     // Keep refs in sync for style.load handler
     useEffect(() => {
-        ndviLayerRef.current = ndviLayer;
-    }, [ndviLayer]);
+        indexLayerRef.current = indexLayer;
+    }, [indexLayer]);
+    useEffect(() => {
+        activeIndexTypeRef.current = activeIndexType;
+    }, [activeIndexType]);
     useEffect(() => {
         fieldRef.current = field;
     }, [field]);
@@ -258,10 +295,10 @@ export default function FieldDetailPage() {
             paint: { "line-color": "#16a34a", "line-width": 2 },
         });
 
-        // Re-add NDVI if active
-        const ndvi = ndviLayerRef.current;
-        if (ndvi?.tile_url) {
-            addNdviOverlay(map, ndvi, f);
+        // Re-add index overlay if active
+        const layer = indexLayerRef.current;
+        if (layer?.tile_url) {
+            addIndexOverlay(map, layer, f, activeIndexTypeRef.current);
         }
     }, []);
 
@@ -322,18 +359,19 @@ export default function FieldDetailPage() {
         [mapInstance, setupMapLayers],
     );
 
-    // NDVI tile overlay management
+    // Index tile overlay management
     useEffect(() => {
         const map = mapInstance;
         if (!map || !map.isStyleLoaded()) return;
-        removeNdviOverlay(map);
-        if (ndviLayer?.tile_url && field) {
-            addNdviOverlay(map, ndviLayer, field);
+        removeAllIndexOverlays(map);
+        if (indexLayer?.tile_url && field) {
+            addIndexOverlay(map, indexLayer, field, activeIndexType);
         }
-    }, [ndviLayer, field, mapInstance]);
+    }, [indexLayer, field, mapInstance, activeIndexType]);
 
-    const handleShowLayer = useCallback((layer: RasterLayer | null) => {
-        setNdviLayer(layer);
+    const handleShowLayer = useCallback((layer: RasterLayer | null, indexType: IndexType) => {
+        setIndexLayer(layer);
+        setActiveIndexType(indexType);
     }, []);
 
     const handleSave = async () => {
@@ -414,10 +452,32 @@ export default function FieldDetailPage() {
                 <LocationSearch onSelect={handleLocationSelect} />
             </div>
 
-            {/* NDVI Legend — bottom-left, visible when NDVI overlay is active */}
-            {ndviLayer && (
+            {/* Index Legend — bottom-left, visible when overlay is active */}
+            {indexLayer && (
                 <div className="absolute bottom-6 left-4 z-20 transition-opacity duration-200">
-                    <NdviLegend layer={ndviLayer} />
+                    <NdviLegend layer={indexLayer} indexType={activeIndexType} />
+                </div>
+            )}
+
+            {/* Floating index selector — bottom-center, visible on Monitor tab when indices exist */}
+            {activeTab === "ndvi" && availableTypes.length > 0 && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+                    <div className="flex gap-1 rounded-lg border border-border/50 bg-background/90 backdrop-blur-sm shadow-lg p-1">
+                        {availableTypes.map((idx) => (
+                            <Button
+                                key={idx}
+                                variant={idx === activeIndexType ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => { if (idx === activeIndexType) return; setIndexLayer(null); setActiveIndexType(idx); }}
+                                className={cn(
+                                    "h-7 px-3 text-xs font-medium",
+                                    idx === activeIndexType && "shadow-sm",
+                                )}
+                            >
+                                {INDEX_CONFIG[idx].label}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -442,7 +502,7 @@ export default function FieldDetailPage() {
                     }`}
             >
                 <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col h-full">
-                    <Tabs defaultValue="info" className="flex flex-col flex-1 overflow-hidden">
+                    <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
                         <TabsList className="grid w-full grid-cols-5 rounded-none border-b border-border/50 bg-transparent h-auto p-0 shrink-0">
                             <TabsTrigger
                                 value="info"
@@ -637,7 +697,13 @@ export default function FieldDetailPage() {
                                     </TabsContent>
 
                                     <TabsContent value="ndvi" className="mt-0 p-4">
-                                        <NdviTab fieldId={fieldId} onShowLayer={handleShowLayer} />
+                                        <NdviTab
+                                            fieldId={fieldId}
+                                            onShowLayer={handleShowLayer}
+                                            activeIndexOverride={activeIndexType}
+                                            onActiveIndexChange={setActiveIndexType}
+                                            onDataLoaded={refreshAvailableTypes}
+                                        />
                                     </TabsContent>
 
                                     <TabsContent value="alerts" className="mt-0 p-4">

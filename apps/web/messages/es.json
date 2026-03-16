@@ -15,7 +15,8 @@
         "dashboard": "Panel",
         "farms": "Fincas",
         "alerts": "Alertas",
-        "settings": "Configuración"
+        "settings": "Configuración",
+        "changelog": "Cambios"
     },
     "sidebar": {
         "workspaces": "Espacios de trabajo",
@@ -209,7 +210,7 @@
         "edit": "Editar",
         "delete": "Eliminar",
         "tabInfo": "Info",
-        "tabNdvi": "NDVI",
+        "tabNdvi": "Monitor",
         "tabAlerts": "Alertas",
         "tabScouting": "Scouting",
         "tabShare": "Compartir",
@@ -283,6 +284,36 @@
         "title": "NDVI",
         "fieldRange": "Rango del campo"
     },
+    "monitoring": {
+        "indexName": {
+            "NDVI": "NDVI",
+            "EVI": "EVI",
+            "SAVI": "SAVI",
+            "NDWI": "NDWI"
+        },
+        "indexDesc": {
+            "NDVI": "Índice de Vegetación de Diferencia Normalizada",
+            "EVI": "Índice de Vegetación Mejorado",
+            "SAVI": "Índice de Vegetación Ajustado al Suelo",
+            "NDWI": "Índice de Agua de Diferencia Normalizada"
+        },
+        "jobStep": {
+            "computeNdvi": "Calculando NDVI",
+            "computeEvi": "Calculando EVI",
+            "computeSavi": "Calculando SAVI",
+            "computeNdwi": "Calculando NDWI"
+        },
+        "alertMessage": {
+            "ndviDrop": "NDVI cayó {pct}% por debajo del promedio móvil",
+            "ndviThreshold": "NDVI cayó por debajo del umbral ({value})",
+            "eviDrop": "EVI cayó {pct}% por debajo del promedio móvil",
+            "eviThreshold": "EVI cayó por debajo del umbral ({value})",
+            "saviDrop": "SAVI cayó {pct}% por debajo del promedio móvil",
+            "saviThreshold": "SAVI cayó por debajo del umbral ({value})",
+            "ndwiDrop": "NDWI cayó {pct}% por debajo del promedio móvil",
+            "ndwiThreshold": "NDWI cayó por debajo del umbral ({value})"
+        }
+    },
     "scoutingTab": {
         "title": "Observaciones de Campo",
         "addObservation": "Agregar Observación",
@@ -355,12 +386,14 @@
         "fieldInfo": "Información del Campo",
         "area": "Área",
         "cropType": "Tipo de Cultivo",
+        "timeSeries": "Serie Temporal",
         "ndviTimeSeries": "Serie Temporal NDVI",
         "recentAlerts": "Alertas Recientes",
         "recentScouting": "Notas de Campo Recientes",
         "noAlerts": "Sin alertas",
         "noScouting": "Sin observaciones de campo",
         "noNdviData": "Sin datos NDVI disponibles",
+        "noIndexData": "Sin datos de {index} disponibles",
         "linkExpired": "Este enlace compartido ha expirado o fue revocado.",
         "linkNotFound": "Enlace compartido no encontrado.",
         "loading": "Cargando reporte...",
@@ -371,5 +404,10 @@
         "label": "Idioma",
         "en": "English",
         "es": "Español"
+    },
+    "changelog": {
+        "title": "Registro de cambios",
+        "description": "Últimas actualizaciones y mejoras de OpenFarm",
+        "unreleased": "Próximamente"
     }
 }

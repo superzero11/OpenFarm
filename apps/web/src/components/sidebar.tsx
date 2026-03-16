@@ -21,6 +21,7 @@ import {
     Leaf,
     Plus,
     Loader2,
+    ScrollText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +58,7 @@ const NAV_ITEMS = [
     { href: "/farms" as const, labelKey: "farms" as const, icon: Tractor },
     { href: "/alerts" as const, labelKey: "alerts" as const, icon: Bell },
     { href: "/settings" as const, labelKey: "settings" as const, icon: Settings },
+    { href: "/changelog" as const, labelKey: "changelog" as const, icon: ScrollText },
 ];
 
 export function Sidebar() {

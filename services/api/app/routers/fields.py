@@ -8,11 +8,13 @@ from datetime import datetime, timezone
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
-from geoalchemy2.shape import from_shape, to_shape
-from shapely.geometry import MultiPolygon, mapping, shape
+from geoalchemy2.shape import from_shape
+from shapely.geometry import MultiPolygon, shape
+from shapely.validation import explain_validity
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.geo import wkb_to_geojson
 from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import AuditEvent, Farm, Field
@@ -31,24 +33,19 @@ def _geojson_to_multi(geojson: dict[str, Any]) -> MultiPolygon:
         geom = MultiPolygon([geom])
     elif geom.geom_type != "MultiPolygon":
         raise ValueError(f"Expected Polygon or MultiPolygon, got {geom.geom_type}")
+    if not geom.is_valid:
+        raise ValueError(f"Invalid geometry: {explain_validity(geom)}")
     return geom
 
 
 def _field_to_out(field: Field) -> FieldOut:
     """Convert ORM Field to FieldOut with GeoJSON geometry."""
-    geom_geojson = None
-    if field.geom is not None:
-        try:
-            geom_geojson = mapping(to_shape(field.geom))
-        except Exception:
-            pass
-
     return FieldOut(
         id=field.id,
         org_id=field.org_id,
         farm_id=field.farm_id,
         name=field.name,
-        geom=geom_geojson,
+        geom=wkb_to_geojson(field.geom),
         area_ha=float(field.area_ha) if field.area_ha else None,
         crop_type=field.crop_type,
         season=field.season,

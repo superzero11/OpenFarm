@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { shareApi, getPhotoUrl } from "@/lib/api";
-import type { ShareReport, FieldStat, Alert, ScoutingObservation } from "@/lib/api";
+import { shareApi, getPhotoUrl, INDEX_CONFIG, ALL_INDEX_TYPES } from "@/lib/api";
+import type { ShareReport, FieldStat, Alert, ScoutingObservation, IndexType, RasterLayer } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import {
     AlertTriangle,
@@ -27,6 +27,10 @@ const NdviChart = dynamic(() => import("@/components/charts/ndvi-chart"), {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
     ),
+});
+
+const NdviLegend = dynamic(() => import("@/components/field/ndvi-legend"), {
+    ssr: false,
 });
 
 /* ── Severity config ───────────────────────────────────────── */
@@ -52,6 +56,12 @@ const SEVERITY_CONFIG: Record<string, { dotClass: string; textClass: string; ico
 const RULE_LABELS: Record<string, string> = {
     ndvi_drop: "NDVI Drop",
     ndvi_threshold: "Low NDVI",
+    evi_drop: "EVI Drop",
+    evi_threshold: "Low EVI",
+    savi_drop: "SAVI Drop",
+    savi_threshold: "Low SAVI",
+    ndwi_drop: "NDWI Drop",
+    ndwi_threshold: "Low NDWI",
 };
 
 /* ── Page Component ────────────────────────────────────────── */
@@ -64,12 +74,22 @@ export default function ShareReportPage() {
     const [report, setReport] = useState<ShareReport | null>(null);
     const [error, setError] = useState<"expired" | "not_found" | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeIndex, setActiveIndex] = useState<IndexType>("NDVI");
 
     useEffect(() => {
         if (!token) return;
         shareApi
             .getReport(token)
-            .then(setReport)
+            .then((r) => {
+                setReport(r);
+                // Default to first available index if NDVI isn't available
+                if (r.available_index_types.length > 0) {
+                    const upper = r.available_index_types.map((t) => t.toUpperCase());
+                    if (!upper.includes("NDVI") && upper.length > 0) {
+                        setActiveIndex(upper[0] as IndexType);
+                    }
+                }
+            })
             .catch((err: Error) => {
                 if (err.message === "expired") setError("expired");
                 else if (err.message === "not_found") setError("not_found");
@@ -97,6 +117,13 @@ export default function ShareReportPage() {
             </div>
         );
     }
+
+    const availableIndices = report.available_index_types
+        .map((t) => t.toUpperCase() as IndexType)
+        .filter((t) => ALL_INDEX_TYPES.includes(t));
+    const config = INDEX_CONFIG[activeIndex];
+    const activeLayer = report.layers_by_type[activeIndex] ?? report.layers_by_type[activeIndex.toLowerCase()] ?? null;
+    const activeStats = report.stats_by_type[activeIndex] ?? report.stats_by_type[activeIndex.toLowerCase()] ?? [];
 
     return (
         <div className="min-h-screen bg-muted/30">
@@ -149,25 +176,52 @@ export default function ShareReportPage() {
                     </div>
 
                     {/* Map card */}
-                    <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+                    <div className="rounded-lg border bg-card shadow-sm overflow-hidden relative">
                         <div className="text-xs font-medium px-3 py-2 border-b text-muted-foreground">
                             {t("fieldBoundary")}
                         </div>
-                        <FieldMap geom={report.field.geom} token={token} hasNdvi={!!report.latest_layer} />
+                        <FieldMap geom={report.field.geom} token={token} hasLayer={!!activeLayer} activeIndex={activeIndex} />
+                        {activeLayer && (
+                            <div className="absolute bottom-2 left-2 z-10">
+                                <NdviLegend layer={activeLayer} indexType={activeIndex} compact />
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* NDVI Chart */}
+                {/* Index Toggle */}
+                {availableIndices.length > 1 && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                        {availableIndices.map((idx) => {
+                            const c = INDEX_CONFIG[idx];
+                            return (
+                                <button
+                                    key={idx}
+                                    onClick={() => setActiveIndex(idx)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeIndex === idx
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                        }`}
+                                >
+                                    {c.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Index Chart */}
                 <div className="rounded-lg border bg-card shadow-sm p-4 space-y-3">
-                    <h2 className="text-sm font-semibold">{t("ndviTimeSeries")}</h2>
-                    {report.stats.length > 0 ? (
+                    <h2 className="text-sm font-semibold">{config.label} {t("timeSeries")}</h2>
+                    {activeStats.length > 0 ? (
                         <NdviChart
-                            stats={[...report.stats].reverse()}
+                            stats={[...activeStats].reverse()}
                             height={250}
+                            indexType={activeIndex}
                         />
                     ) : (
                         <p className="text-sm text-muted-foreground text-center py-6">
-                            {t("noNdviData")}
+                            {t("noIndexData", { index: config.label })}
                         </p>
                     )}
                 </div>
@@ -219,9 +273,11 @@ export default function ShareReportPage() {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/v1";
 
-function FieldMap({ geom, token, hasNdvi }: { geom: GeoJSON.Geometry | null; token: string; hasNdvi: boolean }) {
+function FieldMap({ geom, token, hasLayer, activeIndex }: { geom: GeoJSON.Geometry | null; token: string; hasLayer: boolean; activeIndex: IndexType }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
+    const activeIndexRef = useRef(activeIndex);
+    activeIndexRef.current = activeIndex;
 
     const initMap = useCallback(() => {
         if (!containerRef.current || mapRef.current) return;
@@ -282,18 +338,19 @@ function FieldMap({ geom, token, hasNdvi }: { geom: GeoJSON.Geometry | null; tok
                 },
             });
 
-            // NDVI tile overlay (proxied through API — no JWT needed)
-            if (hasNdvi) {
-                map.addSource("ndvi-tiles", {
+            // Index tile overlay (proxied through API — no JWT needed)
+            if (hasLayer) {
+                const idx = activeIndexRef.current;
+                map.addSource("index-tiles", {
                     type: "raster",
-                    tiles: [`${API_BASE}/share/${token}/tiles/{z}/{x}/{y}.png`],
+                    tiles: [`${API_BASE}/share/${token}/tiles/{z}/{x}/{y}.png?index_type=${idx}`],
                     tileSize: 256,
                 });
                 map.addLayer(
                     {
-                        id: "ndvi-raster",
+                        id: "index-raster",
                         type: "raster",
-                        source: "ndvi-tiles",
+                        source: "index-tiles",
                         paint: { "raster-opacity": 0.75 },
                         minzoom: 10,
                         maxzoom: 18,
@@ -312,7 +369,36 @@ function FieldMap({ geom, token, hasNdvi }: { geom: GeoJSON.Geometry | null; tok
         });
 
         mapRef.current = map;
-    }, [geom, token, hasNdvi]);
+    }, [geom, token, hasLayer]);
+
+    // Swap tile source when activeIndex changes
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !hasLayer) return;
+        if (!map.isStyleLoaded()) return;
+
+        // Remove old overlay
+        if (map.getLayer("index-raster")) map.removeLayer("index-raster");
+        if (map.getSource("index-tiles")) map.removeSource("index-tiles");
+
+        // Add new overlay
+        map.addSource("index-tiles", {
+            type: "raster",
+            tiles: [`${API_BASE}/share/${token}/tiles/{z}/{x}/{y}.png?index_type=${activeIndex}`],
+            tileSize: 256,
+        });
+        map.addLayer(
+            {
+                id: "index-raster",
+                type: "raster",
+                source: "index-tiles",
+                paint: { "raster-opacity": 0.75 },
+                minzoom: 10,
+                maxzoom: 18,
+            },
+            "field-outline",
+        );
+    }, [activeIndex, token, hasLayer]);
 
     useEffect(() => {
         initMap();
@@ -339,9 +425,8 @@ function ReportAlertRow({ alert }: { alert: Alert }) {
 
     return (
         <div
-            className={`rounded-lg border p-2.5 transition-colors ${
-                isClosed ? "opacity-60 bg-muted/30" : ""
-            }`}
+            className={`rounded-lg border p-2.5 transition-colors ${isClosed ? "opacity-60 bg-muted/30" : ""
+                }`}
         >
             <div className="flex items-center gap-1.5">
                 <span className={`shrink-0 ${sev.textClass}`}>{sev.icon}</span>

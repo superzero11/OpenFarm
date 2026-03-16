@@ -15,7 +15,8 @@
         "dashboard": "Dashboard",
         "farms": "Farms",
         "alerts": "Alerts",
-        "settings": "Settings"
+        "settings": "Settings",
+        "changelog": "Changelog"
     },
     "sidebar": {
         "workspaces": "Workspaces",
@@ -209,7 +210,7 @@
         "edit": "Edit",
         "delete": "Delete",
         "tabInfo": "Info",
-        "tabNdvi": "NDVI",
+        "tabNdvi": "Monitor",
         "tabAlerts": "Alerts",
         "tabScouting": "Scouting",
         "tabShare": "Share",
@@ -283,6 +284,36 @@
         "title": "NDVI",
         "fieldRange": "Field range"
     },
+    "monitoring": {
+        "indexName": {
+            "NDVI": "NDVI",
+            "EVI": "EVI",
+            "SAVI": "SAVI",
+            "NDWI": "NDWI"
+        },
+        "indexDesc": {
+            "NDVI": "Normalized Difference Vegetation Index",
+            "EVI": "Enhanced Vegetation Index",
+            "SAVI": "Soil-Adjusted Vegetation Index",
+            "NDWI": "Normalized Difference Water Index"
+        },
+        "jobStep": {
+            "computeNdvi": "Computing NDVI",
+            "computeEvi": "Computing EVI",
+            "computeSavi": "Computing SAVI",
+            "computeNdwi": "Computing NDWI"
+        },
+        "alertMessage": {
+            "ndviDrop": "NDVI dropped {pct}% below rolling average",
+            "ndviThreshold": "NDVI fell below threshold ({value})",
+            "eviDrop": "EVI dropped {pct}% below rolling average",
+            "eviThreshold": "EVI fell below threshold ({value})",
+            "saviDrop": "SAVI dropped {pct}% below rolling average",
+            "saviThreshold": "SAVI fell below threshold ({value})",
+            "ndwiDrop": "NDWI dropped {pct}% below rolling average",
+            "ndwiThreshold": "NDWI fell below threshold ({value})"
+        }
+    },
     "scoutingTab": {
         "title": "Scouting Observations",
         "addObservation": "Add Observation",
@@ -355,12 +386,14 @@
         "fieldInfo": "Field Information",
         "area": "Area",
         "cropType": "Crop Type",
+        "timeSeries": "Time Series",
         "ndviTimeSeries": "NDVI Time Series",
         "recentAlerts": "Recent Alerts",
         "recentScouting": "Recent Scouting Notes",
         "noAlerts": "No alerts",
         "noScouting": "No scouting observations",
         "noNdviData": "No NDVI data available",
+        "noIndexData": "No {index} data available",
         "linkExpired": "This share link has expired or been revoked.",
         "linkNotFound": "Share link not found.",
         "loading": "Loading report...",
@@ -371,5 +404,10 @@
         "label": "Language",
         "en": "English",
         "es": "Español"
+    },
+    "changelog": {
+        "title": "Changelog",
+        "description": "Latest updates and improvements to OpenFarm",
+        "unreleased": "Unreleased"
     }
 }

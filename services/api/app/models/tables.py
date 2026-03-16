@@ -187,6 +187,11 @@ class Field(Base):
 
 class RasterLayer(Base):
     __tablename__ = "raster_layers"
+    __table_args__ = (
+        UniqueConstraint(
+            "field_id", "date", "layer_type", name="uq_raster_field_date_type"
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()")
@@ -220,10 +225,10 @@ class FieldStat(Base):
         UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
     )
     field_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False, index=True
     )
     layer_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("raster_layers.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("raster_layers.id"), nullable=False, index=True
     )
     date: Mapped[_date] = mapped_column(Date, nullable=False)
     mean: Mapped[float | None] = mapped_column(Numeric, nullable=True)
@@ -252,7 +257,7 @@ class Alert(Base):
         UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
     )
     field_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False, index=True
     )
     date: Mapped[_date] = mapped_column(Date, nullable=False)
     severity: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -260,6 +265,9 @@ class Alert(Base):
     rule_params_json = mapped_column(JSONB, nullable=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="open")
+    index_type: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, default="ndvi"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -278,7 +286,7 @@ class ScoutingObservation(Base):
         UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
     )
     field_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False, index=True
     )
     alert_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("alerts.id"), nullable=True
@@ -312,7 +320,7 @@ class Job(Base):
         UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
     )
     field_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False, index=True
     )
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")

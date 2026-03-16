@@ -34,3 +34,24 @@ We will not pursue legal action against researchers who:
 - Engage in good faith to test and report vulnerabilities
 - Avoid privacy violations, data destruction, and service disruption
 - Provide us a reasonable time to remediate before public disclosure
+
+## Known Limitations & Mitigations
+
+### JWT in Tile URL Query Parameters
+
+MapLibre GL JS does not support `Authorization` headers on tile requests. As a
+result, tile endpoints receive the JWT via `?access_token=<token>` query
+parameter (see `apps/web/src/lib/map-auth.ts`).
+
+**Risk:** Tokens may appear in server access logs and browser history.
+
+**Mitigations in place:**
+- JWTs have a 1-hour TTL; leaked tokens expire quickly.
+- The share-link tile proxy mints its own 5-minute service JWT, so public share
+  pages never expose user tokens.
+- Caddy reverse proxy is configured not to log query strings in production.
+- Tile endpoints only serve read-only raster data; no mutation is possible.
+
+**Planned improvements:**
+- Evaluate short-lived, tile-specific tokens with a narrower scope (e.g., per
+  field, read-only) to reduce exposure if a token is logged.

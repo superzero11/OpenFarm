@@ -30,7 +30,15 @@ from app.routers import (
 async def lifespan(app: FastAPI):
     """Application startup / shutdown lifecycle."""
     setup_logging()
-    yield
+
+    # Create shared httpx client for outbound HTTP (e.g., tile proxy)
+    import httpx
+
+    app.state.http_client = httpx.AsyncClient(timeout=30.0)
+    try:
+        yield
+    finally:
+        await app.state.http_client.aclose()
 
 
 app = FastAPI(

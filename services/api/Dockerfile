@@ -12,5 +12,10 @@ RUN pip install --no-cache-dir -e ".[all]" 2>/dev/null || pip install --no-cache
 
 COPY . .
 
+# Run as non-root
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+    && chown -R appuser:appgroup /app
+USER appuser
+
 # Run migrations (with retry for DB readiness) then start API
 CMD ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do alembic upgrade head && break || echo \"Waiting for DB... attempt $i\" && sleep 3; done && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

@@ -9,7 +9,7 @@ from typing import Annotated
 from urllib.parse import quote
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
 from jose import jwt
 from sqlalchemy import select
@@ -37,8 +37,6 @@ _writer = require_roles("owner", "admin", "member")
 
 # ── Tile proxy helpers ────────────────────────────────────────────────
 
-_http_client: httpx.AsyncClient | None = None
-
 
 def _make_empty_tile() -> bytes:
     """Generate a valid 256×256 transparent PNG at import time."""
@@ -64,11 +62,9 @@ def _make_empty_tile() -> bytes:
 _EMPTY_TILE = _make_empty_tile()
 
 
-def _get_http_client() -> httpx.AsyncClient:
-    global _http_client
-    if _http_client is None:
-        _http_client = httpx.AsyncClient(timeout=30.0)
-    return _http_client
+def _get_http_client(request) -> httpx.AsyncClient:
+    """Return the app-managed httpx client from FastAPI state."""
+    return request.app.state.http_client
 
 
 def _mint_service_jwt() -> str:
@@ -210,23 +206,52 @@ async def get_shared_report(
         "geom": mapping(to_shape(field.geom)) if field.geom else None,
     }
 
-    # Latest layer
-    layer_result = await db.execute(
-        select(RasterLayer)
-        .where(RasterLayer.field_id == field.id, RasterLayer.layer_type == "NDVI")
-        .order_by(RasterLayer.date.desc())
-        .limit(1)
+    # Available index types (distinct layer_type values)
+    types_result = await db.execute(
+        select(RasterLayer.layer_type)
+        .where(RasterLayer.field_id == field.id)
+        .distinct()
     )
-    latest_layer = layer_result.scalar_one_or_none()
+    available_index_types: list[str] = sorted(t for (t,) in types_result.all())
 
-    # Stats (last 12)
-    stats_result = await db.execute(
-        select(FieldStat)
-        .where(FieldStat.field_id == field.id)
-        .order_by(FieldStat.date.desc())
-        .limit(12)
-    )
-    stats = stats_result.scalars().all()
+    # Latest layer per index type
+    layers_by_type: dict[str, RasterLayer] = {}
+    for idx_type in available_index_types:
+        lyr_result = await db.execute(
+            select(RasterLayer)
+            .where(
+                RasterLayer.field_id == field.id,
+                RasterLayer.layer_type == idx_type,
+            )
+            .order_by(RasterLayer.date.desc())
+            .limit(1)
+        )
+        lyr = lyr_result.scalar_one_or_none()
+        if lyr:
+            layers_by_type[idx_type] = lyr
+
+    # Backward-compat: latest NDVI layer
+    latest_layer = layers_by_type.get("NDVI")
+
+    # Stats (last 12 for each available index, merged & grouped)
+    all_stats: list[FieldStat] = []
+    stats_by_type: dict[str, list[FieldStat]] = {}
+    for idx_type in available_index_types:
+        stats_result = await db.execute(
+            select(FieldStat)
+            .join(RasterLayer, FieldStat.layer_id == RasterLayer.id)
+            .where(
+                FieldStat.field_id == field.id,
+                RasterLayer.layer_type == idx_type,
+            )
+            .order_by(FieldStat.date.desc())
+            .limit(12)
+        )
+        idx_stats = list(stats_result.scalars().all())
+        stats_by_type[idx_type] = idx_stats
+        all_stats.extend(idx_stats)
+    # Sort descending by date
+    all_stats.sort(key=lambda s: s.date, reverse=True)
 
     # Recent alerts (last 10)
     alerts_result = await db.execute(
@@ -273,7 +298,10 @@ async def get_shared_report(
     return ShareReportOut(
         field=field_data,
         latest_layer=latest_layer,
-        stats=stats,
+        layers_by_type=layers_by_type,
+        available_index_types=available_index_types,
+        stats=all_stats,
+        stats_by_type=stats_by_type,
         alerts=alerts,
         scouting=scouting_out,
     )
@@ -281,11 +309,13 @@ async def get_shared_report(
 
 @router.get("/share/{token}/tiles/{z}/{x}/{y}.png")
 async def proxy_share_tile(
+    request: Request,
     token: str,
     z: int,
     x: int,
     y: int,
     db: Annotated[AsyncSession, Depends(get_db)],
+    index_type: str = "NDVI",
 ):
     """Public tile proxy — validates share token, proxies to TiTiler."""
     result = await db.execute(select(ShareLink).where(ShareLink.token == token))
@@ -300,16 +330,28 @@ async def proxy_share_tile(
     ):
         raise HTTPException(status_code=410, detail="Share link expired or revoked")
 
-    # Find latest NDVI layer for the field
+    # Per-index colormap and rescale settings
+    _INDEX_TILE_PARAMS: dict[str, tuple[str, str]] = {
+        "NDVI": ("rdylgn", "-0.2,0.9"),
+        "EVI": ("rdylgn", "-0.2,0.8"),
+        "SAVI": ("rdylgn", "-0.2,0.8"),
+        "NDWI": ("rdbu", "-0.5,0.5"),
+    }
+    idx_upper = index_type.upper()
+    colormap, rescale = _INDEX_TILE_PARAMS.get(idx_upper, ("rdylgn", "-0.2,0.9"))
+
+    # Find latest layer for the requested index type
     layer_result = await db.execute(
         select(RasterLayer)
-        .where(RasterLayer.field_id == link.field_id, RasterLayer.layer_type == "NDVI")
+        .where(
+            RasterLayer.field_id == link.field_id, RasterLayer.layer_type == idx_upper
+        )
         .order_by(RasterLayer.date.desc())
         .limit(1)
     )
     layer = layer_result.scalar_one_or_none()
     if not layer:
-        raise HTTPException(status_code=404, detail="No NDVI layer available")
+        raise HTTPException(status_code=404, detail=f"No {idx_upper} layer available")
 
     # Build TiTiler URL (internal)
     cog_uri = layer.cog_uri
@@ -319,12 +361,12 @@ async def proxy_share_tile(
     tiler_url = (
         f"{settings.titiler_internal_url}/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png"
         f"?url={encoded_url}"
-        f"&colormap_name=rdylgn&rescale=-0.2,0.9"
+        f"&colormap_name={colormap}&rescale={rescale}"
     )
 
     # Forward request with a service JWT
     service_token = _mint_service_jwt()
-    client = _get_http_client()
+    client = _get_http_client(request)
     try:
         resp = await client.get(
             tiler_url,

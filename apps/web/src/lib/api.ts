@@ -173,6 +173,70 @@ export interface FieldImportResult {
     errors: string[];
 }
 
+// ── Index Configuration ──────────────────────────────────────────────
+
+export type IndexType = "NDVI" | "EVI" | "SAVI" | "NDWI";
+
+export interface IndexConfig {
+    label: string;
+    colormap: string;
+    rescaleMin: number;
+    rescaleMax: number;
+    gradient: string;
+    threshold: number;
+    lineColor: string;
+    bandColor: string;
+}
+
+export const INDEX_CONFIG: Record<IndexType, IndexConfig> = {
+    NDVI: {
+        label: "NDVI",
+        colormap: "rdylgn",
+        rescaleMin: -0.2,
+        rescaleMax: 0.9,
+        gradient:
+            "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)",
+        threshold: 0.3,
+        lineColor: "#16a34a",
+        bandColor: "rgba(34, 197, 94, 0.15)",
+    },
+    EVI: {
+        label: "EVI",
+        colormap: "rdylgn",
+        rescaleMin: -0.2,
+        rescaleMax: 0.8,
+        gradient:
+            "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)",
+        threshold: 0.2,
+        lineColor: "#16a34a",
+        bandColor: "rgba(34, 197, 94, 0.15)",
+    },
+    SAVI: {
+        label: "SAVI",
+        colormap: "rdylgn",
+        rescaleMin: -0.2,
+        rescaleMax: 0.8,
+        gradient:
+            "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)",
+        threshold: 0.25,
+        lineColor: "#16a34a",
+        bandColor: "rgba(34, 197, 94, 0.15)",
+    },
+    NDWI: {
+        label: "NDWI",
+        colormap: "rdbu",
+        rescaleMin: -0.5,
+        rescaleMax: 0.5,
+        gradient:
+            "linear-gradient(to right, #67001f 0%, #b2182b 10%, #d6604d 20%, #f4a582 30%, #fddbc7 40%, #f7f7f7 50%, #d1e5f0 60%, #92c5de 70%, #4393c3 80%, #2166ac 90%, #053061 100%)",
+        threshold: 0.0,
+        lineColor: "#2166ac",
+        bandColor: "rgba(33, 102, 172, 0.15)",
+    },
+};
+
+export const ALL_INDEX_TYPES: IndexType[] = ["NDVI", "EVI", "SAVI", "NDWI"];
+
 // ── Monitoring Types ─────────────────────────────────────────────────
 
 export interface RasterLayer {
@@ -185,6 +249,7 @@ export interface RasterLayer {
     tile_url: string | null;
     min: number | null;
     max: number | null;
+    params_json: Record<string, any> | null;
     provenance_json: Record<string, any> | null;
     created_at: string;
 }
@@ -225,6 +290,7 @@ export interface Alert {
     rule_params_json: Record<string, any> | null;
     message: string;
     status: string;
+    index_type: string | null;
     created_at: string;
 }
 
@@ -331,10 +397,12 @@ export const fieldsApi = {
 // ── Monitoring ───────────────────────────────────────────────────────
 
 export const monitoringApi = {
-    layers: (fieldId: string, type = "NDVI", limit = 50) =>
+    layers: (fieldId: string, type: IndexType = "NDVI", limit = 50) =>
         apiFetch<Paginated<RasterLayer>>(`/fields/${fieldId}/layers?type=${type}&limit=${limit}`),
-    stats: (fieldId: string, type = "NDVI", limit = 200) =>
+    stats: (fieldId: string, type: IndexType = "NDVI", limit = 200) =>
         apiFetch<Paginated<FieldStat>>(`/fields/${fieldId}/stats?type=${type}&limit=${limit}`),
+    layerTypes: (fieldId: string) =>
+        apiFetch<string[]>(`/fields/${fieldId}/layers/types`),
 };
 
 // ── Jobs ─────────────────────────────────────────────────────────────
@@ -344,6 +412,11 @@ export const jobsApi = {
         apiFetch<NdviJob>(`/fields/${fieldId}/jobs/ndvi`, {
             method: "POST",
             body: JSON.stringify({ date_from: dateFrom, date_to: dateTo }),
+        }),
+    createIndex: (fieldId: string, indexType: IndexType, dateFrom: string, dateTo: string, params?: { savi_l?: number }) =>
+        apiFetch<NdviJob>(`/fields/${fieldId}/jobs/index`, {
+            method: "POST",
+            body: JSON.stringify({ index_type: indexType.toLowerCase(), date_from: dateFrom, date_to: dateTo, ...params }),
         }),
     get: (jobId: string) => apiFetch<NdviJob>(`/jobs/${jobId}`),
 };
@@ -358,8 +431,11 @@ export const alertsApi = {
         params.set("offset", String(opts.offset ?? 0));
         return apiFetch<Paginated<Alert>>(`/alerts?${params}`);
     },
-    listForField: (fieldId: string, limit = 50) =>
-        apiFetch<Paginated<Alert>>(`/alerts?field_id=${fieldId}&limit=${limit}`),
+    listForField: (fieldId: string, limit = 50, indexType?: string) => {
+        const params = new URLSearchParams({ field_id: fieldId, limit: String(limit) });
+        if (indexType) params.set("index_type", indexType);
+        return apiFetch<Paginated<Alert>>(`/alerts?${params}`);
+    },
     listForFarm: (farmId: string, limit = 50) =>
         apiFetch<Paginated<Alert>>(`/alerts?farm_id=${farmId}&limit=${limit}`),
     update: (alertId: string, data: { status: string }) =>
@@ -407,7 +483,10 @@ export interface ShareReport {
         geom: GeoJSON.Geometry | null;
     };
     latest_layer: RasterLayer | null;
+    layers_by_type: Record<string, RasterLayer>;
+    available_index_types: string[];
     stats: FieldStat[];
+    stats_by_type: Record<string, FieldStat[]>;
     alerts: Alert[];
     scouting: ScoutingObservation[];
 }

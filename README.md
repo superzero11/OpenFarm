@@ -36,7 +36,8 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 
 ## Why OpenFarm
 - Self-hostable stack with clear service boundaries (Next.js ↔ FastAPI ↔ TiTiler ↔ MinIO ↔ PostGIS)
-- Reproducible NDVI pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
+- Multi-index vegetation monitoring — NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery
+- Reproducible pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
 - Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
 - MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
 - Open, permissive BSD-3-Clause license
@@ -50,7 +51,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 ## Architecture
 ```
 apps/web/       → Next.js 14 + NextAuth (Google OAuth) + Tailwind + shadcn/ui + MapLibre + ECharts
-services/api/   → FastAPI + SQLAlchemy 2.0 (async) + Alembic + Celery tasks (NDVI)
+services/api/   → FastAPI + SQLAlchemy 2.0 (async) + Alembic + Celery tasks (NDVI/EVI/SAVI/NDWI)
 services/tiler/ → TiTiler COG tile server (shared JWT auth)
 docker-compose.yml → Postgres/PostGIS, Redis, MinIO, API, Celery worker, TiTiler, Web
 ```
@@ -138,14 +139,15 @@ ruff format --check .
 - Geometry stored as `MultiPolygon(4326)`; polygons auto-wrapped
 - Audit events on key actions (e.g., field_created)
 
-## Feature Overview (MVP)
-- Auth: Google OAuth via NextAuth → JWT bridge (`/api/auth/token`)
-- Orgs & RBAC: owner/admin/member/viewer
-- Farms & Fields: draw/upload GeoJSON/KML, area calc, soft delete
-- NDVI Monitoring: STAC search → NDVI COG → TiTiler tiles → time-series stats
-- Alerts: ndvi_drop / ndvi_threshold
-- Scouting: geotagged notes, optional photo
-- Sharing: read-only field health report via share links
+## Feature Overview
+- **Auth**: Google OAuth via NextAuth → JWT bridge (`/api/auth/token`)
+- **Orgs & RBAC**: owner/admin/member/viewer with audit logging
+- **Farms & Fields**: draw/upload GeoJSON/KML, area calc, soft delete
+- **Vegetation Monitoring**: NDVI, EVI, SAVI (configurable L factor), NDWI — STAC search → COG → TiTiler tiles → time-series stats
+- **Per-Index Alerts**: configurable threshold and drop-percentage rules for each index
+- **Scouting**: geotagged observations with optional photo upload
+- **Sharing**: read-only field health reports via share links with multi-index toggle
+- **Changelog**: in-app changelog page with version history
 
 ## Quality & CI
 - GitHub Actions: lint + type-check (`.github/workflows/ci.yml`)

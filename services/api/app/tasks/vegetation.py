@@ -1,8 +1,7 @@
-"""NDVI processing task — backward-compatible entry point.
+"""Vegetation index tasks — EVI, SAVI, NDWI.
 
-Delegates to the shared vegetation-index pipeline (``pipeline.py``).
-The Celery task name ``app.tasks.ndvi.process_ndvi`` is preserved so
-existing jobs, imports, and the ``POST /jobs/ndvi`` endpoint keep working.
+Each task follows the same 7-step pipeline as NDVI but uses the
+index registry for formula selection, band resolution, and alert defaults.
 """
 
 from __future__ import annotations
@@ -32,23 +31,19 @@ from app.tasks.pipeline import (
 logger = structlog.get_logger()
 
 
-@celery_app.task(
-    name="app.tasks.ndvi.process_ndvi",
-    bind=True,
-    max_retries=3,
-    time_limit=1800,
-    soft_time_limit=1500,
-)
-def process_ndvi(self, job_id: str) -> dict:
-    """Process NDVI for a field — delegates to the shared pipeline."""
+# ── Generic index processor ──────────────────────────────────────────
+
+
+def _run_index_pipeline(self, job_id: str, index_key: str) -> dict:
+    """Shared entry-point logic for any vegetation-index Celery task."""
     from app.models.tables import Job, Field, FieldStat
 
-    index_def = get_index("ndvi")
+    index_def = get_index(index_key)
     session = get_db_session()
     try:
         job = session.get(Job, uuid.UUID(job_id))
         if not job:
-            logger.error("job_not_found", job_id=job_id)
+            logger.error("job_not_found", job_id=job_id, index=index_key)
             return {"job_id": job_id, "status": "error", "detail": "Job not found"}
 
         job.status = "running"
@@ -72,6 +67,11 @@ def process_ndvi(self, job_id: str) -> dict:
         date_to = date.fromisoformat(params["date_to"])
         org_id_str = str(job.org_id)
         field_id_str = str(job.field_id)
+
+        # Extra params (e.g. savi_l)
+        extra_params = {
+            k: v for k, v in params.items() if k not in ("date_from", "date_to")
+        }
 
         # Step 1: Scene Search
         update_job_progress(session, job, "scene_search")
@@ -128,6 +128,7 @@ def process_ndvi(self, job_id: str) -> dict:
                     date_from=date_from,
                     date_to=date_to,
                     historical_means=historical_means,
+                    extra_params=extra_params,
                 )
                 if result is not None:
                     layers_created += 1
@@ -135,6 +136,7 @@ def process_ndvi(self, job_id: str) -> dict:
                 logger.error(
                     "scene_processing_error",
                     scene_id=scene["id"],
+                    index=index_key,
                     error=str(e),
                 )
                 continue
@@ -150,7 +152,11 @@ def process_ndvi(self, job_id: str) -> dict:
         flag_modified(job, "progress_json")
         session.commit()
 
-        logger.info("ndvi_job_completed", job_id=job_id, layers_created=layers_created)
+        logger.info(
+            f"{index_key}_job_completed",
+            job_id=job_id,
+            layers_created=layers_created,
+        )
         return {
             "job_id": job_id,
             "status": "completed",
@@ -158,7 +164,7 @@ def process_ndvi(self, job_id: str) -> dict:
         }
 
     except Exception as e:
-        logger.error("ndvi_job_failed", job_id=job_id, error=str(e))
+        logger.error(f"{index_key}_job_failed", job_id=job_id, error=str(e))
         try:
             job = session.get(Job, uuid.UUID(job_id))
             if job:
@@ -175,3 +181,48 @@ def process_ndvi(self, job_id: str) -> dict:
 
     finally:
         session.close()
+
+
+# ── EVI ──────────────────────────────────────────────────────────────
+
+
+@celery_app.task(
+    name="app.tasks.vegetation.process_evi",
+    bind=True,
+    max_retries=3,
+    time_limit=1800,
+    soft_time_limit=1500,
+)
+def process_evi(self, job_id: str) -> dict:
+    """Process EVI for a field."""
+    return _run_index_pipeline(self, job_id, "evi")
+
+
+# ── SAVI ─────────────────────────────────────────────────────────────
+
+
+@celery_app.task(
+    name="app.tasks.vegetation.process_savi",
+    bind=True,
+    max_retries=3,
+    time_limit=1800,
+    soft_time_limit=1500,
+)
+def process_savi(self, job_id: str) -> dict:
+    """Process SAVI for a field."""
+    return _run_index_pipeline(self, job_id, "savi")
+
+
+# ── NDWI ─────────────────────────────────────────────────────────────
+
+
+@celery_app.task(
+    name="app.tasks.vegetation.process_ndwi",
+    bind=True,
+    max_retries=3,
+    time_limit=1800,
+    soft_time_limit=1500,
+)
+def process_ndwi(self, job_id: str) -> dict:
+    """Process NDWI for a field."""
+    return _run_index_pipeline(self, job_id, "ndwi")

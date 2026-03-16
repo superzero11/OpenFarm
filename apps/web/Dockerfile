@@ -3,7 +3,7 @@ FROM node:20-alpine AS base
 # Install deps
 FROM base AS deps
 WORKDIR /app
-COPY package.json ./
+COPY apps/web/package.json ./
 RUN npm install
 
 # Build
@@ -19,7 +19,9 @@ ENV NEXT_PUBLIC_TITILER_URL=$NEXT_PUBLIC_TITILER_URL
 ENV NEXT_PUBLIC_PROTOMAPS_URL=$NEXT_PUBLIC_PROTOMAPS_URL
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY apps/web/ .
+# Copy CHANGELOG.md into public/ so the API route can read it at runtime
+COPY CHANGELOG.md ./public/CHANGELOG.md
 RUN npm run build
 
 # Production

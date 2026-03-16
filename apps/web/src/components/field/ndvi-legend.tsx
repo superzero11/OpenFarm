@@ -1,54 +1,51 @@
 "use client";
 
 import React from "react";
-import type { RasterLayer } from "@/lib/api";
+import type { RasterLayer, IndexType } from "@/lib/api";
+import { INDEX_CONFIG } from "@/lib/api";
 import { useTranslations } from "next-intl";
-
-/* ── rdylgn colormap (TiTiler / matplotlib) ──────────────────── */
-
-const RESCALE_MIN = -0.2;
-const RESCALE_MAX = 0.9;
-const RESCALE_RANGE = RESCALE_MAX - RESCALE_MIN; // 1.1
-
-/**
- * Standard RdYlGn divergent colormap – 11 stops evenly spaced.
- * Matches the `rdylgn` colormap used in TiTiler with `rescale=-0.2,0.9`.
- */
-const RDYLGN_GRADIENT =
-    "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)";
-
-/** Map an NDVI value to a percentage position on the gradient bar. */
-function valueToPercent(value: number): number {
-    return Math.max(0, Math.min(100, ((value - RESCALE_MIN) / RESCALE_RANGE) * 100));
-}
 
 /* ── Component ────────────────────────────────────────────────── */
 
 interface NdviLegendProps {
     /** The active raster layer (must have tile_url to be shown on map). */
     layer: RasterLayer;
+    /** Which vegetation index is shown. */
+    indexType?: IndexType;
+    /** Render a smaller variant for tight spaces. */
+    compact?: boolean;
 }
 
-export default function NdviLegend({ layer }: NdviLegendProps) {
+export default function NdviLegend({ layer, indexType = "NDVI", compact = false }: NdviLegendProps) {
     const t = useTranslations("ndviLegend");
+    const config = INDEX_CONFIG[indexType];
+    const rescaleRange = config.rescaleMax - config.rescaleMin;
+
+    /** Map a value to a percentage position on the gradient bar. */
+    function valueToPercent(value: number): number {
+        return Math.max(0, Math.min(100, ((value - config.rescaleMin) / rescaleRange) * 100));
+    }
 
     const hasRange = layer.min != null && layer.max != null;
     const minPct = hasRange ? valueToPercent(layer.min!) : null;
     const maxPct = hasRange ? valueToPercent(layer.max!) : null;
 
     return (
-        <div className="rounded-lg bg-background/90 backdrop-blur-sm shadow-md border border-border/50 px-3 py-2.5 w-[200px]">
+        <div className={`rounded-lg bg-background/90 backdrop-blur-sm shadow-md border border-border/50 ${compact ? "px-2 py-1.5 w-[140px]" : "px-3 py-2.5 w-[200px]"
+            }`}>
             {/* Title */}
-            <p className="text-[11px] font-semibold mb-2 tracking-wide">
-                {t("title")}
+            <p className={`font-semibold tracking-wide ${compact ? "text-[9px] mb-1" : "text-[11px] mb-2"
+                }`}>
+                {config.label}
             </p>
 
             {/* Gradient bar + markers */}
             <div className="relative">
-                <div className="h-3 w-full rounded-sm border border-border/30 overflow-hidden">
+                <div className={`w-full rounded-sm border border-border/30 overflow-hidden ${compact ? "h-2" : "h-3"
+                    }`}>
                     <div
                         className="h-full w-full"
-                        style={{ background: RDYLGN_GRADIENT }}
+                        style={{ background: config.gradient }}
                     />
                 </div>
 
@@ -59,7 +56,7 @@ export default function NdviLegend({ layer }: NdviLegendProps) {
                         style={{ left: `${minPct}%` }}
                         title={`Min: ${layer.min!.toFixed(2)}`}
                     >
-                        <div className="w-[2px] h-3 bg-foreground/80" />
+                        <div className={`w-[2px] bg-foreground/80 ${compact ? "h-2" : "h-3"}`} />
                         <div
                             className="border-l-[3px] border-r-[3px] border-t-[4px] border-l-transparent border-r-transparent border-t-foreground/80"
                             style={{ width: 0, height: 0 }}
@@ -74,7 +71,7 @@ export default function NdviLegend({ layer }: NdviLegendProps) {
                         style={{ left: `${maxPct}%` }}
                         title={`Max: ${layer.max!.toFixed(2)}`}
                     >
-                        <div className="w-[2px] h-3 bg-foreground/80" />
+                        <div className={`w-[2px] bg-foreground/80 ${compact ? "h-2" : "h-3"}`} />
                         <div
                             className="border-l-[3px] border-r-[3px] border-t-[4px] border-l-transparent border-r-transparent border-t-foreground/80"
                             style={{ width: 0, height: 0 }}
@@ -85,13 +82,14 @@ export default function NdviLegend({ layer }: NdviLegendProps) {
 
             {/* Fixed scale labels */}
             <div className="flex justify-between mt-1">
-                <span className="text-[10px] text-muted-foreground font-mono">{RESCALE_MIN}</span>
-                <span className="text-[10px] text-muted-foreground font-mono">{RESCALE_MAX}</span>
+                <span className={`text-muted-foreground font-mono ${compact ? "text-[8px]" : "text-[10px]"}`}>{config.rescaleMin}</span>
+                <span className={`text-muted-foreground font-mono ${compact ? "text-[8px]" : "text-[10px]"}`}>{config.rescaleMax}</span>
             </div>
 
             {/* Field actual range */}
             {hasRange && (
-                <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight">
+                <p className={`text-muted-foreground leading-tight ${compact ? "text-[8px] mt-1" : "text-[10px] mt-1.5"
+                    }`}>
                     {t("fieldRange")}: <span className="font-mono font-medium text-foreground/80">{layer.min!.toFixed(2)}</span>
                     {" – "}
                     <span className="font-mono font-medium text-foreground/80">{layer.max!.toFixed(2)}</span>

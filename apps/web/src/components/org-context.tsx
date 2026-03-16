@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { orgsApi, usersApi, setOrgId, getOrgId } from "@/lib/api";
 import type { Org, UserMe } from "@/lib/api";
 
@@ -46,6 +47,7 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (err) {
             console.error("Failed to fetch orgs:", err);
+            toast.error("Failed to load organizations. Please refresh the page.");
         } finally {
             setLoading(false);
         }

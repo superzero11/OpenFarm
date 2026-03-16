@@ -11,7 +11,8 @@ import {
     DataZoomComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
-import type { FieldStat } from "@/lib/api";
+import type { FieldStat, IndexType } from "@/lib/api";
+import { INDEX_CONFIG } from "@/lib/api";
 
 // Register only the modules we need (tree-shake friendly)
 echarts.use([
@@ -31,6 +32,8 @@ interface NdviChartProps {
     onDateSelect?: (date: string) => void;
     /** Height in pixels */
     height?: number;
+    /** Which vegetation index to display */
+    indexType?: IndexType;
 }
 
 export default function NdviChart({
@@ -38,7 +41,11 @@ export default function NdviChart({
     selectedDate,
     onDateSelect,
     height = 200,
+    indexType = "NDVI",
 }: NdviChartProps) {
+    const config = INDEX_CONFIG[indexType];
+    const seriesName = `Mean ${config.label}`;
+
     const option = useMemo(() => {
         const dates = stats.map((s) => s.date);
         const means = stats.map((s) => s.mean ?? null);
@@ -77,8 +84,8 @@ export default function NdviChart({
             },
             yAxis: {
                 type: "value" as const,
-                min: -0.2,
-                max: 1.0,
+                min: config.rescaleMin,
+                max: config.rescaleMax + 0.1,
                 axisLabel: { fontSize: 10 },
                 splitLine: { lineStyle: { type: "dashed" as const, color: "#e5e7eb" } },
             },
@@ -110,21 +117,21 @@ export default function NdviChart({
                     lineStyle: { opacity: 0 },
                     symbol: "none",
                     areaStyle: {
-                        color: "rgba(34, 197, 94, 0.15)",
+                        color: config.bandColor,
                     },
                     emphasis: { disabled: true },
                 },
-                // Mean NDVI line
+                // Mean line
                 {
-                    name: "Mean NDVI",
+                    name: seriesName,
                     type: "line",
                     data: means,
                     smooth: true,
-                    lineStyle: { color: "#16a34a", width: 2 },
+                    lineStyle: { color: config.lineColor, width: 2 },
                     itemStyle: {
                         color: (params: any) => {
                             const d = dates[params.dataIndex];
-                            return d === selectedDate ? "#ef4444" : "#16a34a";
+                            return d === selectedDate ? "#ef4444" : config.lineColor;
                         },
                     },
                     symbolSize: (value: number, params: any) => {
@@ -135,7 +142,7 @@ export default function NdviChart({
                         silent: true,
                         data: [
                             {
-                                yAxis: 0.3,
+                                yAxis: config.threshold,
                                 lineStyle: { color: "#ef4444", type: "dashed" as const, width: 1 },
                                 label: { formatter: "Threshold", fontSize: 9, position: "insideMiddleBottom" as const },
                             },
@@ -144,18 +151,18 @@ export default function NdviChart({
                 },
             ],
         };
-    }, [stats, selectedDate]);
+    }, [stats, selectedDate, config, seriesName]);
 
     const onEvents = useMemo(
         () => ({
             click: (params: any) => {
-                if (params.seriesName === "Mean NDVI" && params.dataIndex != null) {
+                if (params.seriesName === seriesName && params.dataIndex != null) {
                     const date = stats[params.dataIndex]?.date;
                     if (date) onDateSelect?.(date);
                 }
             },
         }),
-        [stats, onDateSelect],
+        [stats, onDateSelect, seriesName],
     );
 
     if (stats.length === 0) {
@@ -164,7 +171,7 @@ export default function NdviChart({
                 className="flex items-center justify-center text-xs text-muted-foreground"
                 style={{ height }}
             >
-                No NDVI data yet.
+                No {config.label} data yet.
             </div>
         );
     }

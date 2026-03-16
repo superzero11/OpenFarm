@@ -5,12 +5,13 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.logging import logger
+from app.core.rate_limit import limiter
 from app.middleware.auth import (
     CurrentUser,
     OrgContext,
@@ -230,7 +231,9 @@ async def change_member_role(
 @router.delete(
     "/orgs/{org_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT
 )
+@limiter.limit("10/minute")
 async def remove_member(
+    request: Request,
     org_id: uuid.UUID,
     user_id: uuid.UUID,
     ctx: Annotated[OrgContext, Depends(require_roles("owner", "admin"))],
@@ -258,7 +261,9 @@ async def remove_member(
     response_model=InviteOut,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("10/minute")
 async def create_invite(
+    request: Request,
     org_id: uuid.UUID,
     body: InviteCreate,
     ctx: Annotated[OrgContext, Depends(require_roles("owner", "admin"))],
@@ -363,7 +368,9 @@ async def list_org_invites(
 @router.delete(
     "/orgs/{org_id}/invites/{invite_id}", status_code=status.HTTP_204_NO_CONTENT
 )
+@limiter.limit("10/minute")
 async def cancel_invite(
+    request: Request,
     org_id: uuid.UUID,
     invite_id: uuid.UUID,
     ctx: Annotated[OrgContext, Depends(require_roles("owner", "admin"))],

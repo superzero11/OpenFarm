@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -117,12 +117,12 @@ async def delete_farm(
     now = datetime.now(timezone.utc)
     farm.deleted_at = now
 
-    # Cascade soft-delete fields
-    result = await db.execute(
-        select(Field).where(Field.farm_id == farm_id, Field.deleted_at.is_(None))
+    # Cascade soft-delete fields (atomic bulk update)
+    await db.execute(
+        update(Field)
+        .where(Field.farm_id == farm_id, Field.deleted_at.is_(None))
+        .values(deleted_at=now)
     )
-    for field in result.scalars().all():
-        field.deleted_at = now
 
     await db.flush()
 

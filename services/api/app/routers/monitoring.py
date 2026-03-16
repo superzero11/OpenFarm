@@ -6,7 +6,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from sqlalchemy import distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -15,6 +15,7 @@ from app.middleware.auth import OrgContext, get_org_context
 from app.models.tables import FieldStat, RasterLayer
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import FieldStatOut, RasterLayerOut
+from app.tasks.indices import INDEX_REGISTRY
 
 router = APIRouter()
 
@@ -27,16 +28,30 @@ def _cog_uri_to_s3_path(cog_uri: str) -> str:
 
 
 def _layer_to_out(layer: RasterLayer) -> RasterLayerOut:
-    """Convert ORM RasterLayer to RasterLayerOut with tile_url."""
+    """Convert ORM RasterLayer to RasterLayerOut with tile_url.
+
+    Uses the index registry for per-index colormap and rescale values.
+    """
     s3_path = _cog_uri_to_s3_path(layer.cog_uri)
-    # URL-encode the s3 path for the TiTiler query param
     from urllib.parse import quote
 
     encoded_url = quote(s3_path, safe="")
+
+    # Look up index-specific colormap/rescale from registry
+    index_key = (layer.layer_type or "NDVI").lower()
+    idx = INDEX_REGISTRY.get(index_key)
+    if idx:
+        colormap = idx.colormap
+        rescale = f"{idx.rescale[0]},{idx.rescale[1]}"
+    else:
+        # Fallback to NDVI defaults
+        colormap = "rdylgn"
+        rescale = "-0.2,0.9"
+
     tile_url = (
         f"{settings.titiler_public_url}/cog/tiles/WebMercatorQuad/{{z}}/{{x}}/{{y}}.png"
         f"?url={encoded_url}"
-        f"&colormap_name=rdylgn&rescale=-0.2,0.9"
+        f"&colormap_name={colormap}&rescale={rescale}"
     )
     return RasterLayerOut(
         id=layer.id,
@@ -48,6 +63,7 @@ def _layer_to_out(layer: RasterLayer) -> RasterLayerOut:
         tile_url=tile_url,
         min=float(layer.min) if layer.min is not None else None,
         max=float(layer.max) if layer.max is not None else None,
+        params_json=layer.params_json,
         provenance_json=layer.provenance_json,
         created_at=layer.created_at,
     )
@@ -114,3 +130,19 @@ async def list_stats(
         limit=limit,
         offset=offset,
     )
+
+
+@router.get("/fields/{field_id}/layers/types", response_model=list[str])
+async def list_layer_types(
+    field_id: uuid.UUID,
+    ctx: Annotated[OrgContext, Depends(get_org_context)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Return the distinct index types available for a field."""
+    result = await db.execute(
+        select(distinct(RasterLayer.layer_type)).where(
+            RasterLayer.field_id == field_id,
+            RasterLayer.org_id == ctx.org_id,
+        )
+    )
+    return sorted(result.scalars().all())

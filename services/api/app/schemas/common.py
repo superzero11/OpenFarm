@@ -23,5 +23,5 @@ class PaginationParams(BaseModel):
     def clamp(self) -> "PaginationParams":
         return PaginationParams(
             limit=max(1, min(self.limit, 200)),
-            offset=max(0, self.offset),
+            offset=max(0, min(self.offset, 100_000)),
         )

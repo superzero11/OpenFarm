@@ -29,6 +29,7 @@ async def list_alerts(
     field_id: uuid.UUID | None = Query(None),
     farm_id: uuid.UUID | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
+    index_type: str | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
@@ -37,6 +38,8 @@ async def list_alerts(
         base = base.where(Alert.field_id == field_id)
     if status_filter:
         base = base.where(Alert.status == status_filter)
+    if index_type:
+        base = base.where(Alert.index_type == index_type)
     # farm_id filter would require a join through fields → farms
     if farm_id:
         from app.models.tables import Field

@@ -8,6 +8,9 @@ import {
     type RasterLayer,
     type FieldStat,
     type NdviJob,
+    type IndexType,
+    INDEX_CONFIG,
+    ALL_INDEX_TYPES,
 } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -49,25 +52,38 @@ function today(): string {
 }
 
 /* ── Job sub-step labels ─────────────────────────────────────── */
-const STEP_LABELS: Record<string, string> = {
-    scene_search: "Searching satellite scenes",
-    download_bands: "Downloading bands",
-    compute_ndvi: "Computing NDVI",
-    write_cog: "Writing COG",
-    compute_stats: "Computing statistics",
-    run_alerts: "Checking alert rules",
-    complete: "Complete",
-};
+function getStepLabels(indexType: IndexType): Record<string, string> {
+    const label = INDEX_CONFIG[indexType].label;
+    return {
+        scene_search: "Searching satellite scenes",
+        download_bands: "Downloading bands",
+        [`compute_${indexType.toLowerCase()}`]: `Computing ${label}`,
+        write_cog: "Writing COG",
+        compute_stats: "Computing statistics",
+        run_alerts: "Checking alert rules",
+        complete: "Complete",
+    };
+}
 
 /* ── Props ────────────────────────────────────────────────────── */
 
 interface NdviTabProps {
     fieldId: string;
     /** Called when a tile layer should be shown on the map */
-    onShowLayer?: (layer: RasterLayer | null) => void;
+    onShowLayer?: (layer: RasterLayer | null, indexType: IndexType) => void;
+    /** Called when the active index changes — parent renders the selector */
+    onActiveIndexChange?: (index: IndexType) => void;
+    /** Externally controlled active index (from parent floating selector) */
+    activeIndexOverride?: IndexType;
+    /** Called after data loads so parent can refresh available index types */
+    onDataLoaded?: () => void;
 }
 
-export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
+export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, activeIndexOverride, onDataLoaded }: NdviTabProps) {
+    // ── Index selector ───────────────────────────────
+    const [activeIndex, setActiveIndex] = useState<IndexType>("NDVI");
+    const config = INDEX_CONFIG[activeIndex];
+
     // ── Data ─────────────────────────────────────────
     const [layers, setLayers] = useState<RasterLayer[]>([]);
     const [stats, setStats] = useState<FieldStat[]>([]);
@@ -82,45 +98,55 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
     const [dateFrom, setDateFrom] = useState(daysAgo(30));
     const [dateTo, setDateTo] = useState(today());
     const [submitting, setSubmitting] = useState(false);
+    const [selectedIndices, setSelectedIndices] = useState<Set<IndexType>>(new Set(["NDVI"]));
+    const [saviL, setSaviL] = useState(0.5);
 
     // ── Active job tracking ──────────────────────────
     const [activeJob, setActiveJob] = useState<NdviJob | null>(null);
+    const [jobIndices, setJobIndices] = useState<IndexType[]>([]);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const loadGenRef = useRef(0); // prevents stale fetch results
 
-    // ── Load layers + stats ──────────────────────────
+    // ── Load layers + stats for active index ─────────
     const loadData = useCallback(async () => {
+        const gen = ++loadGenRef.current;
+        setLoading(true);
         try {
             const [layersRes, statsRes] = await Promise.all([
-                monitoringApi.layers(fieldId),
-                monitoringApi.stats(fieldId),
+                monitoringApi.layers(fieldId, activeIndex),
+                monitoringApi.stats(fieldId, activeIndex),
             ]);
+            if (gen !== loadGenRef.current) return; // stale — discard
             setLayers(layersRes.items);
             setStats(statsRes.items);
+            onDataLoaded?.();
             // Auto-select latest date
-            if (layersRes.items.length > 0 && !selectedDate) {
+            if (layersRes.items.length > 0) {
                 setSelectedDate(layersRes.items[layersRes.items.length - 1].date);
+            } else {
+                setSelectedDate(null);
             }
         } catch {
             // silent — may simply have no data
         } finally {
-            setLoading(false);
+            if (gen === loadGenRef.current) setLoading(false);
         }
-    }, [fieldId, selectedDate]);
+    }, [fieldId, activeIndex]);
 
     useEffect(() => {
         loadData();
     }, [loadData]);
 
-    // ── Show NDVI layer on map when selectedDate or visibility changes ──
+    // ── Show layer on map when selectedDate or visibility changes ──
     useEffect(() => {
         if (!onShowLayer) return;
         if (!layerVisible || !selectedDate) {
-            onShowLayer(null);
+            onShowLayer(null, activeIndex);
             return;
         }
         const layer = layers.find((l) => l.date === selectedDate);
-        onShowLayer(layer ?? null);
-    }, [selectedDate, layerVisible, layers, onShowLayer]);
+        onShowLayer(layer ?? null, activeIndex);
+    }, [selectedDate, layerVisible, layers, onShowLayer, activeIndex]);
 
     // ── Job polling ─────────────────────────────────
     const pollJob = useCallback(
@@ -131,18 +157,21 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                 if (job.status === "completed" || job.status === "failed") {
                     if (pollRef.current) clearInterval(pollRef.current);
                     pollRef.current = null;
+                    const names = jobIndices.map((i) => INDEX_CONFIG[i].label).join(", ") || config.label;
                     if (job.status === "completed") {
-                        toast.success("NDVI processing complete!");
+                        toast.success(`${names} processing complete!`);
                         loadData();
+                        onDataLoaded?.();
                     } else {
-                        toast.error(`NDVI job failed: ${job.error || "Unknown error"}`);
+                        toast.error(`${names} job failed: ${job.error || "Unknown error"}`);
                     }
+                    setActiveJob(null);
                 }
             } catch {
                 // poll error — keep trying
             }
         },
-        [loadData],
+        [loadData, config.label, jobIndices, onDataLoaded],
     );
 
     useEffect(() => {
@@ -151,18 +180,43 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
         };
     }, []);
 
-    // ── Submit job ───────────────────────────────────
+    // ── Toggle index in job form selection ───────────
+    const toggleJobIndex = (idx: IndexType) => {
+        setSelectedIndices((prev) => {
+            const next = new Set(prev);
+            if (next.has(idx)) {
+                if (next.size > 1) next.delete(idx);
+            } else {
+                next.add(idx);
+            }
+            return next;
+        });
+    };
+
+    // ── Submit jobs (one per selected index) ─────────
     const handleSubmitJob = async () => {
         setSubmitting(true);
         try {
-            const job = await jobsApi.createNdvi(fieldId, dateFrom, dateTo);
-            setActiveJob(job);
-            setShowJobForm(false);
-            toast.success("NDVI job started");
+            const indices = Array.from(selectedIndices);
+            let lastJob: NdviJob | null = null;
 
-            // Start polling
-            if (pollRef.current) clearInterval(pollRef.current);
-            pollRef.current = setInterval(() => pollJob(job.id), 5000);
+            for (const idx of indices) {
+                const params = idx === "SAVI" ? { savi_l: saviL } : undefined;
+                const job = await jobsApi.createIndex(fieldId, idx, dateFrom, dateTo, params);
+                lastJob = job;
+            }
+
+            if (lastJob) {
+                setActiveJob(lastJob);
+                setJobIndices(indices);
+                setShowJobForm(false);
+                const names = indices.map((i) => INDEX_CONFIG[i].label).join(", ");
+                toast.success(`${names} job${indices.length > 1 ? "s" : ""} started`);
+
+                // Poll the last submitted job
+                if (pollRef.current) clearInterval(pollRef.current);
+                pollRef.current = setInterval(() => pollJob(lastJob!.id), 5000);
+            }
         } catch (err: any) {
             toast.error(err.detail || "Failed to start job");
         } finally {
@@ -180,12 +234,45 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
     const getJobProgress = () => {
         if (!activeJob?.progress_json) return null;
         const p = activeJob.progress_json as Record<string, string>;
-        const steps = Object.entries(STEP_LABELS);
+        const lastIdx = jobIndices[jobIndices.length - 1] || activeIndex;
+        const stepLabels = getStepLabels(lastIdx);
+        const steps = Object.entries(stepLabels);
         return steps.map(([key, label]) => {
             const status = p[key] || "pending";
             return { key, label, status };
         });
     };
+
+    // ── Switch active index ──────────────────────────
+    const handleIndexChange = (idx: IndexType) => {
+        if (idx === activeIndex) return;
+        // Clear data immediately to prevent stale overlay
+        setLayers([]);
+        setStats([]);
+        setSelectedDate(null);
+        setActiveIndex(idx);
+        onActiveIndexChange?.(idx);
+        setActiveJob(null);
+        if (pollRef.current) {
+            clearInterval(pollRef.current);
+            pollRef.current = null;
+        }
+    };
+
+    // Sync when parent overrides active index
+    useEffect(() => {
+        if (activeIndexOverride && activeIndexOverride !== activeIndex) {
+            setLayers([]);
+            setStats([]);
+            setSelectedDate(null);
+            setActiveIndex(activeIndexOverride);
+            setActiveJob(null);
+            if (pollRef.current) {
+                clearInterval(pollRef.current);
+                pollRef.current = null;
+            }
+        }
+    }, [activeIndexOverride]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (loading) {
         return (
@@ -203,7 +290,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
 
     return (
         <div className="space-y-4">
-            {/* ── Section: Run NDVI Job ─────────────────── */}
+            {/* ── Section: Run Analysis Job ────────────── */}
             <div>
                 <Button
                     variant="outline"
@@ -212,7 +299,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                 >
                     <span className="flex items-center gap-1.5">
                         <PlayCircle className="h-4 w-4 text-primary" />
-                        Run NDVI Analysis
+                        Run Analysis
                     </span>
                     {showJobForm ? (
                         <ChevronUp className="h-4 w-4" />
@@ -224,6 +311,52 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                 {showJobForm && (
                     <Card className="mt-2">
                         <CardContent className="space-y-3 pt-4">
+                            {/* Index checkboxes */}
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                    Indices to compute
+                                </label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {ALL_INDEX_TYPES.map((idx) => (
+                                        <Button
+                                            key={idx}
+                                            type="button"
+                                            variant={selectedIndices.has(idx) ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => toggleJobIndex(idx)}
+                                            className={cn(
+                                                "h-7 text-xs px-2.5",
+                                                selectedIndices.has(idx) && "shadow-sm",
+                                            )}
+                                        >
+                                            {INDEX_CONFIG[idx].label}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* SAVI L factor */}
+                            {selectedIndices.has("SAVI") && (
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                        SAVI L factor
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={saviL}
+                                        onChange={(e) => setSaviL(Number(e.target.value))}
+                                        min={0}
+                                        max={1}
+                                        step={0.1}
+                                        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                        Soil brightness correction (0–1, default 0.5)
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Date range */}
                             <div className="flex gap-2">
                                 <div className="flex-1">
                                     <label className="block text-xs font-medium text-muted-foreground mb-1">
@@ -277,7 +410,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                     <CardHeader className="pb-2 pt-3 px-3">
                         <CardTitle className="flex items-center gap-2 text-sm font-medium text-primary">
                             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                            Processing NDVI…
+                            Processing {jobIndices.map((i) => INDEX_CONFIG[i].label).join(", ")}…
                         </CardTitle>
                     </CardHeader>
                     {getJobProgress() && (
@@ -330,10 +463,10 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                 </Card>
             )}
 
-            {/* ── Section: NDVI Chart ──────────────────── */}
+            {/* ── Section: Chart ────────────────────────── */}
             <Card>
                 <CardHeader className="pb-2 pt-3 px-3">
-                    <CardTitle className="text-xs font-semibold">NDVI Time Series</CardTitle>
+                    <CardTitle className="text-xs font-semibold">{config.label} Time Series</CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-3 pt-0">
                     <NdviChart
@@ -341,6 +474,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                         selectedDate={selectedDate}
                         onDateSelect={handleChartDateSelect}
                         height={200}
+                        indexType={activeIndex}
                     />
                 </CardContent>
             </Card>
@@ -351,7 +485,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                     <CardHeader className="pb-2 pt-3 px-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-xs font-semibold">
-                                NDVI Layers
+                                {config.label} Layers
                                 <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
                                     {layers.length}
                                 </Badge>
@@ -361,7 +495,7 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                                 size="sm"
                                 onClick={() => setLayerVisible(!layerVisible)}
                                 className="h-6 w-6 p-0"
-                                title={layerVisible ? "Hide NDVI overlay" : "Show NDVI overlay"}
+                                title={layerVisible ? `Hide ${config.label} overlay` : `Show ${config.label} overlay`}
                             >
                                 {layerVisible ? (
                                     <Eye className="h-3.5 w-3.5" />
@@ -393,14 +527,19 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
                                     >
                                         <div className="flex flex-col items-start">
                                             <span className="font-medium">{layer.date}</span>
-                                            <span className="text-muted-foreground text-[10px]">{layer.satellite}</span>
+                                            <span className="text-muted-foreground text-[10px]">
+                                                {layer.satellite}
+                                                {activeIndex === "SAVI" && layer.params_json?.savi_l != null && (
+                                                    <> · L={layer.params_json.savi_l}</>
+                                                )}
+                                            </span>
                                         </div>
                                         {stat?.mean != null && (
                                             <Badge
-                                                variant={stat.mean < 0.3 ? "destructive" : "default"}
+                                                variant={stat.mean < config.threshold ? "destructive" : "default"}
                                                 className={cn(
                                                     "font-mono text-[10px] px-1.5",
-                                                    stat.mean >= 0.3 && "bg-primary hover:bg-primary/90",
+                                                    stat.mean >= config.threshold && "bg-primary hover:bg-primary/90",
                                                 )}
                                             >
                                                 {stat.mean.toFixed(3)}
@@ -418,9 +557,9 @@ export default function NdviTab({ fieldId, onShowLayer }: NdviTabProps) {
             {layers.length === 0 && !activeJob && (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-6 text-center">
-                        <p className="text-sm text-muted-foreground mb-2">No NDVI data yet.</p>
+                        <p className="text-sm text-muted-foreground mb-2">No {config.label} data yet.</p>
                         <p className="text-xs text-muted-foreground">
-                            Click &quot;Run NDVI Analysis&quot; to process satellite imagery.
+                            Click &quot;Run Analysis&quot; to process satellite imagery.
                         </p>
                     </CardContent>
                 </Card>

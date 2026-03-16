@@ -6,12 +6,13 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from geoalchemy2.shape import from_shape, to_shape
-from shapely.geometry import mapping, shape
+from geoalchemy2.shape import from_shape
+from shapely.geometry import shape
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.geo import wkb_to_geojson
 from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import Field, ScoutingObservation
@@ -25,18 +26,11 @@ _writer = require_roles("owner", "admin", "member")
 
 
 def _obs_to_out(obs: ScoutingObservation) -> ScoutingOut:
-    geom_json = None
-    if obs.geom_point is not None:
-        try:
-            geom_json = mapping(to_shape(obs.geom_point))
-        except Exception:
-            pass
-
     return ScoutingOut(
         id=obs.id,
         field_id=obs.field_id,
         alert_id=obs.alert_id,
-        geom_point=geom_json,
+        geom_point=wkb_to_geojson(obs.geom_point),
         title=obs.title,
         note=obs.note,
         tags=obs.tags_json,

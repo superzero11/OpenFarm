@@ -9,7 +9,9 @@ from geoalchemy2 import Geometry
 from sqlalchemy import (
     Date,
     DateTime,
+    Float,
     ForeignKey,
+    Index,
     Numeric,
     String,
     Text,
@@ -319,8 +321,8 @@ class Job(Base):
     org_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
     )
-    field_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=False, index=True
+    field_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=True, index=True
     )
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
@@ -388,4 +390,45 @@ class ShareLink(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+
+
+# ── Boundary Detection ───────────────────────────────────────────────
+
+
+class DetectedBoundary(Base):
+    __tablename__ = "detected_boundaries"
+    __table_args__ = (
+        Index("ix_detected_boundaries_org_id", "org_id"),
+        Index("ix_detected_boundaries_job_id", "job_id"),
+        Index("ix_detected_boundaries_status", "status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()")
+    )
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
+    )
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=False
+    )
+    geom = mapped_column(Geometry("MULTIPOLYGON", srid=4326), nullable=False)
+    area_ha: Mapped[float | None] = mapped_column(Numeric(12, 4), nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="pending"
+    )
+    accepted_field_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("fields.id"), nullable=True
+    )
+    detection_date: Mapped[_date | None] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )

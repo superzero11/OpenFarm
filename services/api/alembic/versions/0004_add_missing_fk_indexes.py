@@ -14,14 +14,19 @@ down_revision = "0003"
 
 
 def upgrade() -> None:
-    op.create_index("ix_alerts_field_id", "alerts", ["field_id"])
-    op.create_index("ix_field_stats_field_id", "field_stats", ["field_id"])
-    op.create_index("ix_field_stats_layer_id", "field_stats", ["layer_id"])
-    op.create_index("ix_jobs_field_id", "jobs", ["field_id"])
+    op.create_index("ix_alerts_field_id", "alerts", ["field_id"], if_not_exists=True)
+    op.create_index(
+        "ix_field_stats_field_id", "field_stats", ["field_id"], if_not_exists=True
+    )
+    op.create_index(
+        "ix_field_stats_layer_id", "field_stats", ["layer_id"], if_not_exists=True
+    )
+    op.create_index("ix_jobs_field_id", "jobs", ["field_id"], if_not_exists=True)
     op.create_index(
         "ix_scouting_observations_field_id",
         "scouting_observations",
         ["field_id"],
+        if_not_exists=True,
     )
 
 

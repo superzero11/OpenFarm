@@ -82,7 +82,7 @@ class JobCreateIndex(BaseModel):
 
 class JobOut(BaseModel):
     id: uuid.UUID
-    field_id: uuid.UUID
+    field_id: uuid.UUID | None = None
     type: str
     status: str
     progress_json: dict[str, Any] | None = None

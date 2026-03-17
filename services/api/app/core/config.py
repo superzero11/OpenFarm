@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     titiler_internal_url: str = "http://tiler:80"
     titiler_public_url: str = "http://localhost:8080"
 
+    # Boundary Detection (ML)
+    ftw_model_path: str = "models/ftw/prue_efnetb5_ccby_checkpoint.ckpt"
+    ftw_model_cache_dir: str = "/tmp/models"
+    detection_max_area_km2: float = 50.0
+
     # Email (Resend)
     resend_api_key: str = ""
     resend_from_email: str = "OpenFarm <noreply@openfarm.app>"

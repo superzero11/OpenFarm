@@ -32,6 +32,10 @@ services:
     ports:
       - "8080:80"
 
+  ml-processor:
+    environment:
+      DATABASE_URL_SYNC: ${DATABASE_URL_SYNC:-postgresql://openfarm:openfarm_dev@db:5432/openfarm}
+
   web:
     ports:
       - "3000:3000"

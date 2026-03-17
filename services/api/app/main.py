@@ -14,6 +14,7 @@ from app.core.logging import setup_logging
 from app.core.rate_limit import limiter
 from app.routers import (
     alerts,
+    detection,
     farms,
     fields,
     jobs,
@@ -87,6 +88,7 @@ app.include_router(alerts.router, prefix=PREFIX, tags=["alerts"])
 app.include_router(scouting.router, prefix=PREFIX, tags=["scouting"])
 app.include_router(share.router, prefix=PREFIX, tags=["share"])
 app.include_router(uploads.router, prefix=PREFIX, tags=["uploads"])
+app.include_router(detection.router, prefix=PREFIX, tags=["detection"])
 
 
 # ── Health Check ─────────────────────────────────────────────────────

@@ -6,7 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.4.0] - 2026-03-17
+
 ### Added
+- **Automatic field boundary detection** from Sentinel-2 satellite imagery using the FTW (Fields of The World) deep learning model.
+- Dedicated ML processor Docker service (`ml-processor`) with PyTorch, torchgeo, and FTW model weights.
+- Detection API endpoints: trigger detection, list/accept/discard detected boundaries.
+- Full-page detection UI (`/farms/[id]/detect`) with 3-phase workflow: draw area → detecting → review results.
+- Interactive polygon drawing via MapLibre GL Draw (pan, zoom, draw, move, edit vertices, delete).
+- Viewport preservation across detection phase transitions (draw → detecting → review).
+- Bbox overlay shown during detection processing phase.
+- Boundary review sidebar with confidence scores, area display, and accept/discard/edit actions.
+- Bulk accept-all and discard-all for detected boundaries.
+- Zoom-to-boundary on selection from sidebar or map click.
+- Boundary geometry editing with DrawMap before accepting as a field.
+- 7-step job progress tracking for detection pipeline (validate → STAC search → download → prepare → inference → polygonize → store).
+- Alembic migrations for detected boundaries table, nullable job field_id, and updated_at column.
+- English and Spanish translations for all detection UI strings.
 - Changelog page visible in-app under sidebar navigation.
 - SAVI L factor displayed on layer cards in field detail sidebar.
 

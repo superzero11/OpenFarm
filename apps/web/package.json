@@ -20,6 +20,7 @@
         "@radix-ui/react-slot": "^1.1.0",
         "@radix-ui/react-tabs": "^1.1.0",
         "@radix-ui/react-tooltip": "^1.2.8",
+        "@turf/turf": "^7.3.4",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.0",
         "echarts": "^5.5.0",

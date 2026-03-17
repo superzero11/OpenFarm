@@ -103,6 +103,7 @@ services:
       dockerfile: Dockerfile
     command: >
       celery -A app.worker worker
+      -Q default,celery
       --loglevel=info
       --concurrency=4
     environment:
@@ -129,6 +130,36 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  # ── ML Processor (Boundary Detection) ──────────────────────────────
+  ml-processor:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile.ml
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      STAC_API_URL: ${STAC_API_URL}
+      DATABASE_URL_SYNC: ${DATABASE_URL_SYNC}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.worker inspect ping --timeout 5 2>/dev/null | grep -q OK",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # ── TiTiler ────────────────────────────────────────────────────────
   tiler:

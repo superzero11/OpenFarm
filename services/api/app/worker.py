@@ -26,5 +26,9 @@ celery_app.conf.update(
     result_serializer="json",
     accept_content=["json"],
     # Task discovery
-    include=["app.tasks.ndvi", "app.tasks.vegetation"],
+    include=["app.tasks.ndvi", "app.tasks.vegetation", "app.tasks.detection"],
+    # Route ML tasks to the dedicated "ml" queue
+    task_routes={
+        "app.tasks.detection.*": {"queue": "ml"},
+    },
 )

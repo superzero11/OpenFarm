@@ -8,7 +8,7 @@ This document outlines where OpenFarm is today and where it's headed. If you'd l
 
 ## Current Status
 
-OpenFarm **Phase 2 (Multi-Index) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), auth, org management, farm/field CRUD, configurable monitoring pipelines, per-index alerts, scouting observations, shareable field health reports, and production-grade security hardening — all functional and deployed. The focus now shifts to testing, documentation, and expanding the platform with new data sources and intelligence capabilities. See [Future Ideas](#future-ideas-post-mvp) for what's next.
+OpenFarm **Phase 3 (Boundary Detection) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, auth, org management, farm/field CRUD, configurable monitoring pipelines, per-index alerts, scouting observations, shareable field health reports, and production-grade security hardening — all functional and deployed. The focus now shifts to testing, documentation, and expanding the platform with new data sources and intelligence capabilities. See [Future Ideas](#future-ideas-post-mvp) for what's next.
 
 ---
 
@@ -98,6 +98,20 @@ OpenFarm **Phase 2 (Multi-Index) is complete**. The platform delivers end-to-end
 - [x] SAVI L factor stored in layer `params_json` and displayed in UI
 - [x] In-app changelog page with parsed Keep a Changelog rendering
 
+## Milestone 7 — Automatic Boundary Detection ✅
+
+- [x] FTW (Fields of The World) deep learning model integration for field boundary detection
+- [x] Dedicated ML processor Docker service with PyTorch, torchgeo, and model weights
+- [x] Detection API — trigger, list, accept, discard, with org-scoped access control
+- [x] Full-page detection UI (`/farms/[id]/detect`) with draw → detecting → review workflow
+- [x] Interactive polygon drawing with MapLibre GL Draw (draw, move, edit vertices, delete)
+- [x] Viewport preservation across phase transitions
+- [x] Boundary review with confidence scores, bulk accept/discard, zoom-to-boundary
+- [x] Boundary geometry editing before accepting as a field
+- [x] 7-step progress tracking (validate → STAC search → download → prepare → inference → polygonize → store)
+- [x] Alembic migrations for detected boundaries, nullable job field_id, updated_at
+- [x] i18n translations (English + Spanish) for all detection UI
+
 ---
 
 ## Future Ideas (Post-MVP)
@@ -107,14 +121,31 @@ These are under consideration but not yet committed. Grouped by theme and roughl
 ### Platform Foundations
 - **Email/Microsoft & Enterprise SSO** — support email/password, Microsoft OAuth, and SAML/OIDC for enterprise identity providers
 - **Direct API integration** — stable, versioned public API with API keys for integrating OpenFarm into existing farm management software
-- **Boundary detection** — automatic field boundary detection from satellite imagery
-- **Crop detection and classification** — ML-based crop type identification from spectral data
 - **Multi-satellite support** — Landsat, Planet (currently Sentinel-2 only)
+- **Higher-frequency monitoring** — support for daily revisit satellites (e.g., PlanetScope) for near real-time crop monitoring
+- **Higher-res imagery** — support for sub-meter commercial imagery for detailed crop monitoring
+- **Custom index builder** — UI for users to define custom indices from available bands with formula editor and visualization
+- **Data export** — export field data, stats, and reports in CSV, GeoJSON, PDF formats
+- **User roles and permissions** — more granular permissions (e.g., field-level access, read-only API keys) and user groups
+
 
 ### Agricultural Intelligence
+- **Weather data integration** — overlay forecasts and historical weather on field maps and incorporate into alert rules
+- **Crop detection and classification** — ML-based crop type identification from spectral data
+- **tree detection and classification** — ML-based tree crop identification and health monitoring
+- **Phenology tracking** — track crop growth stages and phenological events from satellite data
+- **tree canopy analysis** — canopy cover, leaf area index, and tree height estimation from high-res imagery
+- **drought monitoring** — integrate drought indices and soil moisture data for water stress assessment
+- **water stress monitoring** — integrate NDWI and soil moisture data for irrigation management
+- **soil moisture estimation** — integrate soil moisture data from remote sensing and in-situ sensors
 - **Disease/pest risk signals** — risk scoring framework combining vegetation anomalies, weather, and regional pest data
+- **nutrient deficiency detection** — identify spectral signatures of common nutrient deficiencies for early intervention
+- **Fertilizer and irrigation recommendations** — actionable insights based on crop health trends, weather forecasts, and agronomic models
+- **Anomaly detection** — unsupervised ML to identify unusual patterns in field health data that may indicate emerging issues 
+- **Historical data backfill** — backfill historical vegetation index data for existing fields to enable trend analysis from day one
 - **Yield analysis and forecasting** — predict yield from historical NDVI trends, weather, and field data
-- **Weather data integration** — overlay forecasts and historical weather on field maps
+- **Harvest timing recommendations** — optimal harvest windows based on crop maturity models and vegetation indices
+- **Climate impact modeling** — estimate carbon sequestration, emissions, and climate impact of farming practices using field data and agronomic models
 - **Carbon/sustainability reporting** — track and report carbon sequestration, emissions, and sustainability metrics
 
 ### Analytics & Workflows
@@ -125,11 +156,13 @@ These are under consideration but not yet committed. Grouped by theme and roughl
 - **Webhook/notification system** — email, Slack, or SMS on alerts
 
 ### Ecosystem & Integrations
-- **OpenFarm MCP server** — Model Context Protocol server for AI agent integration
+- **AI agent integration** — connect to LLMs for natural language insights, recommendations, and conversational interfaces  
+- **Model Context Protocol (MCP) server** — standardized interface for AI agents to query field data and trigger analysis
 - **Device/Sensor plugin framework** — connect soil sensors, weather stations, and IoT devices
 - **Machinery telemetry integration** — ingest GPS tracks and operational data from farm equipment
 - **Supply chain / traceability integrations** — link field data to downstream logistics and compliance systems
 - **Plugin system** — extensible processing pipelines for custom analysis
+- **Community data sharing** — opt-in anonymized data sharing for regional insights and benchmarking
 
 ### Enterprise & Scale
 - **Enterprise admin controls** — SSO enforcement, audit policies, usage quotas, multi-tenant admin

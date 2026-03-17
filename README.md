@@ -37,6 +37,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 ## Why OpenFarm
 - Self-hostable stack with clear service boundaries (Next.js ↔ FastAPI ↔ TiTiler ↔ MinIO ↔ PostGIS)
 - Multi-index vegetation monitoring — NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery
+- ML-powered automatic field boundary detection (FTW model) with interactive review workflow
 - Reproducible pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
 - Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
 - MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
@@ -144,6 +145,7 @@ ruff format --check .
 - **Orgs & RBAC**: owner/admin/member/viewer with audit logging
 - **Farms & Fields**: draw/upload GeoJSON/KML, area calc, soft delete
 - **Vegetation Monitoring**: NDVI, EVI, SAVI (configurable L factor), NDWI — STAC search → COG → TiTiler tiles → time-series stats
+- **Boundary Detection**: automatic field boundary detection from Sentinel-2 imagery using FTW deep learning model — draw area, review results, accept as fields
 - **Per-Index Alerts**: configurable threshold and drop-percentage rules for each index
 - **Scouting**: geotagged observations with optional photo upload
 - **Sharing**: read-only field health reports via share links with multi-index toggle

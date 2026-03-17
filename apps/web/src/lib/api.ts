@@ -324,6 +324,25 @@ export interface ScoutingUpdate {
     tags?: string[];
 }
 
+// ── Detection Types ──────────────────────────────────────────────
+
+export interface DetectedBoundary {
+    id: string;
+    org_id: string;
+    job_id: string;
+    geom: GeoJSON.Geometry | null;
+    area_ha: number | null;
+    confidence: number | null;
+    status: string;
+    detection_date: string | null;
+    created_at: string;
+}
+
+export interface DetectionJob {
+    job_id: string;
+    status: string;
+}
+
 // ── Upload Types ─────────────────────────────────────────────────
 
 export interface PresignedUpload {
@@ -461,6 +480,48 @@ export const scoutingApi = {
         }),
     delete: (fieldId: string, obsId: string) =>
         apiFetch(`/fields/${fieldId}/scouting/${obsId}`, { method: "DELETE" }),
+};
+
+// ── Detection ────────────────────────────────────────────────────
+
+export const detectionApi = {
+    trigger: (orgId: string, bbox: number[], farmId: string, windowA?: string, windowB?: string) =>
+        apiFetch<DetectionJob>(`/orgs/${orgId}/detect-boundaries`, {
+            method: "POST",
+            body: JSON.stringify({
+                bbox,
+                farm_id: farmId,
+                ...(windowA && { window_a: windowA }),
+                ...(windowB && { window_b: windowB }),
+            }),
+        }),
+    list: (orgId: string, params?: { job_id?: string; status?: string; limit?: number; offset?: number }) => {
+        const q = new URLSearchParams();
+        if (params?.job_id) q.set("job_id", params.job_id);
+        if (params?.status) q.set("status", params.status);
+        if (params?.limit) q.set("limit", String(params.limit));
+        if (params?.offset) q.set("offset", String(params.offset));
+        const qs = q.toString();
+        return apiFetch<Paginated<DetectedBoundary>>(
+            `/orgs/${orgId}/detected-boundaries${qs ? `?${qs}` : ""}`,
+        );
+    },
+    accept: (orgId: string, boundaryId: string, name: string, farmId: string, geom?: GeoJSON.Geometry) =>
+        apiFetch<{ field_id: string; area_ha: number }>(
+            `/orgs/${orgId}/detected-boundaries/${boundaryId}/accept`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    name,
+                    farm_id: farmId,
+                    ...(geom && { geom }),
+                }),
+            },
+        ),
+    discard: (orgId: string, boundaryId: string) =>
+        apiFetch(`/orgs/${orgId}/detected-boundaries/${boundaryId}/discard`, {
+            method: "POST",
+        }),
 };
 
 // ── Share Types ──────────────────────────────────────────────────

@@ -7,11 +7,13 @@ from datetime import date as _date, datetime
 
 from geoalchemy2 import Geometry
 from sqlalchemy import (
+    Boolean,
     Date,
     DateTime,
     Float,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -270,6 +272,7 @@ class Alert(Base):
     index_type: Mapped[str | None] = mapped_column(
         String(20), nullable=True, default="ndvi"
     )
+    weather_context = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -298,6 +301,7 @@ class ScoutingObservation(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     tags_json = mapped_column(JSONB, nullable=True)
     photo_uri: Mapped[str | None] = mapped_column(Text, nullable=True)
+    weather_snapshot = mapped_column(JSONB, nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
@@ -431,4 +435,68 @@ class DetectedBoundary(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+# ── Weather Data ─────────────────────────────────────────────────────
+
+
+class WeatherDaily(Base):
+    __tablename__ = "weather_daily"
+    __table_args__ = (
+        UniqueConstraint("field_id", "date", name="uq_weather_field_date"),
+        Index("idx_weather_field_date", "field_id", "date"),
+        Index("idx_weather_org_id", "org_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()")
+    )
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
+    )
+    field_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fields.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    date: Mapped[_date] = mapped_column(Date, nullable=False)
+    latitude: Mapped[float] = mapped_column(Numeric(10, 8), nullable=False)
+    longitude: Mapped[float] = mapped_column(Numeric(11, 8), nullable=False)
+
+    # Raw Open-Meteo variables
+    temperature_2m_min: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    temperature_2m_max: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    temperature_2m_mean: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    precipitation_sum: Mapped[float | None] = mapped_column(Numeric(6, 2))
+    et0_fao_mm: Mapped[float | None] = mapped_column(Numeric(6, 2))
+    soil_temperature_0cm: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    soil_temperature_6cm: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    soil_temperature_18cm: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    soil_temperature_54cm: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    soil_moisture_0_1cm: Mapped[float | None] = mapped_column(Numeric(5, 3))
+    soil_moisture_1_3cm: Mapped[float | None] = mapped_column(Numeric(5, 3))
+    soil_moisture_3_9cm: Mapped[float | None] = mapped_column(Numeric(5, 3))
+    soil_moisture_9_27cm: Mapped[float | None] = mapped_column(Numeric(5, 3))
+    soil_moisture_27_81cm: Mapped[float | None] = mapped_column(Numeric(5, 3))
+    vapor_pressure_deficit: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    shortwave_radiation_sum: Mapped[float | None] = mapped_column(Numeric(7, 2))
+    wind_speed_10m_max: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    cloud_cover_mean: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # Derived agricultural indices
+    gdd_daily: Mapped[float | None] = mapped_column(Numeric(5, 1))
+    gdd_cumulative: Mapped[float | None] = mapped_column(Numeric(8, 1))
+    water_balance_30d_mm: Mapped[float | None] = mapped_column(Numeric(7, 2))
+    drought_index: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    heat_stress_flag: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    # Metadata
+    source: Mapped[str | None] = mapped_column(Text, server_default="open-meteo")
+    model_used: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )

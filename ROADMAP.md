@@ -8,7 +8,7 @@ This document outlines where OpenFarm is today and where it's headed. If you'd l
 
 ## Current Status
 
-OpenFarm **Phase 3 (Boundary Detection) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, auth, org management, farm/field CRUD, configurable monitoring pipelines, per-index alerts, scouting observations, shareable field health reports, and production-grade security hardening — all functional and deployed. The focus now shifts to testing, documentation, and expanding the platform with new data sources and intelligence capabilities. See [Future Ideas](#future-ideas-post-mvp) for what's next.
+OpenFarm **Phase 4 (Weather Integration) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, and daily weather data integration with agricultural indices — all functional and deployed. Weather data (historical + 7-day forecast) is fetched per-field from Open-Meteo, stored with pre-computed agricultural indices (GDD, water balance, drought index), and surfaced across the entire UI: dedicated weather tab, alert enrichment, scouting snapshots, share reports, and NDVI+weather overlay charts. The focus now shifts to testing, documentation, and building the agricultural intelligence layer. See [Future Ideas](#future-ideas-post-mvp) for what's next.
 
 ---
 
@@ -112,6 +112,28 @@ OpenFarm **Phase 3 (Boundary Detection) is complete**. The platform delivers end
 - [x] Alembic migrations for detected boundaries, nullable job field_id, updated_at
 - [x] i18n translations (English + Spanish) for all detection UI
 
+## Milestone 8 — Weather Data Integration ✅
+
+- [x] `weather_daily` table with 18 raw variables + 5 derived indices + metadata
+- [x] Open-Meteo API integration (free, CC BY 4.0) for forecast + historical archive (ERA5)
+- [x] Celery task `fetch_weather_for_field` — centroid-based fetch, GDD/water balance/drought index computation, upsert
+- [x] Celery task `schedule_daily_weather_fetch` — Beat schedule at 08:00 UTC, batched by 50
+- [x] Celery task `backfill_weather_for_field` — 90-day historical fetch on demand
+- [x] API: `GET /fields/{id}/weather` with date range + optional 7-day forecast
+- [x] API: `GET /fields/{id}/weather/summary` — 30-day aggregated stats
+- [x] API: `POST /fields/{id}/weather/backfill` — manual trigger (202 Accepted)
+- [x] Alert enrichment — `weather_context` JSONB on alerts (precip 7d, ET₀, deficit, soil moisture, GDD, drought index)
+- [x] Scouting weather snapshot — auto-attached 7-day weather context on observation creation
+- [x] Share report — `weather_summary` + `weather_data` (90 days) in public report endpoint
+- [x] Weather tab — summary cards, 7-day forecast bar, temp+precip chart, ET₀+water balance chart
+- [x] Soil moisture gauge — 5-depth horizontal bars with color coding
+- [x] Soil temperature display — 4-depth bars (surface, 6cm, 18cm, 54cm)
+- [x] Vapor pressure deficit (VPD) — value with zone classification (low/ideal/moderate/high)
+- [x] NDVI + weather overlay chart — dual-axis with precip bars + ET₀ line, toggle in Indices tab
+- [x] Alembic migrations: weather_daily table (0008), weather_context on alerts (0009), weather_snapshot on scouting (0010)
+- [x] Config settings: Open-Meteo URLs, backfill days, batch size, GDD base temp, heat stress threshold
+- [x] i18n translations (English + Spanish) for all weather UI strings
+
 ---
 
 ## Future Ideas (Post-MVP)
@@ -127,10 +149,10 @@ These are under consideration but not yet committed. Grouped by theme and roughl
 - **Custom index builder** — UI for users to define custom indices from available bands with formula editor and visualization
 - **Data export** — export field data, stats, and reports in CSV, GeoJSON, PDF formats
 - **User roles and permissions** — more granular permissions (e.g., field-level access, read-only API keys) and user groups
+- ~~**Weather data integration**~~ — ✅ Done (Milestone 8)
 
 
 ### Agricultural Intelligence
-- **Weather data integration** — overlay forecasts and historical weather on field maps and incorporate into alert rules
 - **Crop detection and classification** — ML-based crop type identification from spectral data
 - **tree detection and classification** — ML-based tree crop identification and health monitoring
 - **Phenology tracking** — track crop growth stages and phenological events from satellite data

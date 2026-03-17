@@ -116,6 +116,12 @@ async def create_field(
         farm_id=str(body.farm_id),
         name=body.name,
     )
+
+    # Trigger weather backfill for new field (90 days of history)
+    from app.tasks.weather import backfill_weather_for_field
+
+    backfill_weather_for_field.delay(str(field.id))
+
     return _field_to_out(field)
 
 

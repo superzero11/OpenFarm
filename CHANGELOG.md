@@ -8,6 +8,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.5.0] - 2026-03-17
+
+### Added
+- **Weather data integration** with daily historical + 7-day forecast weather per field via Open-Meteo API (free, CC BY 4.0).
+- `weather_daily` database table with 18 raw variables (temperature, precipitation, ET₀, soil moisture at 5 depths, soil temperature at 4 depths, VPD, solar radiation, wind speed, cloud cover) and 5 pre-computed agricultural indices (GDD, cumulative GDD, 30-day water balance, drought index, heat stress flag).
+- Celery tasks for automated weather fetching: daily scheduled fetch at 08:00 UTC (batched by 50), on-demand 90-day historical backfill.
+- Weather API endpoints: `GET /fields/{id}/weather` (date range + forecast), `GET /fields/{id}/weather/summary` (30-day stats), `POST /fields/{id}/weather/backfill` (manual trigger).
+- Weather tab on field detail page with unified stats grid (temperature, precipitation, water deficit, GDD, VPD, soil moisture, frost days, heat stress days).
+- 7-day forecast horizontal bar with weather icons, temperature ranges, and precipitation.
+- Temperature & precipitation dual-axis time-series chart (ECharts).
+- ET₀ & water balance dual-axis chart with deficit threshold line.
+- Soil moisture depth gauge — 5-layer horizontal bars (0–81 cm) with color-coded thresholds.
+- Soil temperature depth display — 4-layer bars (surface, 6 cm, 18 cm, 54 cm) with temperature color coding.
+- Vapor pressure deficit (VPD) card with zone classification (low/ideal/moderate/high) and agronomic guidance.
+- NDVI + weather overlay chart — toggle button in Indices tab to overlay precipitation bars and ET₀ line on vegetation index time series.
+- Alert enrichment — `weather_context` JSONB column on alerts table with 7-day precipitation, ET₀, water deficit, soil moisture, GDD, and drought index at time of alert creation.
+- Scouting weather snapshot — auto-attached 7-day weather context (temps, precipitation, wind, soil moisture, drought index) on observation creation.
+- Share report weather section — 30-day weather summary and 90-day daily weather data included in public share reports.
+- Weather context displayed on alert cards in both sidebar and share page.
+- Time range selector (30 days / 90 days / Season) for weather tab.
+- Alembic migrations: `weather_daily` table (0008), `weather_context` on alerts (0009), `weather_snapshot` on scouting observations (0010).
+- Configuration settings: Open-Meteo API URLs, backfill days, batch size, GDD base temperature, heat stress threshold.
+- English and Spanish translations for all weather UI strings.
+
+### Changed
+- "Monitor" tab renamed to "Indices" on field detail page.
+- Weather stats cards consolidated into a single unified grid with farmer-centric layout and variable column widths.
+- Chart and gauge sections wrapped in card containers for visual consistency.
+
+---
+
 ## [0.4.0] - 2026-03-17
 
 ### Added

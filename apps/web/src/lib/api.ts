@@ -291,6 +291,7 @@ export interface Alert {
     message: string;
     status: string;
     index_type: string | null;
+    weather_context: Record<string, any> | null;
     created_at: string;
 }
 
@@ -305,6 +306,7 @@ export interface ScoutingObservation {
     note: string | null;
     tags: string[] | null;
     photo_uri: string | null;
+    weather_snapshot: Record<string, any> | null;
     created_by: string;
     created_at: string;
 }
@@ -322,6 +324,73 @@ export interface ScoutingUpdate {
     title?: string;
     note?: string;
     tags?: string[];
+}
+
+// ── Weather Types ────────────────────────────────────────────────
+
+export interface WeatherDaily {
+    date: string;
+    temperature_2m_min: number | null;
+    temperature_2m_max: number | null;
+    temperature_2m_mean: number | null;
+    precipitation_sum: number | null;
+    et0_fao_mm: number | null;
+    soil_temperature_0cm: number | null;
+    soil_temperature_6cm: number | null;
+    soil_temperature_18cm: number | null;
+    soil_temperature_54cm: number | null;
+    soil_moisture_0_1cm: number | null;
+    soil_moisture_1_3cm: number | null;
+    soil_moisture_3_9cm: number | null;
+    soil_moisture_9_27cm: number | null;
+    soil_moisture_27_81cm: number | null;
+    vapor_pressure_deficit: number | null;
+    shortwave_radiation_sum: number | null;
+    wind_speed_10m_max: number | null;
+    cloud_cover_mean: number | null;
+    gdd_daily: number | null;
+    gdd_cumulative: number | null;
+    water_balance_30d_mm: number | null;
+    drought_index: number | null;
+    heat_stress_flag: boolean | null;
+}
+
+export interface WeatherForecastDay {
+    date: string;
+    temperature_2m_min: number | null;
+    temperature_2m_max: number | null;
+    temperature_2m_mean: number | null;
+    precipitation_sum: number | null;
+    et0_fao_mm: number | null;
+    wind_speed_10m_max: number | null;
+    cloud_cover_mean: number | null;
+}
+
+export interface WeatherSummary {
+    field_id: string;
+    period_start: string;
+    period_end: string;
+    avg_temperature: number | null;
+    min_temperature: number | null;
+    max_temperature: number | null;
+    total_precipitation: number | null;
+    total_et0: number | null;
+    water_deficit_mm: number | null;
+    gdd_cumulative: number | null;
+    frost_days: number;
+    heat_stress_days: number;
+    avg_soil_moisture_top: number | null;
+    drought_index: number | null;
+    data_source: string;
+    last_updated: string | null;
+}
+
+export interface WeatherResponse {
+    field_id: string;
+    location: { latitude: number; longitude: number };
+    data: WeatherDaily[];
+    forecast: WeatherForecastDay[];
+    summary: WeatherSummary;
 }
 
 // ── Detection Types ──────────────────────────────────────────────
@@ -524,6 +593,22 @@ export const detectionApi = {
         }),
 };
 
+// ── Weather ──────────────────────────────────────────────────────
+
+export const weatherApi = {
+    get: (fieldId: string, startDate: string, endDate: string, includeForecast = true) =>
+        apiFetch<WeatherResponse>(
+            `/fields/${fieldId}/weather?start_date=${startDate}&end_date=${endDate}&include_forecast=${includeForecast}`,
+        ),
+    summary: (fieldId: string, days = 30) =>
+        apiFetch<WeatherSummary>(`/fields/${fieldId}/weather/summary?days=${days}`),
+    backfill: (fieldId: string, days = 90) =>
+        apiFetch<{ field_id: string; status: string; message: string }>(
+            `/fields/${fieldId}/weather/backfill`,
+            { method: "POST", body: JSON.stringify({ days }) },
+        ),
+};
+
 // ── Share Types ──────────────────────────────────────────────────
 
 export interface ShareLink {
@@ -550,6 +635,8 @@ export interface ShareReport {
     stats_by_type: Record<string, FieldStat[]>;
     alerts: Alert[];
     scouting: ScoutingObservation[];
+    weather_summary: Record<string, any> | null;
+    weather_data: WeatherDaily[];
 }
 
 // ── Uploads ──────────────────────────────────────────────────────

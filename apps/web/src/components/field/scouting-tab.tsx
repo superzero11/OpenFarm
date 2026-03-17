@@ -39,6 +39,7 @@ import {
     Image as ImageIcon,
     Crosshair,
     Tag,
+    CloudRain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -820,6 +821,25 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                                 {obs.note}
                             </p>
+                        )}
+
+                        {/* Weather snapshot */}
+                        {obs.weather_snapshot && (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+                                <CloudRain className="h-3 w-3 shrink-0" />
+                                {obs.weather_snapshot.precipitation_7d_mm != null && (
+                                    <span>{t("precip7d")}: {obs.weather_snapshot.precipitation_7d_mm}mm</span>
+                                )}
+                                {obs.weather_snapshot.temp_max_c != null && (
+                                    <span>{obs.weather_snapshot.temp_min_c}–{obs.weather_snapshot.temp_max_c}°C</span>
+                                )}
+                                {obs.weather_snapshot.soil_moisture_top != null && (
+                                    <span>{t("soilMoisture")}: {(obs.weather_snapshot.soil_moisture_top * 100).toFixed(0)}%</span>
+                                )}
+                                {obs.weather_snapshot.wind_max_kmh != null && (
+                                    <span>{t("wind")}: {obs.weather_snapshot.wind_max_kmh} km/h</span>
+                                )}
+                            </div>
                         )}
 
                         {/* Photo thumbnail */}

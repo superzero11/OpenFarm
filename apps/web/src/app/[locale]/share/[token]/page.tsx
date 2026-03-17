@@ -10,6 +10,7 @@ import {
     AlertTriangle,
     Bell,
     ChevronDown,
+    CloudRain,
     Leaf,
     Loader2,
     MapPin,
@@ -189,6 +190,41 @@ export default function ShareReportPage() {
                     </div>
                 </div>
 
+                {/* Weather Summary */}
+                {report.weather_summary && (
+                    <div className="rounded-lg border bg-card shadow-sm p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <CloudRain className="h-4 w-4 text-blue-500" />
+                            <h2 className="text-sm font-semibold">{t("weatherSummary")}</h2>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <dt className="text-xs text-muted-foreground">{t("totalPrecip")}</dt>
+                                <dd className="text-sm font-medium mt-0.5">{report.weather_summary.total_precip_mm} mm</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs text-muted-foreground">{t("totalET0")}</dt>
+                                <dd className="text-sm font-medium mt-0.5">{report.weather_summary.total_et0_mm} mm</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs text-muted-foreground">{t("waterBalance")}</dt>
+                                <dd className={`text-sm font-medium mt-0.5 ${(report.weather_summary.water_balance_mm ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
+                                    {report.weather_summary.water_balance_mm > 0 ? "+" : ""}{report.weather_summary.water_balance_mm} mm
+                                </dd>
+                            </div>
+                            {report.weather_summary.avg_temp_c != null && (
+                                <div>
+                                    <dt className="text-xs text-muted-foreground">{t("avgTemp")}</dt>
+                                    <dd className="text-sm font-medium mt-0.5">{report.weather_summary.avg_temp_c}°C</dd>
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                            {t("last30Days", { days: report.weather_summary.period_days })}
+                        </p>
+                    </div>
+                )}
+
                 {/* Index Toggle */}
                 {availableIndices.length > 1 && (
                     <div className="flex items-center gap-1 flex-wrap">
@@ -218,6 +254,8 @@ export default function ShareReportPage() {
                             stats={[...activeStats].reverse()}
                             height={250}
                             indexType={activeIndex}
+                            weatherData={report.weather_data}
+                            showWeatherOverlay={report.weather_data.length > 0}
                         />
                     ) : (
                         <p className="text-sm text-muted-foreground text-center py-6">
@@ -447,6 +485,17 @@ function ReportAlertRow({ alert }: { alert: Alert }) {
                 </span>
             </div>
             <p className="text-xs leading-relaxed text-foreground/90 mt-1">{alert.message}</p>
+            {alert.weather_context && (
+                <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+                    <CloudRain className="h-3 w-3 shrink-0" />
+                    <span>
+                        Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "—"}mm
+                        {alert.weather_context.water_deficit_mm != null && (
+                            <> · Deficit: {alert.weather_context.water_deficit_mm}mm</>
+                        )}
+                    </span>
+                </div>
+            )}
             {isClosed && (
                 <Badge variant="outline" className="text-[9px] mt-1">
                     Closed
@@ -475,6 +524,20 @@ function ReportScoutingRow({ obs }: { obs: ScoutingObservation }) {
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                             {obs.note}
                         </p>
+                    )}
+                    {obs.weather_snapshot && (
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+                            <CloudRain className="h-3 w-3 shrink-0" />
+                            {obs.weather_snapshot.precipitation_7d_mm != null && (
+                                <span>Precip 7d: {obs.weather_snapshot.precipitation_7d_mm}mm</span>
+                            )}
+                            {obs.weather_snapshot.temp_max_c != null && (
+                                <span>{obs.weather_snapshot.temp_min_c}–{obs.weather_snapshot.temp_max_c}°C</span>
+                            )}
+                            {obs.weather_snapshot.soil_moisture_top != null && (
+                                <span>Soil: {(obs.weather_snapshot.soil_moisture_top * 100).toFixed(0)}%</span>
+                            )}
+                        </div>
                     )}
                     {obs.photo_uri && (
                         <div className="mt-1.5 rounded-md overflow-hidden border">

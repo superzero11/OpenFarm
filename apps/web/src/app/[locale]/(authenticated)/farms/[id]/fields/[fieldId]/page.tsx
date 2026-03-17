@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
     ArrowLeft,
+    CloudSun,
     Edit2,
     Loader2,
     Save,
@@ -89,6 +90,15 @@ const ScoutingTab = dynamic(() => import("@/components/field/scouting-tab"), {
 });
 
 const ShareTab = dynamic(() => import("@/components/field/share-tab"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+    ),
+});
+
+const WeatherTab = dynamic(() => import("@/components/field/weather-tab"), {
     ssr: false,
     loading: () => (
         <div className="flex items-center justify-center py-8">
@@ -195,7 +205,7 @@ export default function FieldDetailPage() {
     // Map
     const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
     const [mapStyle, setMapStyle] = useState<MapStyleId>("satellite");
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("info");
 
     // Index overlay
@@ -207,6 +217,18 @@ export default function FieldDetailPage() {
 
     // Available index types (only indices with computed layers)
     const [availableTypes, setAvailableTypes] = useState<IndexType[]>([]);
+
+    // Keyboard shortcut: toggle sidebar with Cmd/Ctrl + .
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === ".") {
+                e.preventDefault();
+                setSidebarOpen((prev) => !prev);
+            }
+        };
+        window.addEventListener("keydown", handleKey);
+        return () => window.removeEventListener("keydown", handleKey);
+    }, []);
 
     // Alerts
     const [openAlertCount, setOpenAlertCount] = useState(0);
@@ -486,8 +508,8 @@ export default function FieldDetailPage() {
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="absolute top-4 z-20 rounded-lg bg-background/90 backdrop-blur-sm p-2 shadow-md border border-border/50 hover:bg-background transition-all"
-                style={{ right: sidebarOpen ? "21.5rem" : "1rem" }}
-                title={sidebarOpen ? "Hide panel" : "Show panel"}
+                style={{ right: sidebarOpen ? "23.375rem" : "1rem" }}
+                title={sidebarOpen ? "Hide panel (⌘.)" : "Show panel (⌘.)"}
             >
                 {sidebarOpen ? (
                     <PanelRightClose className="h-4 w-4 text-foreground" />
@@ -498,12 +520,12 @@ export default function FieldDetailPage() {
 
             {/* Floating tabbed sidebar — right */}
             <div
-                className={`absolute top-4 right-4 bottom-4 z-10 w-80 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
+                className={`absolute top-4 right-4 bottom-4 z-10 w-[350px] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
                     }`}
             >
                 <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col h-full">
                     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-                        <TabsList className="grid w-full grid-cols-5 rounded-none border-b border-border/50 bg-transparent h-auto p-0 shrink-0">
+                        <TabsList className="grid w-full grid-cols-6 rounded-none border-b border-border/50 bg-transparent h-auto p-0 shrink-0">
                             <TabsTrigger
                                 value="info"
                                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
@@ -517,16 +539,22 @@ export default function FieldDetailPage() {
                                 {t("tabNdvi")}
                             </TabsTrigger>
                             <TabsTrigger
+                                value="weather"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                            >
+                                <CloudSun className="h-3.5 w-3.5" />
+                                {t("tabWeather")}
+                            </TabsTrigger>
+                            <TabsTrigger
                                 value="alerts"
                                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
                             >
-                                <Bell className="h-3.5 w-3.5" />
-                                {t("tabAlerts")}
-                                {openAlertCount > 0 && (
-                                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 -mr-1">
-                                        {openAlertCount}
-                                    </span>
-                                )}
+                                <span className="relative">
+                                    {t("tabAlerts")}
+                                    {openAlertCount > 0 && (
+                                        <span className="absolute -top-1 -right-2 h-2 w-2 rounded-full bg-destructive" />
+                                    )}
+                                </span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="scouting"
@@ -712,6 +740,10 @@ export default function FieldDetailPage() {
 
                                     <TabsContent value="scouting" className="mt-0">
                                         <ScoutingTab fieldId={fieldId} mapInstance={mapInstance} />
+                                    </TabsContent>
+
+                                    <TabsContent value="weather" className="mt-0 p-4">
+                                        <WeatherTab fieldId={fieldId} />
                                     </TabsContent>
 
                                     <TabsContent value="share" className="mt-0">

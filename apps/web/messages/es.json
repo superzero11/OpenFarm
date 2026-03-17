@@ -210,10 +210,11 @@
         "edit": "Editar",
         "delete": "Eliminar",
         "tabInfo": "Info",
-        "tabNdvi": "Monitor",
+        "tabNdvi": "Índices",
         "tabAlerts": "Alertas",
         "tabScouting": "Scouting",
         "tabShare": "Compartir",
+        "tabWeather": "Clima",
         "editField": "Editar Campo",
         "name": "Nombre",
         "cropType": "Tipo de Cultivo",
@@ -249,6 +250,15 @@
         "alertClosed": "Alerta cerrada",
         "alertReopened": "Alerta reabierta",
         "failedUpdate": "Error al actualizar alerta"
+    },
+    "alertWeather": {
+        "weatherContext": "Contexto Meteorológico",
+        "precip7d": "Precip 7d",
+        "et07d": "ET₀ 7d",
+        "waterDeficit": "Déficit Hídrico",
+        "soilMoistureTop": "Humedad Suelo",
+        "gdd": "GDD",
+        "droughtIndex": "Índice Sequía"
     },
     "farmAlerts": {
         "title": "Alertas",
@@ -353,7 +363,10 @@
         "dropPhoto": "Arrastra una foto aquí o haz clic para buscar",
         "maxSize": "Máx 10 MB",
         "changePhoto": "Cambiar foto",
-        "observations": "{count, plural, one {# observación} other {# observaciones}}"
+        "observations": "{count, plural, one {# observación} other {# observaciones}}",
+        "precip7d": "Precip 7d",
+        "soilMoisture": "Suelo",
+        "wind": "Viento"
     },
     "shareTab": {
         "createShareLink": "Crear Enlace Compartido",
@@ -398,7 +411,13 @@
         "linkNotFound": "Enlace compartido no encontrado.",
         "loading": "Cargando reporte...",
         "generatedOn": "Reporte generado el",
-        "na": "N/D"
+        "na": "N/D",
+        "weatherSummary": "Resumen Meteorológico (30 días)",
+        "totalPrecip": "Precipitación Total",
+        "totalET0": "ET\u2080 Total",
+        "waterBalance": "Balance Hídrico",
+        "avgTemp": "Temp. Promedio",
+        "last30Days": "Basado en {days} días de datos"
     },
     "language": {
         "label": "Idioma",
@@ -454,5 +473,50 @@
             "polygonize": "Convirtiendo a polígonos",
             "store_results": "Almacenando resultados"
         }
+    },
+    "weather": {
+        "avgTemp": "Temp Media",
+        "totalPrecip": "Precipitación",
+        "waterDeficit": "Déficit Hídrico",
+        "gddCumulative": "GDD",
+        "temperature": "Temperatura",
+        "precipitation": "Precipitación",
+        "tempRange": "Rango Temp",
+        "et0": "ET₀ (mm)",
+        "waterBalance30d": "Balance Hídrico 30d",
+        "waterBalanceTitle": "ET₀ y Balance Hídrico",
+        "deficit": "Déficit",
+        "tempAndPrecip": "Temperatura y Precipitación",
+        "forecast7d": "Pronóstico 7 Días",
+        "range30d": "30 días",
+        "range90d": "90 días",
+        "rangeSeason": "Temporada",
+        "refresh": "Actualizar",
+        "noData": "Sin datos meteorológicos",
+        "noForecast": "Sin pronóstico disponible",
+        "noWeatherData": "Sin datos meteorológicos",
+        "noWeatherDataDesc": "Los datos meteorológicos se obtienen automáticamente. También puedes iniciar una obtención manual.",
+        "fetchWeather": "Obtener Datos del Clima",
+        "backfillStarted": "Obtención de datos iniciada",
+        "backfillFailed": "Error al iniciar la obtención",
+        "frostDays": "Días Helada",
+        "heatStressDays": "Estrés Calor",
+        "soilMoisture": "Humedad Suelo",
+        "soilMoistureDepth": "Humedad del Suelo por Profundidad",
+        "soilDepth0_1": "0–1 cm",
+        "soilDepth1_3": "1–3 cm",
+        "soilDepth3_9": "3–9 cm",
+        "soilDepth9_27": "9–27 cm",
+        "soilDepth27_81": "27–81 cm",
+        "soilTempDepth": "Temperatura del Suelo por Profundidad",
+        "soilTempSurface": "Superficie",
+        "soilTemp6cm": "6 cm",
+        "soilTemp18cm": "18 cm",
+        "soilTemp54cm": "54 cm",
+        "vpdTitle": "Déficit de Presión de Vapor (VPD)",
+        "vpdLow": "Bajo — estomas cerrados",
+        "vpdIdeal": "Ideal — transpiración activa",
+        "vpdModerate": "Moderado — riesgo de estrés",
+        "vpdHigh": "Alto — estrés severo"
     }
 }

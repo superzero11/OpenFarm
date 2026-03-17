@@ -285,6 +285,51 @@ def compute_zonal_stats(data: np.ndarray) -> dict:
 # ── Alert evaluation ────────────────────────────────────────────────
 
 
+def _get_weather_context(session, field_id, alert_date: date) -> dict | None:
+    """Query recent weather data to build context JSONB for alert enrichment."""
+    from datetime import timedelta
+
+    from sqlalchemy import select
+
+    from app.models.tables import WeatherDaily
+
+    start = alert_date - timedelta(days=7)
+    rows = (
+        session.execute(
+            select(WeatherDaily)
+            .where(
+                WeatherDaily.field_id == field_id,
+                WeatherDaily.date >= start,
+                WeatherDaily.date <= alert_date,
+            )
+            .order_by(WeatherDaily.date.desc())
+        )
+        .scalars()
+        .all()
+    )
+    if not rows:
+        return None
+
+    latest = rows[0]
+    precip_7d = sum(float(r.precipitation_sum or 0) for r in rows)
+    et0_7d = sum(float(r.et0_fao_mm or 0) for r in rows)
+
+    ctx: dict = {
+        "period": f"{start.isoformat()} to {alert_date.isoformat()}",
+        "precipitation_7d_mm": round(precip_7d, 1),
+        "et0_7d_mm": round(et0_7d, 1),
+    }
+    if latest.water_balance_30d_mm is not None:
+        ctx["water_deficit_mm"] = round(float(latest.water_balance_30d_mm), 1)
+    if latest.soil_moisture_0_1cm is not None:
+        ctx["soil_moisture_top"] = round(float(latest.soil_moisture_0_1cm), 3)
+    if latest.gdd_cumulative is not None:
+        ctx["gdd_cumulative"] = round(float(latest.gdd_cumulative), 1)
+    if latest.drought_index is not None:
+        ctx["drought_index"] = round(float(latest.drought_index), 2)
+    return ctx
+
+
 def run_alerts(
     session,
     field_id,
@@ -300,6 +345,9 @@ def run_alerts(
     current_mean = stats.get("mean")
     if current_mean is None:
         return
+
+    # Fetch recent weather context for alert enrichment
+    weather_ctx = _get_weather_context(session, field_id, scene_date)
 
     alert_cfg = index_def.alerts
     label = index_def.label
@@ -321,6 +369,7 @@ def run_alerts(
                 ),
                 status="open",
                 index_type=index_def.key,
+                weather_context=weather_ctx,
             )
         )
 
@@ -352,6 +401,7 @@ def run_alerts(
                         ),
                         status="open",
                         index_type=index_def.key,
+                        weather_context=weather_ctx,
                     )
                 )
     session.commit()

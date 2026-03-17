@@ -107,6 +107,7 @@ class AlertOut(BaseModel):
     index_type: str | None = None
     message: str
     status: str
+    weather_context: dict[str, Any] | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -143,6 +144,7 @@ class ScoutingOut(BaseModel):
     note: str | None = None
     tags: list[str] | None = None
     photo_uri: str | None = None
+    weather_snapshot: dict[str, Any] | None = None
     created_by: uuid.UUID
     created_at: datetime
 
@@ -179,6 +181,8 @@ class ShareReportOut(BaseModel):
     stats_by_type: dict[str, list[FieldStatOut]] = {}
     alerts: list[AlertOut] = []
     scouting: list[ScoutingOut] = []
+    weather_summary: dict[str, Any] | None = None
+    weather_data: list[dict[str, Any]] = []
 
 
 # ── Presigned Upload ─────────────────────────────────────────────────

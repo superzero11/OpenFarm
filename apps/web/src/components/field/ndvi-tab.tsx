@@ -5,10 +5,12 @@ import dynamic from "next/dynamic";
 import {
     monitoringApi,
     jobsApi,
+    weatherApi,
     type RasterLayer,
     type FieldStat,
     type NdviJob,
     type IndexType,
+    type WeatherDaily,
     INDEX_CONFIG,
     ALL_INDEX_TYPES,
 } from "@/lib/api";
@@ -23,6 +25,7 @@ import {
     AlertTriangle,
     Eye,
     EyeOff,
+    CloudRain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,6 +104,10 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
     const [selectedIndices, setSelectedIndices] = useState<Set<IndexType>>(new Set(["NDVI"]));
     const [saviL, setSaviL] = useState(0.5);
 
+    // ── Weather overlay ──────────────────────────────
+    const [showWeatherOverlay, setShowWeatherOverlay] = useState(false);
+    const [weatherData, setWeatherData] = useState<WeatherDaily[]>([]);
+
     // ── Active job tracking ──────────────────────────
     const [activeJob, setActiveJob] = useState<NdviJob | null>(null);
     const [jobIndices, setJobIndices] = useState<IndexType[]>([]);
@@ -136,6 +143,18 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    // ── Fetch weather data when overlay is toggled on ──
+    useEffect(() => {
+        if (!showWeatherOverlay || stats.length === 0) return;
+        const dates = stats.map((s) => s.date).sort();
+        const start = dates[0];
+        const end = dates[dates.length - 1];
+        weatherApi
+            .get(fieldId, start, end, false)
+            .then((res) => setWeatherData(res.data))
+            .catch(() => setWeatherData([]));
+    }, [showWeatherOverlay, fieldId, stats]);
 
     // ── Show layer on map when selectedDate or visibility changes ──
     useEffect(() => {
@@ -466,15 +485,29 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
             {/* ── Section: Chart ────────────────────────── */}
             <Card>
                 <CardHeader className="pb-2 pt-3 px-3">
-                    <CardTitle className="text-xs font-semibold">{config.label} Time Series</CardTitle>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-xs font-semibold">{config.label} Time Series</CardTitle>
+                        <Button
+                            variant={showWeatherOverlay ? "secondary" : "ghost"}
+                            size="sm"
+                            className="h-6 px-2 text-[10px] gap-1"
+                            onClick={() => setShowWeatherOverlay(!showWeatherOverlay)}
+                            title={showWeatherOverlay ? "Hide weather overlay" : "Show weather overlay"}
+                        >
+                            <CloudRain className="h-3 w-3" />
+                            Weather
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="px-3 pb-3 pt-0">
                     <NdviChart
                         stats={stats}
                         selectedDate={selectedDate}
                         onDateSelect={handleChartDateSelect}
-                        height={200}
+                        height={showWeatherOverlay ? 240 : 200}
                         indexType={activeIndex}
+                        weatherData={weatherData}
+                        showWeatherOverlay={showWeatherOverlay}
                     />
                 </CardContent>
             </Card>

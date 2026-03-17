@@ -14,7 +14,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
 [![GitHub stars](https://img.shields.io/github/stars/superzero11/OpenFarm?style=social)](https://github.com/superzero11/OpenFarm)
-[![Discord](https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/kTtCNC5m)
+[![Discord](https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/spPhvA2u)
 [![Patreon](https://img.shields.io/badge/Patreon-Support%20Us-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/c/SuperZero11)
 
 [Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
@@ -38,6 +38,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 - Self-hostable stack with clear service boundaries (Next.js ↔ FastAPI ↔ TiTiler ↔ MinIO ↔ PostGIS)
 - Multi-index vegetation monitoring — NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery
 - ML-powered automatic field boundary detection (FTW model) with interactive review workflow
+- Daily weather data with agricultural indices (GDD, water balance, drought index) via Open-Meteo
 - Reproducible pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
 - Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
 - MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
@@ -146,9 +147,10 @@ ruff format --check .
 - **Farms & Fields**: draw/upload GeoJSON/KML, area calc, soft delete
 - **Vegetation Monitoring**: NDVI, EVI, SAVI (configurable L factor), NDWI — STAC search → COG → TiTiler tiles → time-series stats
 - **Boundary Detection**: automatic field boundary detection from Sentinel-2 imagery using FTW deep learning model — draw area, review results, accept as fields
-- **Per-Index Alerts**: configurable threshold and drop-percentage rules for each index
-- **Scouting**: geotagged observations with optional photo upload
-- **Sharing**: read-only field health reports via share links with multi-index toggle
+- **Weather Integration**: daily historical + 7-day forecast weather data per field — temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
+- **Per-Index Alerts**: configurable threshold and drop-percentage rules, enriched with weather context
+- **Scouting**: geotagged observations with optional photo upload and auto-attached weather snapshot
+- **Sharing**: read-only field health reports via share links with multi-index toggle and weather summary
 - **Changelog**: in-app changelog page with version history
 
 ## Quality & CI

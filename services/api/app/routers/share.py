@@ -27,6 +27,7 @@ from app.models.tables import (
     RasterLayer,
     ScoutingObservation,
     ShareLink,
+    WeatherDaily,
 )
 from app.schemas.monitoring import ScoutingOut, ShareCreate, ShareOut, ShareReportOut
 
@@ -290,10 +291,59 @@ async def get_shared_report(
                 note=obs.note,
                 tags=obs.tags_json,
                 photo_uri=obs.photo_uri,
+                weather_snapshot=obs.weather_snapshot,
                 created_by=obs.created_by,
                 created_at=obs.created_at,
             )
         )
+
+    # Weather summary (last 30 days)
+    weather_summary = None
+    weather_result = await db.execute(
+        select(WeatherDaily)
+        .where(
+            WeatherDaily.field_id == field.id,
+            WeatherDaily.date >= (now.date() - timedelta(days=30)),
+        )
+        .order_by(WeatherDaily.date.desc())
+    )
+    weather_rows = weather_result.scalars().all()
+    if weather_rows:
+        latest_w = weather_rows[0]
+        total_precip = sum(float(r.precipitation_sum or 0) for r in weather_rows)
+        total_et0 = sum(float(r.et0_fao_mm or 0) for r in weather_rows)
+        temps = [float(r.temperature_2m_mean) for r in weather_rows if r.temperature_2m_mean is not None]
+        weather_summary = {
+            "period_days": len(weather_rows),
+            "total_precip_mm": round(total_precip, 1),
+            "total_et0_mm": round(total_et0, 1),
+            "avg_temp_c": round(sum(temps) / len(temps), 1) if temps else None,
+            "water_balance_mm": round(total_precip - total_et0, 1),
+        }
+        if latest_w.drought_index is not None:
+            weather_summary["drought_index"] = round(float(latest_w.drought_index), 2)
+        if latest_w.soil_moisture_0_1cm is not None:
+            weather_summary["soil_moisture_top"] = round(float(latest_w.soil_moisture_0_1cm), 3)
+
+    # Weather daily rows for chart overlay (last 90 days)
+    weather_data_out: list[dict[str, Any]] = []
+    wd_result = await db.execute(
+        select(WeatherDaily)
+        .where(
+            WeatherDaily.field_id == field.id,
+            WeatherDaily.date >= (now.date() - timedelta(days=90)),
+        )
+        .order_by(WeatherDaily.date.asc())
+    )
+    for wd in wd_result.scalars().all():
+        weather_data_out.append({
+            "date": wd.date.isoformat(),
+            "precipitation_sum": float(wd.precipitation_sum) if wd.precipitation_sum is not None else None,
+            "et0_fao_mm": float(wd.et0_fao_mm) if wd.et0_fao_mm is not None else None,
+            "temperature_2m_mean": float(wd.temperature_2m_mean) if wd.temperature_2m_mean is not None else None,
+            "temperature_2m_min": float(wd.temperature_2m_min) if wd.temperature_2m_min is not None else None,
+            "temperature_2m_max": float(wd.temperature_2m_max) if wd.temperature_2m_max is not None else None,
+        })
 
     return ShareReportOut(
         field=field_data,
@@ -304,6 +354,8 @@ async def get_shared_report(
         stats_by_type=stats_by_type,
         alerts=alerts,
         scouting=scouting_out,
+        weather_summary=weather_summary,
+        weather_data=weather_data_out,
     )
 
 

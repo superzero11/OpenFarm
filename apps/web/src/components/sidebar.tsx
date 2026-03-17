@@ -80,7 +80,7 @@ export function Sidebar() {
         let cancelled = false;
         alertsApi.list({ status: "open", limit: 1 }).then((res) => {
             if (!cancelled) setOpenAlertCount(res.total);
-        }).catch(() => {});
+        }).catch(() => { });
         return () => { cancelled = true; };
     }, [currentOrg]);
 

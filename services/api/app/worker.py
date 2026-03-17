@@ -1,6 +1,7 @@
 """Celery worker configuration — broker=Redis, per PRD Section 7.4."""
 
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import settings
 
@@ -26,9 +27,28 @@ celery_app.conf.update(
     result_serializer="json",
     accept_content=["json"],
     # Task discovery
-    include=["app.tasks.ndvi", "app.tasks.vegetation", "app.tasks.detection"],
+    include=[
+        "app.tasks.ndvi",
+        "app.tasks.vegetation",
+        "app.tasks.weather",
+    ],
     # Route ML tasks to the dedicated "ml" queue
     task_routes={
         "app.tasks.detection.*": {"queue": "ml"},
     },
+    # Celery Beat schedule
+    beat_schedule={
+        "fetch-weather-daily": {
+            "task": "app.tasks.weather.schedule_daily_weather_fetch",
+            "schedule": crontab(hour=8, minute=0),
+        },
+    },
 )
+
+# Conditionally register ML detection tasks (requires torchgeo, only on ml-processor)
+try:
+    import torchgeo  # noqa: F401
+
+    celery_app.conf.include.append("app.tasks.detection")
+except ImportError:
+    pass

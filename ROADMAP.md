@@ -125,22 +125,6 @@ OpenFarm **Phase 5 (Historical Data Backfill) is complete**. The platform delive
 - [x] Alembic migrations for detected boundaries, nullable job field_id, updated_at
 - [x] i18n translations (English + Spanish) for all detection UI
 
-## Milestone 9 — Historical Data Backfill ✅
-
-- [x] Backfill orchestrator task — splits 24-month range into 90-day chunks, dispatches one job per (chunk × index) with staggered countdowns
-- [x] Chunk-level and index-level deduplication — skips chunks/indices where raster data already exists
-- [x] Alert suppression — backfill pipeline runs do not create alerts (`is_backfill` flag in `params_json`)
-- [x] Auto-trigger on field creation — new fields automatically get 24 months of all 4 vegetation indices
-- [x] Weekly auto-compute Celery Beat schedule (`schedule_weekly_index_compute`) — Monday 06:00 UTC, skips fresh fields
-- [x] Manual backfill API: `POST /fields/{id}/backfill-indices` (admin/owner, rate-limited 1/min)
-- [x] Backfill status API: `GET /fields/{id}/backfill-status` — pending, running, completed job counts
-- [x] Endpoint-level deduplication — 409 Conflict if backfill already in progress
-- [x] Sentinel job pattern — synchronous placeholder job before async dispatch to prevent race conditions
-- [x] Batch backfill task (`backfill_all_existing_fields`) for retroactive backfill of all org fields
-- [x] Backfill History button on Indices tab with active-backfill detection and progress banner
-- [x] Config settings: `index_backfill_months` (24), `index_backfill_chunk_days` (90)
-- [x] i18n translations (English + Spanish) for all backfill UI strings
-
 ## Milestone 8 — Weather Data Integration ✅
 
 - [x] `weather_daily` table with 18 raw variables + 5 derived indices + metadata
@@ -162,6 +146,22 @@ OpenFarm **Phase 5 (Historical Data Backfill) is complete**. The platform delive
 - [x] Alembic migrations: weather_daily table (0008), weather_context on alerts (0009), weather_snapshot on scouting (0010)
 - [x] Config settings: Open-Meteo URLs, backfill days, batch size, GDD base temp, heat stress threshold
 - [x] i18n translations (English + Spanish) for all weather UI strings
+
+## Milestone 9 — Historical Data Backfill ✅
+
+- [x] Backfill orchestrator task — splits 24-month range into 90-day chunks, dispatches one job per (chunk × index) with staggered countdowns
+- [x] Chunk-level and index-level deduplication — skips chunks/indices where raster data already exists
+- [x] Alert suppression — backfill pipeline runs do not create alerts (`is_backfill` flag in `params_json`)
+- [x] Auto-trigger on field creation — new fields automatically get 24 months of all 4 vegetation indices
+- [x] Weekly auto-compute Celery Beat schedule (`schedule_weekly_index_compute`) — Monday 06:00 UTC, skips fresh fields
+- [x] Manual backfill API: `POST /fields/{id}/backfill-indices` (admin/owner, rate-limited 1/min)
+- [x] Backfill status API: `GET /fields/{id}/backfill-status` — pending, running, completed job counts
+- [x] Endpoint-level deduplication — 409 Conflict if backfill already in progress
+- [x] Sentinel job pattern — synchronous placeholder job before async dispatch to prevent race conditions
+- [x] Batch backfill task (`backfill_all_existing_fields`) for retroactive backfill of all org fields
+- [x] Backfill History button on Indices tab with active-backfill detection and progress banner
+- [x] Config settings: `index_backfill_months` (24), `index_backfill_chunk_days` (90)
+- [x] i18n translations (English + Spanish) for all backfill UI strings
 
 ---
 

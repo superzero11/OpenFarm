@@ -8,6 +8,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.7.0] - 2026-03-19
+
+### Added
+- **Soil intelligence foundation** — automatic soil profile ingestion from SoilGrids (global, 250m) and POLARIS (US, 30m) on field creation.
+- `soil_profiles`, `soil_layers`, and `soil_field_summary` database tables with UUID PKs, PostGIS integration, and full audit trail.
+- SoilGrids WCS client — fetches 10 baseline properties (sand, silt, clay, pH, SOC, bulk density, CEC, nitrogen, coarse fragments, organic carbon density) across 6 GlobalSoilMap depths (0–200cm) with mean/Q05/Q95 quantiles.
+- POLARIS S3 client — reads COG tiles for 9 properties across 6 depths for US fields (30m resolution).
+- Automatic source routing — POLARIS for CONUS coordinates, SoilGrids globally.
+- USDA soil texture triangle classification (12 classes) from sand/silt/clay percentages.
+- Unit conversion pipeline for SoilGrids storage units to conventional units (pH×10→pH, cg/cm³→kg/dm³, etc.).
+- Available Water Capacity (AWC) computation per layer and depth-integrated rootzone AWC.
+- Field summary aggregation with dominant texture, average pH, SOC stock, rootzone AWC, and drainage class.
+- Risk scoring (0–1 scale) for acidification, compaction, leaching, and rooting constraint.
+- Data quality score based on uncertainty spread (Q95−Q05)/mean across properties.
+- Celery task `fetch_soil_for_field` with retry logic, exponential backoff, and graceful partial-data handling.
+- Auto-trigger on field creation — new fields automatically get soil profile data.
+- API endpoints: `GET /fields/{id}/soil` (profile + layers), `GET /fields/{id}/soil/summary`, `POST /fields/{id}/soil/refresh` (rate-limited 1/min).
+- Soil tab on field detail page with texture-by-depth stacked bar chart (sand/silt/clay), color-coded legend, and interactive tooltips with color-matched dots and uncertainty ranges.
+- Property cards for pH (color-coded scale), Organic Carbon (g/kg with level badge), CEC (nutrient buffering), and Bulk Density (compaction indicator).
+- AWC gauge with Low/Moderate/Good classification and progress bar.
+- Risk indicator badges with green/yellow/red dot system for all four risk dimensions.
+- Data quality and source metadata display with resolution and fetch date.
+- "Regional Estimate" disclaimer banner — soil data clearly labeled as satellite-derived estimates, not field measurements.
+- Job progress tracking for soil refresh — 6-step checklist UI with real-time polling (source detection → data fetch → layer processing → summary → save → complete).
+- Retry logic on soil data reload (3 attempts with 2s delay) for resilient UX after long-running fetches.
+- Tooltip portal fix — all tooltips now render via Radix Portal to prevent clipping inside overflow containers.
+- Alembic migration `0011_add_soil_tables` for all three soil tables with FK indexes.
+- English and Spanish translations for all soil UI strings (~65 keys).
+- Configuration settings: SoilGrids WCS base URL (HTTPS), POLARIS S3 bucket, fetch timeout, source priority.
+
+### Fixed
+- Tooltip clipping in sidebar panels — `TooltipContent` now wrapped in `TooltipPrimitive.Portal` (affects all tooltips app-wide).
+- Pydantic v2 UUID serialization — soil schemas use `uuid.UUID` type instead of `str` to match ORM model output.
+- SoilGrids WCS redirect handling — `httpx` calls use `follow_redirects=True` and `map` parameter passed in params dict instead of URL string.
+- Tab header layout for Spanish locale — switched from rigid grid to flex layout with `justify-evenly` for i18n-safe tab sizing.
+- Sidebar width increased to 440px to accommodate Spanish translations without text clipping.
+
+---
+
 ## [0.6.0] - 2026-03-19
 
 ### Added

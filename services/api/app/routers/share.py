@@ -5,7 +5,7 @@ from __future__ import annotations
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Any
 from urllib.parse import quote
 
 import httpx
@@ -312,7 +312,11 @@ async def get_shared_report(
         latest_w = weather_rows[0]
         total_precip = sum(float(r.precipitation_sum or 0) for r in weather_rows)
         total_et0 = sum(float(r.et0_fao_mm or 0) for r in weather_rows)
-        temps = [float(r.temperature_2m_mean) for r in weather_rows if r.temperature_2m_mean is not None]
+        temps = [
+            float(r.temperature_2m_mean)
+            for r in weather_rows
+            if r.temperature_2m_mean is not None
+        ]
         weather_summary = {
             "period_days": len(weather_rows),
             "total_precip_mm": round(total_precip, 1),
@@ -323,7 +327,9 @@ async def get_shared_report(
         if latest_w.drought_index is not None:
             weather_summary["drought_index"] = round(float(latest_w.drought_index), 2)
         if latest_w.soil_moisture_0_1cm is not None:
-            weather_summary["soil_moisture_top"] = round(float(latest_w.soil_moisture_0_1cm), 3)
+            weather_summary["soil_moisture_top"] = round(
+                float(latest_w.soil_moisture_0_1cm), 3
+            )
 
     # Weather daily rows for chart overlay (last 90 days)
     weather_data_out: list[dict[str, Any]] = []
@@ -336,14 +342,26 @@ async def get_shared_report(
         .order_by(WeatherDaily.date.asc())
     )
     for wd in wd_result.scalars().all():
-        weather_data_out.append({
-            "date": wd.date.isoformat(),
-            "precipitation_sum": float(wd.precipitation_sum) if wd.precipitation_sum is not None else None,
-            "et0_fao_mm": float(wd.et0_fao_mm) if wd.et0_fao_mm is not None else None,
-            "temperature_2m_mean": float(wd.temperature_2m_mean) if wd.temperature_2m_mean is not None else None,
-            "temperature_2m_min": float(wd.temperature_2m_min) if wd.temperature_2m_min is not None else None,
-            "temperature_2m_max": float(wd.temperature_2m_max) if wd.temperature_2m_max is not None else None,
-        })
+        weather_data_out.append(
+            {
+                "date": wd.date.isoformat(),
+                "precipitation_sum": float(wd.precipitation_sum)
+                if wd.precipitation_sum is not None
+                else None,
+                "et0_fao_mm": float(wd.et0_fao_mm)
+                if wd.et0_fao_mm is not None
+                else None,
+                "temperature_2m_mean": float(wd.temperature_2m_mean)
+                if wd.temperature_2m_mean is not None
+                else None,
+                "temperature_2m_min": float(wd.temperature_2m_min)
+                if wd.temperature_2m_min is not None
+                else None,
+                "temperature_2m_max": float(wd.temperature_2m_max)
+                if wd.temperature_2m_max is not None
+                else None,
+            }
+        )
 
     return ShareReportOut(
         field=field_data,

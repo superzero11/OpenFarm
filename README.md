@@ -39,6 +39,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 - Multi-index vegetation monitoring — NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery with automatic 24-month historical backfill
 - ML-powered automatic field boundary detection (FTW model) with interactive review workflow
 - Daily weather data with agricultural indices (GDD, water balance, drought index) via Open-Meteo
+- Soil intelligence — automatic soil profile ingestion from SoilGrids (global, 250m) and POLARIS (US, 30m) with texture, pH, carbon, risk scoring, and interactive depth visualization
 - Reproducible pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
 - Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
 - MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
@@ -148,6 +149,7 @@ ruff format --check .
 - **Vegetation Monitoring**: NDVI, EVI, SAVI (configurable L factor), NDWI — STAC search → COG → TiTiler tiles → time-series stats, with automatic 24-month historical backfill on field creation and weekly auto-compute
 - **Boundary Detection**: automatic field boundary detection from Sentinel-2 imagery using FTW deep learning model — draw area, review results, accept as fields
 - **Weather Integration**: daily historical + 7-day forecast weather data per field — temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
+- **Soil Intelligence**: automatic soil profile from SoilGrids/POLARIS — texture-by-depth visualization, pH, organic carbon, CEC, bulk density, AWC, risk scoring (acidification, compaction, leaching, rooting), data quality indicators
 - **Per-Index Alerts**: configurable threshold and drop-percentage rules, enriched with weather context
 - **Scouting**: geotagged observations with optional photo upload and auto-attached weather snapshot
 - **Sharing**: read-only field health reports via share links with multi-index toggle and weather summary

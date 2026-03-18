@@ -28,6 +28,7 @@ dependencies = [
     "numpy>=1.26.0",
     "python-multipart>=0.0.9",
     "slowapi>=0.1.9",
+    "owslib>=0.31.0",
 ]
 
 [project.optional-dependencies]

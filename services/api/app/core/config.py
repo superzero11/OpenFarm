@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     index_backfill_chunk_days: int = 90
     index_weekly_batch_size: int = 50
 
+    # Soil Data
+    soilgrids_wcs_base_url: str = "https://maps.isric.org/mapserv"
+    polaris_s3_bucket: str = "polaris-soil-data"
+    soil_fetch_timeout_seconds: int = 60
+    soil_source_priority: str = "auto"  # auto | soilgrids | polaris
+
     # Email (Resend)
     resend_api_key: str = ""
     resend_from_email: str = "OpenFarm <noreply@openfarm.app>"

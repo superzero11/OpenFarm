@@ -500,3 +500,145 @@ class WeatherDaily(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+# ── Soil Data ────────────────────────────────────────────────────────
+
+
+class SoilProfile(Base):
+    __tablename__ = "soil_profiles"
+    __table_args__ = (
+        Index("idx_soil_profiles_field_id", "field_id"),
+        Index("idx_soil_profiles_org_id", "org_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()")
+    )
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("orgs.id"), nullable=False
+    )
+    field_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fields.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    source: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # soilgrids | polaris
+    source_resolution_m: Mapped[int | None] = mapped_column(Integer)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    metadata_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    layers = relationship(
+        "SoilLayer", back_populates="profile", cascade="all, delete-orphan"
+    )
+
+
+class SoilLayer(Base):
+    __tablename__ = "soil_layers"
+    __table_args__ = (
+        UniqueConstraint(
+            "profile_id", "depth_top_cm", name="uq_soil_layer_profile_depth"
+        ),
+        Index("idx_soil_layers_profile_id", "profile_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()")
+    )
+    profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("soil_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # Depth range (GlobalSoilMap standard: 0-5, 5-15, 15-30, 30-60, 60-100, 100-200 cm)
+    depth_top_cm: Mapped[int] = mapped_column(Integer, nullable=False)
+    depth_bottom_cm: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Baseline properties
+    sand_pct: Mapped[float | None] = mapped_column(Float)
+    silt_pct: Mapped[float | None] = mapped_column(Float)
+    clay_pct: Mapped[float | None] = mapped_column(Float)
+    ph: Mapped[float | None] = mapped_column(Float)
+    soc_g_kg: Mapped[float | None] = mapped_column(Float)  # soil organic carbon
+    bd_kg_dm3: Mapped[float | None] = mapped_column(Float)  # bulk density
+    cec_cmol_kg: Mapped[float | None] = mapped_column(Float)  # cation exchange capacity
+    nitrogen_g_kg: Mapped[float | None] = mapped_column(Float)
+    cfvo_pct: Mapped[float | None] = mapped_column(Float)  # coarse fragments vol %
+
+    # Water retention
+    fc_vol_pct: Mapped[float | None] = mapped_column(
+        Float
+    )  # field capacity (θ at 33kPa)
+    wp_vol_pct: Mapped[float | None] = mapped_column(
+        Float
+    )  # wilting point (θ at 1500kPa)
+    awc_mm: Mapped[float | None] = mapped_column(
+        Float
+    )  # available water capacity for layer
+    ksat_cm_day: Mapped[float | None] = mapped_column(
+        Float
+    )  # saturated hydraulic conductivity
+
+    # Texture classification
+    texture_class: Mapped[str | None] = mapped_column(String(20))
+
+    # Uncertainty (90% confidence intervals)
+    sand_q05: Mapped[float | None] = mapped_column(Float)
+    sand_q95: Mapped[float | None] = mapped_column(Float)
+    clay_q05: Mapped[float | None] = mapped_column(Float)
+    clay_q95: Mapped[float | None] = mapped_column(Float)
+    ph_q05: Mapped[float | None] = mapped_column(Float)
+    ph_q95: Mapped[float | None] = mapped_column(Float)
+    soc_q05: Mapped[float | None] = mapped_column(Float)
+    soc_q95: Mapped[float | None] = mapped_column(Float)
+
+    profile = relationship("SoilProfile", back_populates="layers")
+
+
+class SoilFieldSummary(Base):
+    __tablename__ = "soil_field_summary"
+    __table_args__ = (UniqueConstraint("field_id", name="uq_soil_field_summary_field"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()")
+    )
+    field_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fields.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("soil_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # Aggregated properties
+    dominant_texture: Mapped[str | None] = mapped_column(String(20))
+    avg_ph: Mapped[float | None] = mapped_column(Float)
+    total_soc_stock_t_ha: Mapped[float | None] = mapped_column(Float)
+    rootzone_awc_mm: Mapped[float | None] = mapped_column(Float)  # 0-100cm integrated
+    drainage_class: Mapped[str | None] = mapped_column(String(30))
+
+    # Risk scores (0–1 scale)
+    acidification_risk: Mapped[float | None] = mapped_column(Float)
+    compaction_risk: Mapped[float | None] = mapped_column(Float)
+    leaching_risk: Mapped[float | None] = mapped_column(Float)
+    rooting_constraint: Mapped[float | None] = mapped_column(Float)
+
+    # Data quality
+    data_quality_score: Mapped[float | None] = mapped_column(
+        Float
+    )  # 0–1, higher=better
+
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

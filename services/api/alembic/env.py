@@ -1,8 +1,12 @@
 import os
+import sys
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+# Ensure the project root is on sys.path so 'app' is importable
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 config = context.config
 
@@ -16,7 +20,9 @@ if "+asyncpg" in db_url:
     db_url = db_url.replace("+asyncpg", "")
 config.set_main_option("sqlalchemy.url", db_url)
 
-target_metadata = None
+from app.models.tables import Base  # noqa: E402
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

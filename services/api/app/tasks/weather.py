@@ -131,7 +131,10 @@ def _fetch_open_meteo(
     if hourly_times:
         # Group hourly values by date, compute daily mean
         from collections import defaultdict
-        daily_agg: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
+
+        daily_agg: dict[str, dict[str, list[float]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         for i, ts in enumerate(hourly_times):
             day = ts[:10]  # "YYYY-MM-DD"
             for var in HOURLY_VARIABLES:

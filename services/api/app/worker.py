@@ -32,6 +32,7 @@ celery_app.conf.update(
         "app.tasks.vegetation",
         "app.tasks.weather",
         "app.tasks.backfill",
+        "app.tasks.soil",
     ],
     # Route ML tasks to the dedicated "ml" queue
     task_routes={

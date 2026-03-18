@@ -14,6 +14,7 @@ import {
     ArrowLeft,
     CloudSun,
     Edit2,
+    Layers,
     Loader2,
     Save,
     Trash2,
@@ -99,6 +100,15 @@ const ShareTab = dynamic(() => import("@/components/field/share-tab"), {
 });
 
 const WeatherTab = dynamic(() => import("@/components/field/weather-tab"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+    ),
+});
+
+const SoilTab = dynamic(() => import("@/components/field/soil-tab"), {
     ssr: false,
     loading: () => (
         <div className="flex items-center justify-center py-8">
@@ -508,7 +518,7 @@ export default function FieldDetailPage() {
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="absolute top-4 z-20 rounded-lg bg-background/90 backdrop-blur-sm p-2 shadow-md border border-border/50 hover:bg-background transition-all"
-                style={{ right: sidebarOpen ? "23.375rem" : "1rem" }}
+                style={{ right: sidebarOpen ? "29rem" : "1rem" }}
                 title={sidebarOpen ? "Hide panel (⌘.)" : "Show panel (⌘.)"}
             >
                 {sidebarOpen ? (
@@ -520,34 +530,39 @@ export default function FieldDetailPage() {
 
             {/* Floating tabbed sidebar — right */}
             <div
-                className={`absolute top-4 right-4 bottom-4 z-10 w-[350px] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
+                className={`absolute top-4 right-4 bottom-4 z-10 w-[440px] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
                     }`}
             >
                 <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col h-full">
                     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-                        <TabsList className="grid w-full grid-cols-6 rounded-none border-b border-border/50 bg-transparent h-auto p-0 shrink-0">
+                        <TabsList className="flex w-full justify-evenly rounded-none border-b border-border/50 bg-transparent h-auto py-0 shrink-0">
                             <TabsTrigger
                                 value="info"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
                             >
                                 {t("tabInfo")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="ndvi"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
                             >
                                 {t("tabNdvi")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="weather"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
                             >
-                                <CloudSun className="h-3.5 w-3.5" />
                                 {t("tabWeather")}
                             </TabsTrigger>
                             <TabsTrigger
+                                value="soil"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                            >
+                                {t("tabSoil")}
+                            </TabsTrigger>
+                            <TabsTrigger
                                 value="alerts"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
                             >
                                 <span className="relative">
                                     {t("tabAlerts")}
@@ -558,16 +573,14 @@ export default function FieldDetailPage() {
                             </TabsTrigger>
                             <TabsTrigger
                                 value="scouting"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
                             >
-                                <ClipboardList className="h-3.5 w-3.5" />
                                 {t("tabScouting")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="share"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs gap-1 py-2.5"
+                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
                             >
-                                <Share2 className="h-3.5 w-3.5" />
                                 {t("tabShare")}
                             </TabsTrigger>
                         </TabsList>
@@ -744,6 +757,10 @@ export default function FieldDetailPage() {
 
                                     <TabsContent value="weather" className="mt-0 p-4">
                                         <WeatherTab fieldId={fieldId} />
+                                    </TabsContent>
+
+                                    <TabsContent value="soil" className="mt-0 p-4">
+                                        <SoilTab fieldId={fieldId} />
                                     </TabsContent>
 
                                     <TabsContent value="share" className="mt-0">

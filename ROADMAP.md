@@ -21,7 +21,7 @@ Map UI, reports, API, webhooks, partner integrations, lightweight mobile scoutin
 
 ## Current Status
 
-OpenFarm **Phase 5 (Historical Data Backfill) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, daily weather data with agricultural indices, and automatic 24-month historical index backfill on field creation — all functional and deployed. New fields automatically receive two years of vegetation index history, and a weekly Celery Beat schedule keeps all fields up to date. The focus now shifts to testing, documentation, and building the agricultural intelligence layer. See [Future Ideas](#future-ideas-post-mvp) for what's next.
+OpenFarm **Milestone 10 (Soil Intelligence Foundation) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, daily weather data with agricultural indices, automatic 24-month historical index backfill, and soil profile intelligence from SoilGrids/POLARIS — all functional and deployed. New fields automatically receive vegetation index history, weather data, and soil profile analysis on creation. The focus now shifts to derived agronomic layers (hydraulic properties, refined risk scoring) and broader agricultural intelligence. See [Future Ideas](#future-ideas-post-mvp) for what's next.
 
 ---
 
@@ -163,6 +163,28 @@ OpenFarm **Phase 5 (Historical Data Backfill) is complete**. The platform delive
 - [x] Config settings: `index_backfill_months` (24), `index_backfill_chunk_days` (90)
 - [x] i18n translations (English + Spanish) for all backfill UI strings
 
+## Milestone 10 — Soil Intelligence Foundation ✅
+
+- [x] `soil_profiles`, `soil_layers`, `soil_field_summary` database tables with UUID PKs and PostGIS integration
+- [x] SoilGrids WCS client — 10 properties × 6 depths × 3 quantiles (mean, Q05, Q95) globally at 250m
+- [x] POLARIS S3 client — 9 properties × 6 depths for US fields at 30m resolution
+- [x] Automatic source routing (POLARIS for CONUS, SoilGrids globally)
+- [x] USDA soil texture triangle classification (12 classes)
+- [x] Available Water Capacity (AWC) computation and rootzone integration
+- [x] Field summary aggregation with risk scoring (acidification, compaction, leaching, rooting)
+- [x] Data quality scoring based on uncertainty spread
+- [x] Celery task `fetch_soil_for_field` with retry, backoff, and partial-data handling
+- [x] Auto-trigger on field creation
+- [x] API: `GET /fields/{id}/soil`, `GET /fields/{id}/soil/summary`, `POST /fields/{id}/soil/refresh`
+- [x] Soil tab with texture-by-depth stacked bar chart, color-coded legend, and interactive tooltips
+- [x] Property cards: pH, Organic Carbon, CEC, Bulk Density with color-coded thresholds
+- [x] AWC gauge, drainage class badge, risk indicators, data quality display
+- [x] Job progress tracking for soil refresh (6-step real-time polling)
+- [x] "Regional Estimate" disclaimer banner
+- [x] Alembic migration `0011_add_soil_tables`
+- [x] Config settings: SoilGrids WCS URL, POLARIS bucket, fetch timeout, source priority
+- [x] i18n translations (English + Spanish) for all soil UI strings
+
 ---
 
 ## Future Ideas (Post-MVP)
@@ -171,6 +193,7 @@ These are under consideration but not yet committed. Grouped by theme and ordere
 
 ### Platform Foundations
 - ~~**Historical data backfill**~~ — ✅ completed in Milestone 9
+- ~~**Soil data integration**~~ — ✅ completed in Milestone 10 (SoilGrids + POLARIS ingestion, soil tab UI, risk scoring)
 - **Data export** — export field data, stats, and reports in CSV, GeoJSON, PDF formats
 - **Custom index builder** — UI for users to define custom indices from available bands with formula editor and visualization
 - **User roles and permissions** — more granular permissions (e.g., field-level access, read-only API keys) and user groups

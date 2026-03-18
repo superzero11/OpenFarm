@@ -26,9 +26,7 @@ router = APIRouter()
 _writer = require_roles("owner", "admin", "member")
 
 
-async def _get_weather_snapshot(
-    db: AsyncSession, field_id: uuid.UUID
-) -> dict | None:
+async def _get_weather_snapshot(db: AsyncSession, field_id: uuid.UUID) -> dict | None:
     """Query recent weather data to build a snapshot JSONB for scouting."""
     today = date.today()
     start = today - timedelta(days=7)

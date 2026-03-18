@@ -680,6 +680,78 @@ export function getPhotoUrl(objectKey: string): string {
     return `${MINIO_URL}/${objectKey}`;
 }
 
+// ── Soil Types ───────────────────────────────────────────────────
+
+export interface SoilLayer {
+    depth_top_cm: number;
+    depth_bottom_cm: number;
+    sand_pct: number | null;
+    silt_pct: number | null;
+    clay_pct: number | null;
+    ph: number | null;
+    soc_g_kg: number | null;
+    bd_kg_dm3: number | null;
+    cec_cmol_kg: number | null;
+    nitrogen_g_kg: number | null;
+    cfvo_pct: number | null;
+    fc_vol_pct: number | null;
+    wp_vol_pct: number | null;
+    awc_mm: number | null;
+    ksat_cm_day: number | null;
+    texture_class: string | null;
+    sand_q05: number | null;
+    sand_q95: number | null;
+    clay_q05: number | null;
+    clay_q95: number | null;
+    ph_q05: number | null;
+    ph_q95: number | null;
+    soc_q05: number | null;
+    soc_q95: number | null;
+}
+
+export interface SoilProfile {
+    id: string;
+    field_id: string;
+    source: string;
+    source_resolution_m: number | null;
+    fetched_at: string;
+    layers: SoilLayer[];
+}
+
+export interface SoilFieldSummary {
+    id: string;
+    field_id: string;
+    dominant_texture: string | null;
+    avg_ph: number | null;
+    total_soc_stock_t_ha: number | null;
+    rootzone_awc_mm: number | null;
+    drainage_class: string | null;
+    acidification_risk: number | null;
+    compaction_risk: number | null;
+    leaching_risk: number | null;
+    rooting_constraint: number | null;
+    data_quality_score: number | null;
+    computed_at: string;
+}
+
+export interface SoilRefreshResponse {
+    field_id: string;
+    job_id: string;
+    status: string;
+    message: string;
+}
+
+export const soilApi = {
+    get: (fieldId: string) =>
+        apiFetch<SoilProfile>(`/fields/${fieldId}/soil`),
+    getSummary: (fieldId: string) =>
+        apiFetch<SoilFieldSummary>(`/fields/${fieldId}/soil/summary`),
+    refresh: (fieldId: string) =>
+        apiFetch<SoilRefreshResponse>(`/fields/${fieldId}/soil/refresh`, {
+            method: "POST",
+        }),
+};
+
 // ── Share Links ──────────────────────────────────────────────────
 
 export const shareApi = {

@@ -22,6 +22,7 @@ from app.routers import (
     orgs,
     scouting,
     share,
+    soil,
     uploads,
     users,
     weather,
@@ -91,6 +92,7 @@ app.include_router(share.router, prefix=PREFIX, tags=["share"])
 app.include_router(uploads.router, prefix=PREFIX, tags=["uploads"])
 app.include_router(detection.router, prefix=PREFIX, tags=["detection"])
 app.include_router(weather.router, prefix=PREFIX, tags=["weather"])
+app.include_router(soil.router, prefix=PREFIX, tags=["soil"])
 
 
 # ── Health Check ─────────────────────────────────────────────────────

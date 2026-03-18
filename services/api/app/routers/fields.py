@@ -157,6 +157,11 @@ async def create_field(
 
     backfill_indices_for_field.delay(str(field.id), sentinel_job_id=str(sentinel.id))
 
+    # Trigger soil data fetch for new field
+    from app.tasks.soil import fetch_soil_for_field
+
+    fetch_soil_for_field.delay(str(field.id))
+
     return _field_to_out(field)
 
 

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import {
     monitoringApi,
     jobsApi,
+    fieldsApi,
     weatherApi,
     type RasterLayer,
     type FieldStat,
@@ -26,6 +27,8 @@ import {
     Eye,
     EyeOff,
     CloudRain,
+    History,
+    Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +111,11 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
     const [showWeatherOverlay, setShowWeatherOverlay] = useState(false);
     const [weatherData, setWeatherData] = useState<WeatherDaily[]>([]);
 
+    // ── Backfill state ───────────────────────────────
+    const [backfilling, setBackfilling] = useState(false);
+    const [backfillTriggered, setBackfillTriggered] = useState(false);
+    const [backfillActive, setBackfillActive] = useState(false);
+
     // ── Active job tracking ──────────────────────────
     const [activeJob, setActiveJob] = useState<NdviJob | null>(null);
     const [jobIndices, setJobIndices] = useState<IndexType[]>([]);
@@ -143,6 +151,16 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    // ── Check backfill status on mount ───────────────
+    useEffect(() => {
+        fieldsApi.backfillStatus(fieldId)
+            .then((res) => {
+                setBackfillActive(res.has_active_backfill);
+                if (res.has_active_backfill) setBackfillTriggered(true);
+            })
+            .catch(() => { }); // silent — endpoint may not exist in older deployments
+    }, [fieldId]);
 
     // ── Fetch weather data when overlay is toggled on ──
     useEffect(() => {
@@ -249,6 +267,26 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
         setLayerVisible(true);
     };
 
+    // ── Backfill handler ────────────────────────────
+    const handleBackfill = async () => {
+        setBackfilling(true);
+        try {
+            await fieldsApi.backfillIndices(fieldId);
+            setBackfillTriggered(true);
+            setBackfillActive(true);
+            toast.success("Historical analysis started. Data will appear over the next few hours.");
+        } catch (err: any) {
+            const msg = err.detail || "Failed to start backfill";
+            if (err.status === 409) {
+                setBackfillActive(true);
+                setBackfillTriggered(true);
+            }
+            toast.error(msg);
+        } finally {
+            setBackfilling(false);
+        }
+    };
+
     // ── Job progress helper ─────────────────────────
     const getJobProgress = () => {
         if (!activeJob?.progress_json) return null;
@@ -309,12 +347,12 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
 
     return (
         <div className="space-y-4">
-            {/* ── Section: Run Analysis Job ────────────── */}
-            <div>
+            {/* ── Section: Run Analysis + Backfill ─────── */}
+            <div className="flex gap-2">
                 <Button
                     variant="outline"
                     onClick={() => setShowJobForm(!showJobForm)}
-                    className="w-full flex items-center justify-between"
+                    className="flex-1 flex items-center justify-between"
                 >
                     <span className="flex items-center gap-1.5">
                         <PlayCircle className="h-4 w-4 text-primary" />
@@ -326,102 +364,133 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                         <ChevronDown className="h-4 w-4" />
                     )}
                 </Button>
-
-                {showJobForm && (
-                    <Card className="mt-2">
-                        <CardContent className="space-y-3 pt-4">
-                            {/* Index checkboxes */}
-                            <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                                    Indices to compute
-                                </label>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {ALL_INDEX_TYPES.map((idx) => (
-                                        <Button
-                                            key={idx}
-                                            type="button"
-                                            variant={selectedIndices.has(idx) ? "default" : "outline"}
-                                            size="sm"
-                                            onClick={() => toggleJobIndex(idx)}
-                                            className={cn(
-                                                "h-7 text-xs px-2.5",
-                                                selectedIndices.has(idx) && "shadow-sm",
-                                            )}
-                                        >
-                                            {INDEX_CONFIG[idx].label}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* SAVI L factor */}
-                            {selectedIndices.has("SAVI") && (
-                                <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                                        SAVI L factor
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={saviL}
-                                        onChange={(e) => setSaviL(Number(e.target.value))}
-                                        min={0}
-                                        max={1}
-                                        step={0.1}
-                                        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    />
-                                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                                        Soil brightness correction (0–1, default 0.5)
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Date range */}
-                            <div className="flex gap-2">
-                                <div className="flex-1">
-                                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                                        <Calendar className="inline h-3 w-3 mr-0.5" />
-                                        From
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) => setDateFrom(e.target.value)}
-                                        max={dateTo}
-                                        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                                        <Calendar className="inline h-3 w-3 mr-0.5" />
-                                        To
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) => setDateTo(e.target.value)}
-                                        min={dateFrom}
-                                        max={today()}
-                                        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    />
-                                </div>
-                            </div>
-                            <p className="text-xs text-muted-foreground">Maximum 180-day range.</p>
-                            <Button
-                                onClick={handleSubmitJob}
-                                disabled={submitting || !!activeJob}
-                                className="w-full"
-                            >
-                                {submitting ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                ) : (
-                                    <PlayCircle className="h-4 w-4 mr-2" />
-                                )}
-                                {submitting ? "Starting…" : "Start Processing"}
-                            </Button>
-                        </CardContent>
-                    </Card>
-                )}
+                <Button
+                    variant="outline"
+                    onClick={handleBackfill}
+                    disabled={backfilling || backfillTriggered || backfillActive}
+                    className="flex items-center gap-1.5"
+                    title={backfillActive ? "Backfill is already in progress" : "Backfill 24 months of historical data for all indices"}
+                >
+                    {backfilling ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <History className="h-4 w-4" />
+                    )}
+                    <span className="hidden sm:inline">Backfill History</span>
+                </Button>
             </div>
+
+            {showJobForm && (
+                <Card className="mt-2">
+                    <CardContent className="space-y-3 pt-4">
+                        {/* Index checkboxes */}
+                        <div>
+                            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                Indices to compute
+                            </label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {ALL_INDEX_TYPES.map((idx) => (
+                                    <Button
+                                        key={idx}
+                                        type="button"
+                                        variant={selectedIndices.has(idx) ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => toggleJobIndex(idx)}
+                                        className={cn(
+                                            "h-7 text-xs px-2.5",
+                                            selectedIndices.has(idx) && "shadow-sm",
+                                        )}
+                                    >
+                                        {INDEX_CONFIG[idx].label}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* SAVI L factor */}
+                        {selectedIndices.has("SAVI") && (
+                            <div>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                    SAVI L factor
+                                </label>
+                                <input
+                                    type="number"
+                                    value={saviL}
+                                    onChange={(e) => setSaviL(Number(e.target.value))}
+                                    min={0}
+                                    max={1}
+                                    step={0.1}
+                                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                />
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    Soil brightness correction (0–1, default 0.5)
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Date range */}
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                    <Calendar className="inline h-3 w-3 mr-0.5" />
+                                    From
+                                </label>
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) => setDateFrom(e.target.value)}
+                                    max={dateTo}
+                                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                    <Calendar className="inline h-3 w-3 mr-0.5" />
+                                    To
+                                </label>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    min={dateFrom}
+                                    max={today()}
+                                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                />
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Maximum 180-day range.</p>
+                        <Button
+                            onClick={handleSubmitJob}
+                            disabled={submitting || !!activeJob}
+                            className="w-full"
+                        >
+                            {submitting ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                                <PlayCircle className="h-4 w-4 mr-2" />
+                            )}
+                            {submitting ? "Starting…" : "Start Processing"}
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* ── Backfill in-progress banner ──────────── */}
+            {stats.length < 10 && (backfillActive || backfillTriggered || stats.length === 0) && !loading && !activeJob && (
+                <Card className="border-blue-500/30 bg-blue-500/5">
+                    <CardContent className="flex items-start gap-2 p-3">
+                        <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                        <div>
+                            <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                                Historical data is being processed
+                            </p>
+                            <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
+                                Satellite imagery for the past 24 months is being analyzed. Data will appear automatically as it&apos;s ready.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* ── Section: Active Job Progress ─────────── */}
             {activeJob && (activeJob.status === "pending" || activeJob.status === "running") && (

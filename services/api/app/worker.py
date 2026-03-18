@@ -31,6 +31,7 @@ celery_app.conf.update(
         "app.tasks.ndvi",
         "app.tasks.vegetation",
         "app.tasks.weather",
+        "app.tasks.backfill",
     ],
     # Route ML tasks to the dedicated "ml" queue
     task_routes={
@@ -38,6 +39,10 @@ celery_app.conf.update(
     },
     # Celery Beat schedule
     beat_schedule={
+        "compute-indices-weekly": {
+            "task": "app.tasks.backfill.schedule_weekly_index_compute",
+            "schedule": crontab(hour=6, minute=0, day_of_week=1),
+        },
         "fetch-weather-daily": {
             "task": "app.tasks.weather.schedule_daily_weather_fetch",
             "schedule": crontab(hour=8, minute=0),

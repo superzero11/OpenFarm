@@ -322,6 +322,14 @@
             "saviThreshold": "SAVI cayó por debajo del umbral ({value})",
             "ndwiDrop": "NDWI cayó {pct}% por debajo del promedio móvil",
             "ndwiThreshold": "NDWI cayó por debajo del umbral ({value})"
+        },
+        "backfill": {
+            "buttonLabel": "Historial de datos",
+            "buttonTitle": "Rellenar 24 meses de datos históricos para todos los índices",
+            "processing": "Se están procesando datos históricos",
+            "processingDesc": "Se están analizando imágenes satelitales de los últimos 24 meses. Los datos aparecerán automáticamente.",
+            "started": "Análisis histórico iniciado. Los datos aparecerán en las próximas horas.",
+            "failed": "Error al iniciar el relleno de datos"
         }
     },
     "scoutingTab": {

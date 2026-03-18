@@ -14,19 +14,15 @@ from app.core.rate_limit import limiter
 from app.middleware.auth import OrgContext, get_org_context, require_roles
 from app.models.tables import Field, Job
 from app.schemas.monitoring import JobCreateIndex, JobCreateNDVI, JobOut
-from app.tasks.indices import INDEX_REGISTRY
+from app.tasks.indices import INDEX_TASK_MAP
 
 router = APIRouter()
 
 # Dependency: restrict write operations to owner/admin/member (viewers are read-only)
 _writer = require_roles("owner", "admin", "member")
 
-# Derive task names from the index registry — single source of truth.
-# The ndvi task lives in its own legacy module; others share the vegetation module.
-_INDEX_TASK_MAP = {
-    key: f"app.tasks.{'ndvi' if key == 'ndvi' else 'vegetation'}.process_{key}"
-    for key in INDEX_REGISTRY
-}
+# Re-export from indices.py (single source of truth)
+_INDEX_TASK_MAP = INDEX_TASK_MAP
 
 
 async def _create_index_job(

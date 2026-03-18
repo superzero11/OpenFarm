@@ -322,6 +322,14 @@
             "saviThreshold": "SAVI fell below threshold ({value})",
             "ndwiDrop": "NDWI dropped {pct}% below rolling average",
             "ndwiThreshold": "NDWI fell below threshold ({value})"
+        },
+        "backfill": {
+            "buttonLabel": "Backfill History",
+            "buttonTitle": "Backfill 24 months of historical data for all indices",
+            "processing": "Historical data is being processed",
+            "processingDesc": "Satellite imagery for the past 24 months is being analyzed. Data will appear automatically as it's ready.",
+            "started": "Historical analysis started. Data will appear over the next few hours.",
+            "failed": "Failed to start backfill"
         }
     },
     "scoutingTab": {

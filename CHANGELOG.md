@@ -8,6 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.6.0] - 2026-03-19
+
+### Added
+- **Historical data backfill** — automatic 24-month vegetation index backfill for all four indices (NDVI, EVI, SAVI, NDWI) on field creation.
+- Backfill orchestrator task (`backfill_indices_for_field`) that splits date ranges into 90-day chunks and dispatches one job per (chunk × index) pair with staggered countdowns.
+- Chunk-level and index-level deduplication — skips chunks/indices where raster data already exists.
+- Weekly auto-compute Celery Beat schedule (`schedule_weekly_index_compute`) — runs every Monday at 06:00 UTC, skips fields with recent data (< 5 days old).
+- Manual backfill API endpoint: `POST /fields/{id}/backfill-indices` with configurable month range (admin/owner only, rate-limited 1/minute).
+- Backfill status API endpoint: `GET /fields/{id}/backfill-status` — returns pending, running, and completed job counts.
+- Endpoint-level deduplication — returns 409 Conflict if a backfill is already in progress for the field.
+- Sentinel job pattern — synchronous placeholder job created before async Celery dispatch to prevent race conditions with status checks.
+- Alert suppression for backfill jobs — backfill pipeline runs do not create alerts (controlled via `is_backfill` flag in `params_json`).
+- Backfill History button on field Indices tab with loading state, active-backfill detection, and progress banner.
+- Batch backfill task (`backfill_all_existing_fields`) for retroactive backfill of all org fields.
+- Configuration settings: `index_backfill_months` (default 24), `index_backfill_chunk_days` (default 90).
+- English and Spanish translations for all backfill UI strings.
+
+---
+
 ## [0.5.0] - 2026-03-17
 
 ### Added

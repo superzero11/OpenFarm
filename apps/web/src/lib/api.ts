@@ -480,6 +480,15 @@ export const fieldsApi = {
         formData.append("file", file);
         return apiFetch<FieldImportResult>(`/fields/import?farm_id=${farmId}`, { method: "POST", body: formData });
     },
+    backfillIndices: (fieldId: string, months = 24) =>
+        apiFetch<{ field_id: string; status: string; message: string }>(
+            `/fields/${fieldId}/backfill-indices`,
+            { method: "POST", body: JSON.stringify({ months }) },
+        ),
+    backfillStatus: (fieldId: string) =>
+        apiFetch<{ field_id: string; has_active_backfill: boolean; pending_jobs: number; running_jobs: number; completed_jobs: number }>(
+            `/fields/${fieldId}/backfill-status`,
+        ),
 };
 
 // ── Monitoring ───────────────────────────────────────────────────────

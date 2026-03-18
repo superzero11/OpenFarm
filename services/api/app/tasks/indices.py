@@ -158,3 +158,10 @@ def get_index(key: str) -> IndexDef:
 
 
 VALID_INDEX_KEYS = tuple(sorted(INDEX_REGISTRY.keys()))
+
+# Derive task names from the index registry — single source of truth.
+# The ndvi task lives in its own legacy module; others share the vegetation module.
+INDEX_TASK_MAP: dict[str, str] = {
+    key: f"app.tasks.{'ndvi' if key == 'ndvi' else 'vegetation'}.process_{key}"
+    for key in INDEX_REGISTRY
+}

@@ -591,19 +591,21 @@ def process_scene(
     session.commit()
     complete_step(session, job, "compute_stats")
 
-    # -- run alerts --
+    # -- run alerts (skip for backfill jobs to avoid flooding) --
+    is_backfill = (job.params_json or {}).get("is_backfill", False)
     update_job_progress(session, job, "run_alerts")
     if stats["mean"] is not None:
         historical_means.append(stats["mean"])
-    run_alerts(
-        session,
-        job.field_id,
-        job.org_id,
-        scene_date,
-        stats,
-        historical_means,
-        index_def,
-    )
+    if not is_backfill:
+        run_alerts(
+            session,
+            job.field_id,
+            job.org_id,
+            scene_date,
+            stats,
+            historical_means,
+            index_def,
+        )
     complete_step(session, job, "run_alerts")
 
     logger.info(

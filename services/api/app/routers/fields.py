@@ -7,7 +7,15 @@ import uuid
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 from geoalchemy2.shape import from_shape
 from shapely.geometry import MultiPolygon, shape
 from shapely.validation import explain_validity
@@ -16,9 +24,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.geo import wkb_to_geojson
 from app.core.logging import logger
+from app.core.rate_limit import limiter
 from app.middleware.auth import OrgContext, get_org_context, require_roles
-from app.models.tables import AuditEvent, Farm, Field
-from app.schemas.farm import FieldCreate, FieldImportResponse, FieldOut, FieldUpdate
+from app.models.tables import AuditEvent, Farm, Field, Job
+from app.schemas.farm import (
+    BackfillIndicesRequest,
+    BackfillIndicesResponse,
+    BackfillStatusResponse,
+    FieldCreate,
+    FieldImportResponse,
+    FieldOut,
+    FieldUpdate,
+)
 
 router = APIRouter()
 
@@ -121,6 +138,24 @@ async def create_field(
     from app.tasks.weather import backfill_weather_for_field
 
     backfill_weather_for_field.delay(str(field.id))
+
+    # Trigger index backfill for new field (24 months of all vegetation indices)
+    # Create a sentinel job so the backfill-status endpoint immediately
+    # reports an active backfill (avoids race with async task startup).
+    sentinel = Job(
+        org_id=ctx.org_id,
+        field_id=field.id,
+        type="backfill",
+        status="pending",
+        params_json={"is_backfill": True, "sentinel": True},
+        created_by=ctx.user.id,
+    )
+    db.add(sentinel)
+    await db.flush()
+
+    from app.tasks.backfill import backfill_indices_for_field
+
+    backfill_indices_for_field.delay(str(field.id), sentinel_job_id=str(sentinel.id))
 
     return _field_to_out(field)
 
@@ -251,3 +286,136 @@ async def import_fields(
         await db.flush()
 
     return FieldImportResponse(imported=imported, errors=errors)
+
+
+# ── Manual index backfill ────────────────────────────────────────────
+
+_admin = require_roles("owner", "admin")
+
+
+@router.post(
+    "/fields/{field_id}/backfill-indices",
+    response_model=BackfillIndicesResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+@limiter.limit("1/minute")
+async def backfill_field_indices(
+    request: Request,
+    field_id: uuid.UUID,
+    body: BackfillIndicesRequest | None = None,
+    ctx: OrgContext = Depends(_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Trigger historical index backfill for one field (admin/owner only)."""
+    from sqlalchemy import select as sa_select
+
+    field = await db.get(Field, field_id)
+    if not field or field.org_id != ctx.org_id or field.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Field not found")
+
+    # Check for existing pending/running backfill jobs
+    active_count = (
+        (
+            await db.execute(
+                sa_select(Job.id).where(
+                    Job.field_id == field_id,
+                    Job.status.in_(["pending", "running"]),
+                    Job.params_json["is_backfill"].as_boolean().is_(True),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if active_count:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Backfill already in progress ({len(active_count)} jobs pending/running).",
+        )
+
+    months = body.months if body else 24
+
+    # Create sentinel job so status endpoint immediately reflects active backfill
+    sentinel = Job(
+        org_id=ctx.org_id,
+        field_id=field_id,
+        type="backfill",
+        status="pending",
+        params_json={"is_backfill": True, "sentinel": True},
+        created_by=ctx.user.id,
+    )
+    db.add(sentinel)
+    await db.flush()
+
+    from app.tasks.backfill import backfill_indices_for_field
+
+    backfill_indices_for_field.delay(
+        str(field_id), months=months, sentinel_job_id=str(sentinel.id)
+    )
+
+    return BackfillIndicesResponse(
+        field_id=field_id,
+        status="dispatched",
+        message=f"Backfill of {months} months started. Data will appear over the next few hours.",
+    )
+
+
+@router.get(
+    "/fields/{field_id}/backfill-status",
+    response_model=BackfillStatusResponse,
+)
+async def get_backfill_status(
+    field_id: uuid.UUID,
+    ctx: OrgContext = Depends(get_org_context),
+    db: AsyncSession = Depends(get_db),
+):
+    """Check whether a backfill is active for this field."""
+    from sqlalchemy import func, select as sa_select
+
+    field = await db.get(Field, field_id)
+    if not field or field.org_id != ctx.org_id or field.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Field not found")
+
+    rows = (
+        await db.execute(
+            sa_select(
+                func.count().filter(Job.status == "pending").label("pending"),
+                func.count().filter(Job.status == "running").label("running"),
+                func.count().filter(Job.status == "completed").label("completed"),
+            ).where(
+                Job.field_id == field_id,
+                Job.params_json["is_backfill"].as_boolean().is_(True),
+            )
+        )
+    ).one()
+
+    return BackfillStatusResponse(
+        field_id=field_id,
+        has_active_backfill=(rows.pending + rows.running) > 0,
+        pending_jobs=rows.pending,
+        running_jobs=rows.running,
+        completed_jobs=rows.completed,
+    )
+
+
+@router.post(
+    "/admin/backfill-all-fields",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def backfill_all_fields(
+    request: Request,
+    body: BackfillIndicesRequest | None = None,
+    ctx: OrgContext = Depends(require_roles("owner")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Trigger backfill for ALL active fields (owner only, one-time migration)."""
+    months = body.months if body else 24
+
+    from app.tasks.backfill import backfill_all_existing_fields
+
+    backfill_all_existing_fields.delay(months=months)
+
+    return {
+        "status": "dispatched",
+        "message": f"Bulk backfill of {months} months dispatched for all active fields.",
+    }

@@ -104,3 +104,24 @@ class FieldOut(BaseModel):
 class FieldImportResponse(BaseModel):
     imported: int
     errors: list[str] = []
+
+
+# ── Backfill ─────────────────────────────────────────────────────────
+
+
+class BackfillIndicesRequest(BaseModel):
+    months: int = 24
+
+
+class BackfillIndicesResponse(BaseModel):
+    field_id: uuid.UUID
+    status: str
+    message: str
+
+
+class BackfillStatusResponse(BaseModel):
+    field_id: uuid.UUID
+    has_active_backfill: bool
+    pending_jobs: int
+    running_jobs: int
+    completed_jobs: int

@@ -82,7 +82,7 @@ services/tiler/ → TiTiler COG tile server (shared JWT auth)
 docker-compose.yml → Postgres/PostGIS, Redis, MinIO, API, Celery worker, TiTiler, Web
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the full strategic architecture document.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full strategic architecture document.
 
 ## Quick Start (Full Stack via Docker)
 ```bash

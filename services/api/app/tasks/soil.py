@@ -429,6 +429,112 @@ def _classify_texture(sand: float, silt: float, clay: float) -> str | None:
     return "sandy loam"
 
 
+# ── Rosetta PTF ──────────────────────────────────────────────────────
+
+
+def _run_rosetta_ptf(sand: float, silt: float, clay: float, bd: float) -> dict | None:
+    """Run Rosetta pedotransfer function to derive van Genuchten hydraulic params.
+
+    Uses Model 3 (sand, silt, clay, bulk density).
+    Returns dict with theta_r, theta_s, alpha, n, ksat, L and uncertainty.
+    """
+    try:
+        from rosetta import SoilData, rosetta
+    except ImportError:
+        logger.warning("rosetta_not_installed")
+        return None
+
+    if any(v is None for v in (sand, silt, clay, bd)):
+        return None
+
+    try:
+        soil = SoilData.from_array([[sand, silt, clay, bd]])
+        mean, std, codes = rosetta(3, soil)
+
+        if mean is None or len(mean) == 0:
+            return None
+
+        # mean row: [theta_r, theta_s, log10(alpha), log10(n), log10(ksat)]
+        row = mean[0]
+        std_row = std[0] if std is not None and len(std) > 0 else [0] * 5
+
+        theta_r = float(row[0])
+        theta_s = float(row[1])
+        log10_alpha = float(row[2])
+        log10_n = float(row[3])
+        log10_ksat = float(row[4])
+
+        ksat = 10**log10_ksat  # cm/day
+        alpha = 10**log10_alpha
+        n_param = 10**log10_n
+
+        # Uncertainty: approximate Q05/Q95 from mean ± 1.645 × std (log space for ksat)
+        ksat_std = float(std_row[4]) if len(std_row) > 4 else 0
+        ksat_q05 = 10 ** (log10_ksat - 1.645 * ksat_std) if ksat_std > 0 else ksat
+        ksat_q95 = 10 ** (log10_ksat + 1.645 * ksat_std) if ksat_std > 0 else ksat
+
+        # Derive FC (θ at 33kPa) and WP (θ at 1500kPa) from van Genuchten equation:
+        # θ(h) = θ_r + (θ_s - θ_r) / [1 + (α|h|)^n]^(1 - 1/n)
+        m = 1.0 - 1.0 / n_param
+        fc_vol = theta_r + (theta_s - theta_r) / (1 + (alpha * 330) ** n_param) ** m
+        wp_vol = theta_r + (theta_s - theta_r) / (1 + (alpha * 15000) ** n_param) ** m
+
+        return {
+            "ksat_cm_day": round(ksat, 4),
+            "ksat_q05": round(ksat_q05, 4),
+            "ksat_q95": round(ksat_q95, 4),
+            "fc_vol_pct": round(fc_vol * 100, 2),
+            "wp_vol_pct": round(wp_vol * 100, 2),
+            "theta_r": theta_r,
+            "theta_s": theta_s,
+        }
+    except Exception:
+        logger.exception("rosetta_ptf_error", sand=sand, silt=silt, clay=clay, bd=bd)
+        return None
+
+
+def _apply_rosetta_to_layers(layers: list[dict], source: str) -> list[dict]:
+    """Apply Rosetta PTF to layers that lack K_sat (SoilGrids source).
+
+    For POLARIS, K_sat is already available — skip.
+    """
+    if source == "polaris":
+        return layers
+
+    for layer in layers:
+        if layer.get("ksat_cm_day") is not None:
+            continue  # already have K_sat
+
+        sand = layer.get("sand_pct")
+        silt = layer.get("silt_pct")
+        clay = layer.get("clay_pct")
+        bd = layer.get("bd_kg_dm3")
+
+        ptf = _run_rosetta_ptf(sand, silt, clay, bd)
+        if ptf is None:
+            continue
+
+        layer["ksat_cm_day"] = ptf["ksat_cm_day"]
+        layer["ksat_q05"] = ptf["ksat_q05"]
+        layer["ksat_q95"] = ptf["ksat_q95"]
+
+        # Supplement FC/WP if not already set
+        if layer.get("fc_vol_pct") is None:
+            layer["fc_vol_pct"] = ptf["fc_vol_pct"]
+        if layer.get("wp_vol_pct") is None:
+            layer["wp_vol_pct"] = ptf["wp_vol_pct"]
+
+        # Recompute AWC with new FC/WP
+        layer["awc_mm"] = _compute_layer_awc_mm(
+            layer.get("fc_vol_pct"),
+            layer.get("wp_vol_pct"),
+            layer["depth_top_cm"],
+            layer["depth_bottom_cm"],
+        )
+
+    return layers
+
+
 # ── AWC Computation ──────────────────────────────────────────────────
 
 
@@ -463,14 +569,8 @@ def _compute_field_summary(layers: list[dict]) -> dict:
     textures = []
     ph_values = []
     ph_weights = []
-    soc_stocks = []
     awc_total = 0.0
     ksat_values = []
-    sand_values = []
-    clay_values = []
-    bd_values = []
-    cfvo_values = []
-    cec_values = []
 
     for layer in layers:
         thickness = layer["depth_bottom_cm"] - layer["depth_top_cm"]
@@ -482,11 +582,6 @@ def _compute_field_summary(layers: list[dict]) -> dict:
         if layer.get("ph") is not None:
             ph_values.append(layer["ph"])
             ph_weights.append(weight)
-
-        # SOC stock: soc_g_kg × BD_kg_dm3 × thickness_cm × 0.1 → t/ha
-        if layer.get("soc_g_kg") is not None and layer.get("bd_kg_dm3") is not None:
-            soc_stock = layer["soc_g_kg"] * layer["bd_kg_dm3"] * thickness * 0.01
-            soc_stocks.append(soc_stock)
 
         if layer.get("awc_mm") is not None:
             # Only sum up to 100cm for rootzone AWC
@@ -503,16 +598,6 @@ def _compute_field_summary(layers: list[dict]) -> dict:
 
         if layer.get("ksat_cm_day") is not None:
             ksat_values.append(layer["ksat_cm_day"])
-        if layer.get("sand_pct") is not None:
-            sand_values.append(layer["sand_pct"])
-        if layer.get("clay_pct") is not None:
-            clay_values.append(layer["clay_pct"])
-        if layer.get("bd_kg_dm3") is not None:
-            bd_values.append(layer["bd_kg_dm3"])
-        if layer.get("cfvo_pct") is not None:
-            cfvo_values.append(layer["cfvo_pct"])
-        if layer.get("cec_cmol_kg") is not None:
-            cec_values.append(layer["cec_cmol_kg"])
 
     # Dominant texture
     dominant_texture = None
@@ -527,113 +612,303 @@ def _compute_field_summary(layers: list[dict]) -> dict:
             sum(p * w for p, w in zip(ph_values, ph_weights)) / sum(ph_weights), 2
         )
 
-    # Total SOC stock
-    total_soc = round(sum(soc_stocks), 2) if soc_stocks else None
+    # SOC stocks (full profile and topsoil)
+    total_soc = _compute_soc_stock(layers, max_depth=200)
+    topsoil_soc = _compute_soc_stock(layers, max_depth=30)
 
     # Drainage class from Ksat
     drainage_class = _classify_drainage(ksat_values)
 
-    # Risk scores
-    acidification = _acidification_risk(avg_ph, cec_values)
-    compaction = _compaction_risk(bd_values, clay_values)
-    leaching = _leaching_risk(ksat_values, sand_values)
-    rooting = _rooting_constraint(cfvo_values, bd_values)
+    # Refined risk scores — all layer-based
+    acidification = _acidification_risk(layers)
+    compaction = _compaction_risk(layers)
+    leaching = _leaching_risk(layers)
+    rooting = _rooting_constraint(layers)
+    waterlogging = _waterlogging_risk(layers)
 
     return {
         "dominant_texture": dominant_texture,
         "avg_ph": avg_ph,
         "total_soc_stock_t_ha": total_soc,
+        "topsoil_soc_stock_t_ha": topsoil_soc,
         "rootzone_awc_mm": round(awc_total, 1) if awc_total > 0 else None,
         "drainage_class": drainage_class,
         "acidification_risk": acidification,
         "compaction_risk": compaction,
         "leaching_risk": leaching,
         "rooting_constraint": rooting,
+        "waterlogging_risk": waterlogging,
     }
 
 
 def _classify_drainage(ksat_values: list[float]) -> str | None:
-    """Classify drainage based on average Ksat."""
+    """Classify drainage using 7 USDA drainage classes from depth-weighted Ksat."""
     if not ksat_values:
         return None
     avg_ksat = sum(ksat_values) / len(ksat_values)
     if avg_ksat > 100:
         return "excessively drained"
     if avg_ksat > 36:
+        return "somewhat excessively drained"
+    if avg_ksat > 10:
         return "well drained"
-    if avg_ksat > 3.6:
+    if avg_ksat > 1:
         return "moderately well drained"
-    if avg_ksat > 0.36:
+    if avg_ksat > 0.1:
         return "somewhat poorly drained"
-    return "poorly drained"
+    if avg_ksat > 0.01:
+        return "poorly drained"
+    return "very poorly drained"
 
 
-def _acidification_risk(avg_ph: float | None, cec_values: list[float]) -> float | None:
-    """Acidification risk: f(pH, CEC). Low CEC + low pH = high risk."""
-    if avg_ph is None:
+def _acidification_risk(layers: list[dict]) -> float | None:
+    """Refined acidification risk: f(pH, CEC, depth_pattern).
+
+    Multi-factor:
+    - Low pH + low CEC = high risk (poor buffering)
+    - Increasing acidity with depth = higher risk
+    - Subsoil pH < 4.5 = aluminum toxicity proxy
+    """
+    ph_values = [lyr.get("ph") for lyr in layers if lyr.get("ph") is not None]
+    if not ph_values:
         return None
-    # pH component: risk increases below 6.5
+
+    avg_ph = sum(ph_values) / len(ph_values)
+
+    # pH component: risk increases below 6.5, strong risk below 5.0
     ph_risk = max(0.0, min(1.0, (6.5 - avg_ph) / 3.0))
-    # CEC component: low CEC = poor buffering
+
+    # CEC component: low CEC = poor buffering capacity
+    cec_values = [
+        lyr.get("cec_cmol_kg") for lyr in layers if lyr.get("cec_cmol_kg") is not None
+    ]
     if cec_values:
         avg_cec = sum(cec_values) / len(cec_values)
         cec_risk = max(0.0, min(1.0, (20.0 - avg_cec) / 20.0))
     else:
-        cec_risk = 0.5  # unknown
-    return round(ph_risk * 0.6 + cec_risk * 0.4, 3)
+        cec_risk = 0.5
+
+    # Depth pattern: check if acidity increases with depth
+    depth_risk = 0.0
+    topsoil_ph = [
+        lyr.get("ph")
+        for lyr in layers
+        if lyr.get("ph") is not None and lyr["depth_top_cm"] < 30
+    ]
+    subsoil_ph = [
+        lyr.get("ph")
+        for lyr in layers
+        if lyr.get("ph") is not None and lyr["depth_top_cm"] >= 30
+    ]
+    if topsoil_ph and subsoil_ph:
+        top_avg = sum(topsoil_ph) / len(topsoil_ph)
+        sub_avg = sum(subsoil_ph) / len(subsoil_ph)
+        if sub_avg < top_avg:
+            depth_risk = min(1.0, (top_avg - sub_avg) / 2.0)
+
+    # Aluminum toxicity proxy: pH < 4.5 at depth
+    al_tox = 0.0
+    deep_layers = [
+        lyr for lyr in layers if lyr.get("ph") is not None and lyr["depth_top_cm"] >= 30
+    ]
+    for dl in deep_layers:
+        if dl["ph"] < 4.5:
+            al_tox = min(1.0, (4.5 - dl["ph"]) / 1.5)
+            break
+
+    return round(ph_risk * 0.4 + cec_risk * 0.25 + depth_risk * 0.15 + al_tox * 0.2, 3)
 
 
-def _compaction_risk(bd_values: list[float], clay_values: list[float]) -> float | None:
-    """Compaction risk: f(BD, clay%). High BD + low clay = high risk."""
-    if not bd_values:
+def _compaction_risk(layers: list[dict]) -> float | None:
+    """Refined compaction risk: f(BD, clay%, depth, coarse_frags).
+
+    Uses texture-specific critical bulk density thresholds:
+    - Sandy: ~1.80 kg/dm³
+    - Loam: ~1.65 kg/dm³
+    - Clay: ~1.47 kg/dm³
+    Low coarse fragments with high BD = higher risk.
+    """
+    bd_layers = [lyr for lyr in layers if lyr.get("bd_kg_dm3") is not None]
+    if not bd_layers:
         return None
-    avg_bd = sum(bd_values) / len(bd_values)
-    # BD component: risk increases above 1.4
-    bd_risk = max(0.0, min(1.0, (avg_bd - 1.2) / 0.6))
-    # Clay component: more clay = more structure resistance (lower risk)
-    if clay_values:
-        avg_clay = sum(clay_values) / len(clay_values)
-        clay_factor = max(0.0, min(1.0, 1.0 - avg_clay / 50.0))
-    else:
-        clay_factor = 0.5
-    return round(bd_risk * 0.7 + clay_factor * 0.3, 3)
+
+    risk_scores = []
+    for layer in bd_layers:
+        bd = layer["bd_kg_dm3"]
+        clay = layer.get("clay_pct", 25)
+        sand = layer.get("sand_pct", 40)
+        cfvo = layer.get("cfvo_pct", 0)
+
+        # Texture-specific critical BD (Reichert et al. 2009)
+        if sand > 65:
+            critical_bd = 1.80
+        elif clay > 35:
+            critical_bd = 1.47
+        else:
+            critical_bd = 1.65
+
+        # BD relative to critical threshold
+        bd_ratio = max(0.0, min(1.0, (bd - critical_bd * 0.7) / (critical_bd * 0.4)))
+
+        # Coarse fragments reduce effective compaction concern
+        cfvo_factor = max(0.0, 1.0 - cfvo / 40.0)
+
+        risk_scores.append(bd_ratio * cfvo_factor)
+
+    return round(sum(risk_scores) / len(risk_scores), 3)
 
 
-def _leaching_risk(ksat_values: list[float], sand_values: list[float]) -> float | None:
-    """Leaching risk: f(Ksat, sand%). High Ksat + high sand = high risk."""
-    if not ksat_values and not sand_values:
+def _leaching_risk(layers: list[dict]) -> float | None:
+    """Refined leaching risk: f(K_sat, sand%, SOC, AWC).
+
+    High K_sat + high sand + low SOC + low AWC = high risk.
+    Especially relevant for nutrient/pesticide transport.
+    """
+    scored_layers = [
+        lyr
+        for lyr in layers
+        if lyr.get("sand_pct") is not None or lyr.get("ksat_cm_day") is not None
+    ]
+    if not scored_layers:
         return None
+
+    ksat_vals = [
+        lyr["ksat_cm_day"]
+        for lyr in scored_layers
+        if lyr.get("ksat_cm_day") is not None
+    ]
+    sand_vals = [
+        lyr["sand_pct"] for lyr in scored_layers if lyr.get("sand_pct") is not None
+    ]
+    soc_vals = [
+        lyr["soc_g_kg"] for lyr in scored_layers if lyr.get("soc_g_kg") is not None
+    ]
+    awc_vals = [lyr["awc_mm"] for lyr in scored_layers if lyr.get("awc_mm") is not None]
+
+    components = []
+    weights = []
+
+    # K_sat component: high K_sat = high leaching
+    if ksat_vals:
+        avg_ksat = sum(ksat_vals) / len(ksat_vals)
+        components.append(max(0.0, min(1.0, avg_ksat / 100.0)))
+        weights.append(0.35)
+
+    # Sand component: high sand = rapid drainage
+    if sand_vals:
+        avg_sand = sum(sand_vals) / len(sand_vals)
+        components.append(max(0.0, min(1.0, avg_sand / 80.0)))
+        weights.append(0.25)
+
+    # SOC component: low SOC = less sorption capacity
+    if soc_vals:
+        avg_soc = sum(soc_vals) / len(soc_vals)
+        soc_risk = max(0.0, min(1.0, 1.0 - avg_soc / 30.0))
+        components.append(soc_risk)
+        weights.append(0.25)
+
+    # AWC component: low AWC = less retention
+    if awc_vals:
+        total_awc = sum(awc_vals)
+        awc_risk = max(0.0, min(1.0, 1.0 - total_awc / 200.0))
+        components.append(awc_risk)
+        weights.append(0.15)
+
+    if not components:
+        return None
+
+    total_w = sum(weights)
+    return round(sum(c * w for c, w in zip(components, weights)) / total_w, 3)
+
+
+def _rooting_constraint(layers: list[dict]) -> float | None:
+    """Rooting constraint: f(cfvo, BD, depth). Evaluates rootzone (0-100cm)."""
+    rootzone = [lyr for lyr in layers if lyr["depth_top_cm"] < 100]
+    if not rootzone:
+        return None
+
+    cfvo_vals = [lyr["cfvo_pct"] for lyr in rootzone if lyr.get("cfvo_pct") is not None]
+    bd_vals = [lyr["bd_kg_dm3"] for lyr in rootzone if lyr.get("bd_kg_dm3") is not None]
+
+    if not cfvo_vals and not bd_vals:
+        return None
+
     risk = 0.0
     count = 0
-    if ksat_values:
-        avg_ksat = sum(ksat_values) / len(ksat_values)
-        # Normalize Ksat: high Ksat = high leaching risk
-        risk += max(0.0, min(1.0, avg_ksat / 100.0))
-        count += 1
-    if sand_values:
-        avg_sand = sum(sand_values) / len(sand_values)
-        risk += max(0.0, min(1.0, avg_sand / 80.0))
-        count += 1
-    return round(risk / count, 3) if count > 0 else None
-
-
-def _rooting_constraint(
-    cfvo_values: list[float], bd_values: list[float]
-) -> float | None:
-    """Rooting constraint: f(cfvo, BD). High coarse fragments + high BD = constrained."""
-    if not cfvo_values and not bd_values:
-        return None
-    risk = 0.0
-    count = 0
-    if cfvo_values:
-        avg_cfvo = sum(cfvo_values) / len(cfvo_values)
+    if cfvo_vals:
+        avg_cfvo = sum(cfvo_vals) / len(cfvo_vals)
         risk += max(0.0, min(1.0, avg_cfvo / 30.0))
         count += 1
-    if bd_values:
-        avg_bd = sum(bd_values) / len(bd_values)
+    if bd_vals:
+        avg_bd = sum(bd_vals) / len(bd_vals)
         risk += max(0.0, min(1.0, (avg_bd - 1.3) / 0.5))
         count += 1
     return round(risk / count, 3) if count > 0 else None
+
+
+def _waterlogging_risk(layers: list[dict]) -> float | None:
+    """Waterlogging risk: f(K_sat_deep, clay%_deep, drainage_class).
+
+    Low K_sat at 60-200cm + high clay at depth = high risk.
+    """
+    deep = [lyr for lyr in layers if lyr["depth_top_cm"] >= 60]
+    if not deep:
+        return None
+
+    ksat_deep = [
+        lyr["ksat_cm_day"] for lyr in deep if lyr.get("ksat_cm_day") is not None
+    ]
+    clay_deep = [lyr["clay_pct"] for lyr in deep if lyr.get("clay_pct") is not None]
+
+    if not ksat_deep and not clay_deep:
+        return None
+
+    components = []
+    weights = []
+
+    # Low K_sat at depth = poor deep drainage
+    if ksat_deep:
+        avg_ksat = sum(ksat_deep) / len(ksat_deep)
+        # Inverse: low ksat = high risk
+        ksat_risk = max(0.0, min(1.0, 1.0 - avg_ksat / 10.0))
+        components.append(ksat_risk)
+        weights.append(0.5)
+
+    # High clay at depth = water pooling
+    if clay_deep:
+        avg_clay = sum(clay_deep) / len(clay_deep)
+        clay_risk = max(0.0, min(1.0, avg_clay / 50.0))
+        components.append(clay_risk)
+        weights.append(0.5)
+
+    if not components:
+        return None
+
+    total_w = sum(weights)
+    return round(sum(c * w for c, w in zip(components, weights)) / total_w, 3)
+
+
+def _compute_soc_stock(layers: list[dict], max_depth: int = 200) -> float | None:
+    """Compute SOC stock (t/ha) using standard formula.
+
+    SOC_stock = Σ(SOC_g_kg × BD_kg_dm3 × thickness_cm × (1 - cfvo/100) × 0.01)
+    """
+    total = 0.0
+    has_data = False
+    for layer in layers:
+        if layer["depth_top_cm"] >= max_depth:
+            continue
+        soc = layer.get("soc_g_kg")
+        bd = layer.get("bd_kg_dm3")
+        if soc is None or bd is None:
+            continue
+        effective_bottom = min(layer["depth_bottom_cm"], max_depth)
+        thickness = effective_bottom - layer["depth_top_cm"]
+        cfvo = layer.get("cfvo_pct", 0) or 0
+        stock = soc * bd * thickness * (1.0 - cfvo / 100.0) * 0.01
+        total += stock
+        has_data = True
+    return round(total, 2) if has_data else None
 
 
 # ── Data Quality Score ───────────────────────────────────────────────
@@ -850,9 +1125,16 @@ def fetch_soil_for_field(self, field_id: str, job_id: str | None = None) -> dict
         _update_soil_job(session, job, "layer_processing")
 
         layer_dicts = _build_layers_from_data(converted, source)
-        quality = _compute_data_quality_score(layer_dicts)
 
         _update_soil_job(session, job, "layer_processing", "completed")
+
+        # Step 3b: Rosetta PTF (K_sat derivation for SoilGrids)
+        _update_soil_job(session, job, "rosetta_ptf")
+
+        layer_dicts = _apply_rosetta_to_layers(layer_dicts, source)
+        quality = _compute_data_quality_score(layer_dicts)
+
+        _update_soil_job(session, job, "rosetta_ptf", "completed")
 
         # Step 4: Compute summary
         _update_soil_job(session, job, "compute_summary")
@@ -923,6 +1205,8 @@ def fetch_soil_for_field(self, field_id: str, job_id: str | None = None) -> dict
                 ph_q95=ld.get("ph_q95"),
                 soc_q05=ld.get("soc_q05"),
                 soc_q95=ld.get("soc_q95"),
+                ksat_q05=ld.get("ksat_q05"),
+                ksat_q95=ld.get("ksat_q95"),
             )
             session.add(soil_layer)
         session.flush()
@@ -940,6 +1224,8 @@ def fetch_soil_for_field(self, field_id: str, job_id: str | None = None) -> dict
             compaction_risk=summary_data.get("compaction_risk"),
             leaching_risk=summary_data.get("leaching_risk"),
             rooting_constraint=summary_data.get("rooting_constraint"),
+            waterlogging_risk=summary_data.get("waterlogging_risk"),
+            topsoil_soc_stock_t_ha=summary_data.get("topsoil_soc_stock_t_ha"),
             data_quality_score=quality,
         )
         # Upsert: delete old summary first

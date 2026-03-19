@@ -599,6 +599,8 @@ class SoilLayer(Base):
     ph_q95: Mapped[float | None] = mapped_column(Float)
     soc_q05: Mapped[float | None] = mapped_column(Float)
     soc_q95: Mapped[float | None] = mapped_column(Float)
+    ksat_q05: Mapped[float | None] = mapped_column(Float)
+    ksat_q95: Mapped[float | None] = mapped_column(Float)
 
     profile = relationship("SoilProfile", back_populates="layers")
 
@@ -633,6 +635,10 @@ class SoilFieldSummary(Base):
     compaction_risk: Mapped[float | None] = mapped_column(Float)
     leaching_risk: Mapped[float | None] = mapped_column(Float)
     rooting_constraint: Mapped[float | None] = mapped_column(Float)
+    waterlogging_risk: Mapped[float | None] = mapped_column(Float)
+
+    # Carbon
+    topsoil_soc_stock_t_ha: Mapped[float | None] = mapped_column(Float)  # 0-30cm
 
     # Data quality
     data_quality_score: Mapped[float | None] = mapped_column(

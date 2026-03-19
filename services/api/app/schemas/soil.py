@@ -41,6 +41,8 @@ class SoilLayerOut(BaseModel):
     ph_q95: float | None = None
     soc_q05: float | None = None
     soc_q95: float | None = None
+    ksat_q05: float | None = None
+    ksat_q95: float | None = None
 
     model_config = {"from_attributes": True}
 
@@ -70,6 +72,10 @@ class SoilFieldSummaryOut(BaseModel):
     compaction_risk: float | None = None
     leaching_risk: float | None = None
     rooting_constraint: float | None = None
+    waterlogging_risk: float | None = None
+
+    # Carbon
+    topsoil_soc_stock_t_ha: float | None = None
 
     data_quality_score: float | None = None
     computed_at: datetime

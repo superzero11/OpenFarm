@@ -707,6 +707,8 @@ export interface SoilLayer {
     ph_q95: number | null;
     soc_q05: number | null;
     soc_q95: number | null;
+    ksat_q05: number | null;
+    ksat_q95: number | null;
 }
 
 export interface SoilProfile {
@@ -730,6 +732,8 @@ export interface SoilFieldSummary {
     compaction_risk: number | null;
     leaching_risk: number | null;
     rooting_constraint: number | null;
+    waterlogging_risk: number | null;
+    topsoil_soc_stock_t_ha: number | null;
     data_quality_score: number | null;
     computed_at: string;
 }

@@ -186,6 +186,7 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
         { key: "source_detection", label: t("stepSourceDetection") },
         { key: "data_fetch", label: t("stepDataFetch") },
         { key: "layer_processing", label: t("stepLayerProcessing") },
+        { key: "rosetta_ptf", label: t("stepRosettaPtf") },
         { key: "compute_summary", label: t("stepComputeSummary") },
         { key: "save_results", label: t("stepSaveResults") },
         { key: "complete", label: t("stepComplete") },
@@ -351,13 +352,22 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
                                 <Badge label={t("textureClass")} value={summary.dominant_texture} />
                             )}
                             {summary.drainage_class && (
-                                <Badge label={t("drainageClass")} value={summary.drainage_class} />
+                                <DrainageBadge drainageClass={summary.drainage_class} t={t} />
                             )}
                             <Badge
                                 label={t("dataQuality")}
                                 value={qualityLabel(summary.data_quality_score, t)}
                             />
                         </div>
+
+                        {/* SOC stock card */}
+                        {summary.total_soc_stock_t_ha != null && (
+                            <SocStockCard
+                                total={summary.total_soc_stock_t_ha}
+                                topsoil={summary.topsoil_soc_stock_t_ha}
+                                t={t}
+                            />
+                        )}
 
                         {/* Risk indicators */}
                         <div>
@@ -383,6 +393,11 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
                                 <RiskBadge
                                     label={t("rootingConstraint")}
                                     score={summary.rooting_constraint}
+                                    t={t}
+                                />
+                                <RiskBadge
+                                    label={t("waterlogging")}
+                                    score={summary.waterlogging_risk}
                                     t={t}
                                 />
                             </div>
@@ -716,6 +731,77 @@ function RiskBadge({
                 <p className={cn("text-[11px] font-medium", riskTextColor(score))}>
                     {t(labelKey)}
                 </p>
+            </div>
+        </div>
+    );
+}
+
+function DrainageBadge({
+    drainageClass,
+    t,
+}: {
+    drainageClass: string;
+    t: (key: string) => string;
+}) {
+    const colorMap: Record<string, string> = {
+        "very poorly drained": "bg-blue-600",
+        "poorly drained": "bg-blue-500",
+        "somewhat poorly drained": "bg-blue-400",
+        "moderately well drained": "bg-green-500",
+        "well drained": "bg-green-400",
+        "somewhat excessively drained": "bg-yellow-500",
+        "excessively drained": "bg-orange-500",
+    };
+    const dot = colorMap[drainageClass] ?? "bg-muted-foreground";
+    return (
+        <span className="inline-flex items-center gap-1.5 rounded-md border bg-card px-2 py-1 text-[11px]">
+            <span className={cn("h-2 w-2 rounded-full shrink-0", dot)} />
+            <span className="text-muted-foreground">{t("drainageClass")}:</span>
+            <span className="font-medium capitalize">{drainageClass}</span>
+        </span>
+    );
+}
+
+function SocStockCard({
+    total,
+    topsoil,
+    t,
+}: {
+    total: number;
+    topsoil: number | null;
+    t: (key: string) => string;
+}) {
+    const level = total < 40 ? "socStockLow" : total < 80 ? "socStockMedium" : "socStockHigh";
+    const color =
+        total < 40
+            ? "text-red-600 dark:text-red-400"
+            : total < 80
+                ? "text-yellow-600 dark:text-yellow-400"
+                : "text-green-600 dark:text-green-400";
+    const pct = Math.min((total / 150) * 100, 100);
+    const barColor =
+        total < 40 ? "bg-red-500" : total < 80 ? "bg-yellow-500" : "bg-green-500";
+    return (
+        <div className="rounded-lg border bg-card p-2.5">
+            <div className="flex items-baseline justify-between mb-1">
+                <p className="text-[10px] text-muted-foreground">{t("socStock")}</p>
+                <span className={cn("text-xs font-semibold tabular-nums", color)}>
+                    {total.toFixed(1)} {t("socStockUnit")}
+                </span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                    className={cn("h-full rounded-full transition-all", barColor)}
+                    style={{ width: `${pct}%` }}
+                />
+            </div>
+            <div className="flex items-center justify-between mt-1">
+                <p className="text-[10px] text-muted-foreground">{t(level)}</p>
+                {topsoil != null && (
+                    <p className="text-[10px] text-muted-foreground">
+                        {t("topsoil")}: {topsoil.toFixed(1)} {t("socStockUnit")}
+                    </p>
+                )}
             </div>
         </div>
     );

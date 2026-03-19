@@ -29,6 +29,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "slowapi>=0.1.9",
     "owslib>=0.31.0",
+    "rosetta-soil>=1.1.0",
 ]
 
 [project.optional-dependencies]

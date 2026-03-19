@@ -1352,11 +1352,11 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 23.21 | Verify Rosetta PTF runs for SoilGrids-sourced profiles (no source K_sat) | ⬜ | K_sat column populated after reprocessing |
-| 23.22 | Verify Rosetta is SKIPPED for POLARIS-sourced profiles (K_sat already available) | ⬜ | No duplicate computation |
-| 23.23 | Verify drainage class mapping produces reasonable results for 3+ test profiles | ⬜ | Clay, loam, sand profiles |
-| 23.24 | Verify refined risk scores — compare with simple Phase 1 scores for regression | ⬜ | Scores should be more differentiated |
-| 23.25 | Verify SOC stock calculation matches hand-computed values from layer data | ⬜ | Within 5% of manual calculation |
+| 23.21 | Verify Rosetta PTF runs for SoilGrids-sourced profiles (no source K_sat) | ✅ | K_sat column populated after reprocessing |
+| 23.22 | Verify Rosetta is SKIPPED for POLARIS-sourced profiles (K_sat already available) | ✅ | No duplicate computation |
+| 23.23 | Verify drainage class mapping produces reasonable results for 3+ test profiles | ✅ | Clay, loam, sand profiles |
+| 23.24 | Verify refined risk scores — compare with simple Phase 1 scores for regression | ✅ | Scores should be more differentiated |
+| 23.25 | Verify SOC stock calculation matches hand-computed values from layer data | ✅ | Within 5% of manual calculation |
 | 23.26 | `ruff check` + `ruff format --check` on all modified Python files | ✅ | |
 | 23.27 | `npx tsc --noEmit` | ✅ | |
 

@@ -439,7 +439,7 @@ def _run_rosetta_ptf(sand: float, silt: float, clay: float, bd: float) -> dict |
     Returns dict with theta_r, theta_s, alpha, n, ksat, L and uncertainty.
     """
     try:
-        from rosetta import SoilData, rosetta
+        from rosetta import rosetta
     except ImportError:
         logger.warning("rosetta_not_installed")
         return None
@@ -448,15 +448,16 @@ def _run_rosetta_ptf(sand: float, silt: float, clay: float, bd: float) -> dict |
         return None
 
     try:
-        soil = SoilData.from_array([[sand, silt, clay, bd]])
-        mean, std, codes = rosetta(3, soil)
+        # rosetta-soil >=0.3 accepts list-of-lists directly; estimate_type='log'
+        # returns log10 values for alpha, n, Ksat, K0 (theta_r/theta_s/Lpar stay arith)
+        mean, std, codes = rosetta(3, [[sand, silt, clay, bd]], estimate_type="log")
 
         if mean is None or len(mean) == 0:
             return None
 
-        # mean row: [theta_r, theta_s, log10(alpha), log10(n), log10(ksat)]
+        # mean row: [theta_r, theta_s, log10(alpha), log10(n), log10(Ksat), log10(K0), Lpar]
         row = mean[0]
-        std_row = std[0] if std is not None and len(std) > 0 else [0] * 5
+        std_row = std[0] if std is not None and len(std) > 0 else [0] * 7
 
         theta_r = float(row[0])
         theta_s = float(row[1])

@@ -2,7 +2,13 @@
 
 ## Architecture Overview
 
-OpenFarm is a satellite-powered crop intelligence platform with a strict frontend/backend split:
+OpenFarm is an open, modular field intelligence platform built on a **3-layer strategic architecture** (see `ARCHITECTURE.md`):
+
+- **Layer A — Observation Infrastructure** (Data Gravity): satellite imagery, weather, soil profiles, field boundaries, sensors
+- **Layer B — Intelligence Engine** (Moat): anomaly detection, stress signals, risk models, explainability
+- **Layer C — Delivery Surfaces** (Distribution): map UI, reports, API, scouting, integrations
+
+### Tech Stack
 
 - **`apps/web/`** — Next.js 14 + NextAuth (Google OAuth) + Tailwind + shadcn/ui + MapLibre + ECharts
 - **`services/api/`** — FastAPI + SQLAlchemy 2.0 (async) + Alembic + Pydantic v2
@@ -40,9 +46,11 @@ OpenFarm is a satellite-powered crop intelligence platform with a strict fronten
 ## Celery / Background Jobs
 
 - Worker config in `services/api/app/worker.py` — broker=Redis, JSON serialization, 30min hard timeout
-- Tasks in `services/api/app/tasks/` (currently `ndvi.py`)
+- Tasks in `services/api/app/tasks/` — `ndvi.py` (vegetation indices), `soil.py` (soil profile ingestion), `weather.py` (weather data), `backfill.py` (historical index backfill)
 - Celery workers use sync SQLAlchemy sessions (`core/database_sync.py`), not async
-- NDVI pipeline: STAC search → download B04/B08 bands → compute NDVI → write COG to MinIO → zonal stats → alert evaluation
+- Vegetation pipeline: STAC search → download bands → compute index (NDVI/EVI/SAVI/NDWI) → write COG to MinIO → zonal stats → alert evaluation
+- Soil pipeline: SoilGrids WCS (global) or POLARIS S3 (US) → 10 properties × 6 depths → texture classification → risk scoring → field summary
+- Weather pipeline: Open-Meteo API → 18 variables + 5 derived indices (GDD, ET₀, water balance, drought) → daily upsert
 - Job progress tracked via `jobs.progress_json` JSONB column with per-step status updates
 
 ## Frontend Patterns
@@ -92,4 +100,5 @@ curl http://localhost:3000/api/health # Web
 | Docker Compose (base services) | `docker-compose.yml` |
 | Dev port overrides | `docker-compose.dev.yml` |
 | Prod overrides (Caddy, limits) | `docker-compose.prod.yml` |
+| Strategic architecture | `ARCHITECTURE.md` |
 | PRD (full product spec) | `docs/openfarm.md` |

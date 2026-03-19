@@ -30,9 +30,10 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 
 </div>
 
-**Vision:** A world where every farm, from smallholders to enterprises, can access transparent, trustworthy, and affordable digital farming intelligence.
+**OpenFarm is an open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field — and why.**
 
-**Mission:** Build and maintain an open, reproducible crop intelligence platform that turns satellite, weather, sensor and field data into actionable insights, with modular workflows for scouting, operations, and analytics — deployable anywhere (self-hosted or hosted).
+- **Vision:** A world where every farm, from smallholders to enterprises, can access transparent, trustworthy, and affordable digital farming intelligence.
+- **Mission:** Build and maintain an open, reproducible crop intelligence platform that turns satellite, weather, soil, and field data into actionable insights — deployable anywhere (self-hosted or hosted).
 
 ## Why OpenFarm
 - Self-hostable stack with clear service boundaries (Next.js ↔ FastAPI ↔ TiTiler ↔ MinIO ↔ PostGIS)
@@ -52,13 +53,36 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 - Google OAuth credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 
 ## Architecture
+
+OpenFarm follows a 3-layer strategic architecture:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer C — Delivery Surfaces                   (Distribution)  │
+│  Map UI · Reports · API · Webhooks · MCP · Mobile scouting     │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer B — Intelligence Engine                       (Moat)    │
+│  Phenology · Anomaly detection · Stress signals · Yield        │
+│  Risk models · Soil-derived insights · Explainability          │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer A — Observation Infrastructure         (Data Gravity)   │
+│  Satellite · Weather · Soil · Field boundaries · Sensors       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+- **Layer A** collects, standardizes, and stores raw signals (satellite imagery, weather, soil profiles, field boundaries)
+- **Layer B** transforms observations into explainable, agronomically meaningful insights with confidence scores
+- **Layer C** delivers intelligence through maps, reports, APIs, and integrations
+
+**Tech stack:**
 ```
 apps/web/       → Next.js 14 + NextAuth (Google OAuth) + Tailwind + shadcn/ui + MapLibre + ECharts
-services/api/   → FastAPI + SQLAlchemy 2.0 (async) + Alembic + Celery tasks (NDVI/EVI/SAVI/NDWI)
+services/api/   → FastAPI + SQLAlchemy 2.0 (async) + Alembic + Celery tasks
 services/tiler/ → TiTiler COG tile server (shared JWT auth)
 docker-compose.yml → Postgres/PostGIS, Redis, MinIO, API, Celery worker, TiTiler, Web
 ```
-**Critical rule:** Next.js talks to Postgres **only** for user upsert during NextAuth auth callback (`apps/web/src/lib/db.ts`). All other data flows through the FastAPI API via `apps/web/src/lib/api.ts`.
+
+See [docs/architecture.md](docs/architecture.md) for the full strategic architecture document.
 
 ## Quick Start (Full Stack via Docker)
 ```bash
@@ -143,16 +167,26 @@ ruff format --check .
 - Audit events on key actions (e.g., field_created)
 
 ## Feature Overview
-- **Auth**: Google OAuth via NextAuth → JWT bridge (`/api/auth/token`)
-- **Orgs & RBAC**: owner/admin/member/viewer with audit logging
-- **Farms & Fields**: draw/upload GeoJSON/KML, area calc, soft delete
-- **Vegetation Monitoring**: NDVI, EVI, SAVI (configurable L factor), NDWI — STAC search → COG → TiTiler tiles → time-series stats, with automatic 24-month historical backfill on field creation and weekly auto-compute
-- **Boundary Detection**: automatic field boundary detection from Sentinel-2 imagery using FTW deep learning model — draw area, review results, accept as fields
-- **Weather Integration**: daily historical + 7-day forecast weather data per field — temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
-- **Soil Intelligence**: automatic soil profile from SoilGrids/POLARIS — texture-by-depth visualization, pH, organic carbon, CEC, bulk density, AWC, risk scoring (acidification, compaction, leaching, rooting), data quality indicators
-- **Per-Index Alerts**: configurable threshold and drop-percentage rules, enriched with weather context
-- **Scouting**: geotagged observations with optional photo upload and auto-attached weather snapshot
-- **Sharing**: read-only field health reports via share links with multi-index toggle and weather summary
+
+### Layer A — Observation
+- **Satellite Intelligence**: NDVI, EVI, SAVI (configurable L), NDWI from Sentinel-2 — STAC search → COG → TiTiler tiles → time-series stats, with automatic 24-month historical backfill and weekly auto-compute
+- **Weather Intelligence**: daily historical + 7-day forecast via Open-Meteo — temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
+- **Soil Intelligence**: automatic soil profile from SoilGrids (global, 250m) and POLARIS (US, 30m) — texture-by-depth, pH, organic carbon, CEC, bulk density, AWC, risk scoring, data quality indicators
+- **Boundary Detection**: ML-powered field boundary detection (FTW model) from Sentinel-2 — draw area, review with confidence scores, accept as fields
+- **Farms & Fields**: draw/upload GeoJSON/KML polygons, auto area calculation, soft delete
+
+### Layer B — Intelligence
+- **Per-Index Alerts**: configurable threshold and drop-percentage rules, enriched with weather context and soil data
+- **Risk Scoring**: acidification, compaction, leaching, and rooting risk from soil properties
+- **Multi-Signal Context**: alerts combine vegetation anomalies + weather conditions + soil characteristics
+
+### Layer C — Delivery
+- **Interactive Map**: MapLibre + PMTiles (no Mapbox needed), multi-layer toggle, per-index colormaps
+- **Time-Series Charts**: ECharts with percentile bands, NDVI + weather overlay, soil depth visualization
+- **Scouting**: geotagged observations with photo upload and auto-attached weather snapshot
+- **Sharing**: read-only field health reports via share links with multi-index, weather, and soil summary
+- **Auth & RBAC**: Google OAuth → JWT bridge, owner/admin/member/viewer roles, audit logging
+- **i18n**: English + Spanish, dark/light theme
 - **Changelog**: in-app changelog page with version history
 
 ## Quality & CI

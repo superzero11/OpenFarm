@@ -6,16 +6,62 @@ This document outlines where OpenFarm is today and where it's headed. If you'd l
 
 ---
 
-## Platform Vision
+## Strategic Architecture
 
-### Layer A — Observation Infrastructure
-Satellite ingestion, weather, radar, sensor plugins, field boundaries, temporal storage, provenance, exports, APIs. 
+OpenFarm is built on a 3-layer architecture where each layer has a distinct strategic role:
 
-### Layer B — Intelligence Engine
-Phenology, crop type, stress segmentation, anomaly detection, disease/pest risk signals, irrigation/nutrient heuristics, yield forecasting, uncertainty scoring, benchmarking.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer C — Delivery Surfaces                   (Distribution)  │
+│  Map UI · Reports · API · Webhooks · MCP · Mobile scouting     │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer B — Intelligence Engine                       (Moat)    │
+│  Phenology · Anomaly detection · Stress signals · Yield        │
+│  Risk models · Soil-derived insights · Explainability          │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer A — Observation Infrastructure         (Data Gravity)   │
+│  Satellite · Weather · Soil · Field boundaries · Sensors       │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Layer C — Delivery Surfaces
-Map UI, reports, API, webhooks, partner integrations, lightweight mobile scouting, LLM/MCP interfaces. 
+### Layer A — Observation Infrastructure (Data Gravity)
+
+Collects, standardizes, and stores raw signals about every field. Source-agnostic, reproducible, and extensible.
+
+| Domain | Current State | Next |
+|---|---|---|
+| **Satellite** | Sentinel-2 (NDVI, EVI, SAVI, NDWI), STAC ingestion, COG storage, 24-month backfill | Landsat, Planet, SAR (Sentinel-1), cloud masking, fusion |
+| **Weather** | Open-Meteo (ERA5 + forecast), GDD, ET₀, water balance, drought index | Additional providers, irrigation scheduling inputs |
+| **Soil** | SoilGrids (global 250m) + POLARIS (US 30m), 10 properties × 6 depths, texture classification, AWC, risk scoring | Derived hydraulic properties (Rosetta PTF), terrain layers |
+| **Boundaries** | FTW deep learning model, interactive review, GeoJSON/KML import | Multi-model ensemble, higher-res detection |
+| **Sensors** | — | IoT soil sensors, weather stations, device plugin framework |
+
+### Layer B — Intelligence Engine (Moat)
+
+Transforms raw observations into explainable, agronomically meaningful insights. This is the strategic differentiator — multi-signal reasoning with confidence scores and input attribution.
+
+| Tier | Capabilities | Dependencies |
+|---|---|---|
+| **Statistical analysis** | Anomaly detection (z-score, CUSUM), phenology tracking, drought/water stress composite scoring | Existing indices + weather + soil |
+| **Composite intelligence** | Disease/pest risk signals, enhanced soil moisture modeling, nutrient interaction modeling | Tier 1 outputs |
+| **Actionable recommendations** | Yield forecasting, harvest timing, fertilizer/irrigation advisory | Tier 2 outputs |
+| **ML classification** | Crop type detection, tree detection, nutrient deficiency signatures | GPU + fine-tuned models |
+| **Advanced modeling** | Climate impact, carbon sequestration, sustainability reporting | All prior tiers |
+
+Every insight carries: confidence score, contributing signal breakdown ("NDVI drop + rainfall deficit + sandy soil"), and historical comparison ("This field behaved similarly in 2022").
+
+### Layer C — Delivery Surfaces (Distribution)
+
+Ensures OpenFarm is a platform others can build on, not just a tool.
+
+| Surface | Current State | Next |
+|---|---|---|
+| **Map UI** | MapLibre + PMTiles, layer toggles, ECharts time series, dark/light theme | Zone visualization, field comparison |
+| **Reports** | Share links with multi-index + weather + soil summary | PDF export, scheduled reports, seasonal summaries |
+| **API** | REST (`/v1`), JWT + RBAC, pagination, org-scoped | Versioned public API with API keys, webhooks |
+| **Scouting** | Geotagged observations, photo upload, weather snapshots | Mobile-optimized, offline sync |
+| **Integrations** | — | MCP server for AI agents, plugin system, machinery telemetry |
+| **Exports** | — | CSV, GeoJSON, raster tiles, PDF |
 
 ---
 
@@ -189,65 +235,83 @@ OpenFarm **Milestone 10 (Soil Intelligence Foundation) is complete**. The platfo
 
 ## Future Ideas (Post-MVP)
 
-These are under consideration but not yet committed. Grouped by theme and ordered by dependency — items higher in each list are prerequisites for items below them.
+Organized by architecture layer and ordered by dependency. Items higher in each section are prerequisites for items below.
 
-### Platform Foundations
-- ~~**Historical data backfill**~~ — ✅ completed in Milestone 9
-- ~~**Soil data integration**~~ — ✅ completed in Milestone 10 (SoilGrids + POLARIS ingestion, soil tab UI, risk scoring)
-- **Data export** — export field data, stats, and reports in CSV, GeoJSON, PDF formats
-- **Custom index builder** — UI for users to define custom indices from available bands with formula editor and visualization
-- **User roles and permissions** — more granular permissions (e.g., field-level access, read-only API keys) and user groups
-- **Email/Microsoft & Enterprise SSO** — support email/password, Microsoft OAuth, and SAML/OIDC for enterprise identity providers
-- **Direct API integration** — stable, versioned public API with API keys for integrating OpenFarm into existing farm management software
+### Layer A — Observation Infrastructure
+
+**Completed:**
+- ~~Historical data backfill~~ — ✅ Milestone 9
+- ~~Soil data integration~~ — ✅ Milestone 10
+
+**Satellite & Imagery:**
 - **Multi-satellite support** — Landsat, Planet (currently Sentinel-2 only) _(prerequisite for higher-frequency monitoring)_
-- **Higher-frequency monitoring** — support for daily revisit satellites (e.g., PlanetScope) for near real-time crop monitoring
-- **Higher-res imagery** — support for sub-meter commercial imagery for detailed crop monitoring _(prerequisite for tree canopy analysis, individual tree detection)_
-- **Drone imagery support** — ingest and process high-res drone imagery for field-level insights _(depends on higher-res imagery pipeline)_
+- **Higher-frequency monitoring** — daily revisit satellites (PlanetScope) for near real-time crop monitoring
+- **Higher-res imagery** — sub-meter commercial imagery for detailed crop monitoring _(prerequisite for tree canopy analysis)_
+- **Drone imagery support** — ingest and process high-res drone imagery _(depends on higher-res pipeline)_
+- **Cloud masking & gap handling** — improved scene quality filtering and temporal fusion
+- **Custom index builder** — user-defined indices from available bands with formula editor
 
-### Agricultural Intelligence
+**Field & Spatial:**
+- **Terrain layers** — elevation, slope, aspect from SRTM/Copernicus DEM
+- **Multi-model boundary detection** — ensemble approach for improved accuracy
 
-Items are ordered by dependency. Each layer builds on the one above it.
+**Sensors & External Data:**
+- **Device/Sensor plugin framework** — connect soil sensors, weather stations, IoT devices
+- **Machinery telemetry integration** — GPS tracks and operational data from farm equipment _(depends on plugin framework)_
 
-**Layer 1 — Statistical analysis (CPU-only, builds on existing indices + weather)**
-- **Anomaly detection** — statistical detection of unusual patterns in vegetation index time series (z-score, moving average deviation from historical baseline) _(historical backfill ✅)_
-- **Phenology tracking** — track crop growth stages and phenological events from NDVI/EVI temporal curves _(historical backfill ✅)_
-- **Drought and water stress monitoring** — composite risk scoring from existing drought index, NDWI, soil moisture, ET₀, and water balance data _(extends existing weather + NDWI features)_
+### Layer B — Intelligence Engine
 
-**Layer 2 — Composite intelligence (builds on Layer 1)**
-- **Disease/pest risk signals** — risk scoring framework combining vegetation anomalies, weather conditions, and regional pest data _(depends on anomaly detection + weather)_
-- **Soil moisture estimation** — enhanced soil moisture modeling combining remote sensing indices with in-situ sensor data _(depends on drought/water stress monitoring)_
+Each tier builds on the one above it.
 
-**Layer 3 — Actionable recommendations (builds on Layer 2)**
-- **Yield analysis and forecasting** — predict yield from historical NDVI trends, weather, and field data _(depends on phenology + anomaly detection + weather)_
-- **Harvest timing recommendations** — optimal harvest windows based on crop maturity models and vegetation indices _(depends on phenology tracking)_
-- **Fertilizer and irrigation recommendations** — actionable insights based on crop health trends, weather forecasts, and agronomic models _(depends on disease risk + water stress)_
+**Tier 1 — Statistical analysis (CPU-only, builds on existing observations):**
+- **Anomaly detection** — z-score, CUSUM, moving average deviation from historical baseline _(historical backfill ✅)_
+- **Phenology tracking** — crop growth stages from NDVI/EVI temporal curves _(historical backfill ✅)_
+- **Drought and water stress monitoring** — composite scoring from drought index, NDWI, soil moisture, ET₀, water balance _(extends weather + NDWI + soil)_
 
-**Layer 4 — ML-powered classification (requires GPU + fine-tuned models)**
-- **Crop detection and classification** — ML-based crop type identification from multi-temporal spectral data using foundation models _(see [research doc](docs/features/crop-tree-detection.md))_
-- **Tree detection and classification** — ML-based tree crop identification and health monitoring _(depends on crop classification pipeline)_
-- **Nutrient deficiency detection** — identify spectral signatures of common nutrient deficiencies for early intervention _(depends on additional spectral bands from crop classification pipeline)_
-- **Tree canopy analysis** — canopy cover, leaf area index, and tree height estimation _(depends on higher-res imagery)_
+**Tier 2 — Composite intelligence (builds on Tier 1):**
+- **Disease/pest risk signals** — risk scoring combining vegetation anomalies + weather + regional pest data _(depends on anomaly detection)_
+- **Soil moisture estimation** — enhanced modeling combining remote sensing with in-situ sensor data _(depends on water stress monitoring)_
+- **Soil × weather × crop interaction modeling** — nutrient buffering, salinity, compaction susceptibility _(depends on soil + weather observations)_
 
-**Layer 5 — Advanced modeling (builds on everything above)**
-- **Climate impact modeling** — estimate carbon sequestration, emissions, and climate impact of farming practices using field data and agronomic models _(depends on yield forecasting + crop classification)_
-- **Carbon/sustainability reporting** — track and report carbon sequestration, emissions, and sustainability metrics _(depends on climate impact modeling)_
+**Tier 3 — Actionable recommendations (builds on Tier 2):**
+- **Yield forecasting** — predict from historical trends, weather, soil, and field data _(depends on phenology + anomaly detection)_
+- **Harvest timing** — optimal windows from crop maturity models and vegetation indices _(depends on phenology)_
+- **Fertilizer and irrigation advisory** — insights from crop health, weather forecasts, and soil data _(depends on disease risk + water stress)_
 
-### Analytics & Workflows
+**Tier 4 — ML classification (requires GPU + fine-tuned models):**
+- **Crop type detection** — multi-temporal spectral classification using foundation models _(see [research doc](docs/features/crop-tree-detection.md))_
+- **Tree detection and classification** — tree crop identification and health monitoring _(depends on crop classification)_
+- **Nutrient deficiency detection** — spectral signatures of common deficiencies _(depends on crop classification)_
+- **Tree canopy analysis** — cover, LAI, height estimation _(depends on higher-res imagery)_
+
+**Tier 5 — Advanced modeling (builds on all tiers):**
+- **Climate impact modeling** — carbon sequestration, emissions from field data + agronomic models _(depends on yield + crop classification)_
+- **Carbon/sustainability reporting** — track and report sustainability metrics _(depends on climate impact)_
+
+### Layer C — Delivery Surfaces
+
+**Reports & Exports:**
+- **Data export** — CSV, GeoJSON, PDF formats for field data, stats, and reports
+- **Seasonal summaries** — automated end-of-season reports
 - **Field comparison** — side-by-side health comparison across fields
 - **Historical analytics** — season-over-season trend analysis _(historical backfill ✅)_
-- **Webhook/notification system** — email, Slack, or SMS on alerts _(prerequisite for advanced workflows)_
-- **Advanced analytics and reporting framework** — customizable dashboards, scheduled reports, and data export _(depends on field comparison + historical analytics)_
-- **Advanced workflows** — rule-based automation (e.g., auto-trigger analysis on new imagery, scheduled monitoring) _(depends on webhook/notification system)_
+- **Advanced analytics dashboard** — customizable dashboards, scheduled reports _(depends on field comparison)_
 
-### Ecosystem & Integrations
-- **Direct API integration** — stable, versioned public API with API keys _(prerequisite for MCP + AI agent integration)_
-- **Plugin system** — extensible processing pipelines for custom analysis _(prerequisite for device/sensor framework)_
-- **Model Context Protocol (MCP) server** — standardized interface for AI agents to query field data and trigger analysis _(depends on API integration)_
-- **AI agent integration** — connect to LLMs for natural language insights, recommendations, and conversational interfaces _(depends on MCP server)_
-- **Device/Sensor plugin framework** — connect soil sensors, weather stations, and IoT devices _(depends on plugin system)_
-- **Machinery telemetry integration** — ingest GPS tracks and operational data from farm equipment _(depends on device/sensor framework)_
-- **Supply chain / traceability integrations** — link field data to downstream logistics and compliance systems
-- **Community data sharing** — opt-in anonymized data sharing for regional insights and benchmarking
+**API & Integrations:**
+- **Versioned public API** — stable API with API keys for third-party integration _(prerequisite for MCP + webhooks)_
+- **Webhook/notification system** — email, Slack, SMS on alerts _(depends on public API)_
+- **Plugin system** — extensible processing pipelines for custom analysis
+- **Model Context Protocol (MCP) server** — standardized interface for AI agents _(depends on public API)_
+- **AI agent integration** — LLM-powered natural language insights and conversational interface _(depends on MCP)_
+
+**Platform & Auth:**
+- **Enhanced RBAC** — field-level permissions, read-only API keys, user groups
+- **Email/Microsoft & Enterprise SSO** — email/password, Microsoft OAuth, SAML/OIDC
+- **Advanced workflows** — rule-based automation (auto-trigger on new imagery, scheduled monitoring) _(depends on webhooks)_
+
+**Community:**
+- **Supply chain / traceability integrations** — link field data to downstream logistics and compliance
+- **Community data sharing** — opt-in anonymized data for regional insights and benchmarking
 
 ### Enterprise & Scale
 - **Enterprise admin controls** — SSO enforcement, audit policies, usage quotas, multi-tenant admin

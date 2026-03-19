@@ -102,3 +102,19 @@ curl http://localhost:3000/api/health # Web
 | Prod overrides (Caddy, limits) | `docker-compose.prod.yml` |
 | Strategic architecture | `ARCHITECTURE.md` |
 | PRD (full product spec) | `docs/openfarm.md` |
+
+## Changelog Guidelines
+
+`CHANGELOG.md` is rendered in-app at `/changelog` for end users. The parser (`parseChangelog` in `changelog/page.tsx`) only supports these constructs:
+
+- `## [version] - YYYY-MM-DD` — version header
+- `### Added` / `### Fixed` / `### Changed` / `### Security` / `### Deprecated` / `### Removed` — section badges
+- `- plain text item` — list items rendered as **plain text** (no markdown processing)
+
+**Rules for writing changelog entries:**
+
+1. Items are output as raw text in `<li>` tags — `**bold**`, `` `backticks` ``, and `[links](url)` will display literally, not formatted. Do not use any inline markdown.
+2. Write for non-technical users: describe what features do, not how they are built.
+3. Do not include internal file paths, migration names, function names, API endpoint paths, or config keys.
+4. Keep items as clean, descriptive sentences. Match the style of existing entries (e.g., v0.1.0).
+5. Use the section headings that map to badge colors: Added (green), Fixed (blue), Changed (yellow), Security (red), Deprecated (orange), Removed (gray).

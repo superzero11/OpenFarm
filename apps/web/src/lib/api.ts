@@ -292,6 +292,7 @@ export interface Alert {
     status: string;
     index_type: string | null;
     weather_context: Record<string, any> | null;
+    soil_context: Record<string, any> | null;
     created_at: string;
 }
 
@@ -646,6 +647,7 @@ export interface ShareReport {
     scouting: ScoutingObservation[];
     weather_summary: Record<string, any> | null;
     weather_data: WeatherDaily[];
+    soil_summary: Record<string, any> | null;
 }
 
 // ── Uploads ──────────────────────────────────────────────────────
@@ -745,6 +747,63 @@ export interface SoilRefreshResponse {
     message: string;
 }
 
+// Intelligence response types
+
+export interface SamplingZoneFeature {
+    type: "Feature";
+    geometry: GeoJSON.Geometry;
+    properties: Record<string, any>;
+}
+
+export interface SamplingZonesResponse {
+    type: "FeatureCollection";
+    features: SamplingZoneFeature[];
+}
+
+export interface CropSuitabilityItem {
+    crop: string;
+    name: string;
+    score: number;
+    rating: string;
+    limiting_factors: string[];
+}
+
+export interface CropSuitabilityResponse {
+    crops: CropSuitabilityItem[];
+    field_crop_type: string | null;
+    field_crop_suitability: CropSuitabilityItem | null;
+    weather_available: boolean;
+    message: string | null;
+}
+
+export interface NutrientContextResponse {
+    zone_class: string;
+    confidence: number;
+    factors: string[];
+    interpretation: string;
+    disclaimer: string;
+}
+
+export interface CarbonEstimateResponse {
+    current_soc_t_ha: number | null;
+    topsoil_soc_t_ha: number | null;
+    saturation_t_ha: number | null;
+    saturation_pct: number | null;
+    seq_potential_low_t_ha_yr: number | null;
+    seq_potential_high_t_ha_yr: number | null;
+    climate_zone: string | null;
+    disclaimer: string;
+}
+
+export interface SoilWeatherStressResponse {
+    status: string;
+    severity: number;
+    moisture_status: string;
+    awc_rootzone_mm: number | null;
+    water_balance_30d_mm: number | null;
+    factors: string[];
+}
+
 export const soilApi = {
     get: (fieldId: string) =>
         apiFetch<SoilProfile>(`/fields/${fieldId}/soil`),
@@ -754,6 +813,16 @@ export const soilApi = {
         apiFetch<SoilRefreshResponse>(`/fields/${fieldId}/soil/refresh`, {
             method: "POST",
         }),
+    getSamplingZones: (fieldId: string) =>
+        apiFetch<SamplingZonesResponse>(`/fields/${fieldId}/soil/sampling-zones`),
+    getCropSuitability: (fieldId: string) =>
+        apiFetch<CropSuitabilityResponse>(`/fields/${fieldId}/soil/crop-suitability`),
+    getNutrientContext: (fieldId: string) =>
+        apiFetch<NutrientContextResponse>(`/fields/${fieldId}/soil/nutrient-context`),
+    getCarbon: (fieldId: string) =>
+        apiFetch<CarbonEstimateResponse>(`/fields/${fieldId}/soil/carbon`),
+    getWeatherStress: (fieldId: string) =>
+        apiFetch<SoilWeatherStressResponse>(`/fields/${fieldId}/soil/weather-stress`),
 };
 
 // ── Share Links ──────────────────────────────────────────────────

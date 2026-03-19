@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     open_meteo_forecast_url: str = "https://api.open-meteo.com/v1/forecast"
     open_meteo_archive_url: str = "https://archive-api.open-meteo.com/v1/archive"
     open_meteo_api_key: str = ""
-    weather_backfill_days: int = 90
+    weather_backfill_days: int = 365
     weather_batch_size: int = 50
     weather_gdd_base_temp: float = 10.0
     weather_heat_stress_threshold: float = 32.0

@@ -63,6 +63,14 @@ const RULE_LABELS: Record<string, string> = {
     savi_threshold: "Low SAVI",
     ndwi_drop: "NDWI Drop",
     ndwi_threshold: "Low NDWI",
+    soil_ph_critical: "Soil pH Critical",
+    soil_ph_warning: "Soil pH Warning",
+    soil_soc_critical: "SOC Critical",
+    soil_soc_warning: "SOC Warning",
+    soil_sand_erosion: "Erosion Risk",
+    soil_cec_low: "Low CEC",
+    soil_compaction: "Compaction Risk",
+    soil_waterlogging: "Waterlogging Risk",
 };
 
 /* ── Page Component ────────────────────────────────────────── */
@@ -222,6 +230,48 @@ export default function ShareReportPage() {
                         <p className="text-[10px] text-muted-foreground">
                             {t("last30Days", { days: report.weather_summary.period_days })}
                         </p>
+                    </div>
+                )}
+
+                {/* Soil Summary */}
+                {report.soil_summary && (
+                    <div className="rounded-lg border bg-card shadow-sm p-4 space-y-3">
+                        <h2 className="text-sm font-semibold flex items-center gap-1.5">
+                            <Leaf className="h-4 w-4" />
+                            {t("soilSummary")}
+                        </h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {report.soil_summary.dominant_texture && (
+                                <div>
+                                    <dt className="text-xs text-muted-foreground">{t("soilTexture")}</dt>
+                                    <dd className="text-sm font-medium mt-0.5 capitalize">{report.soil_summary.dominant_texture}</dd>
+                                </div>
+                            )}
+                            {report.soil_summary.avg_ph != null && (
+                                <div>
+                                    <dt className="text-xs text-muted-foreground">{t("soilPh")}</dt>
+                                    <dd className="text-sm font-medium mt-0.5">{report.soil_summary.avg_ph.toFixed(1)}</dd>
+                                </div>
+                            )}
+                            {report.soil_summary.rootzone_awc_mm != null && (
+                                <div>
+                                    <dt className="text-xs text-muted-foreground">{t("soilAwc")}</dt>
+                                    <dd className="text-sm font-medium mt-0.5">{report.soil_summary.rootzone_awc_mm.toFixed(0)} mm</dd>
+                                </div>
+                            )}
+                            {report.soil_summary.total_soc_stock_t_ha != null && (
+                                <div>
+                                    <dt className="text-xs text-muted-foreground">{t("soilSoc")}</dt>
+                                    <dd className="text-sm font-medium mt-0.5">{report.soil_summary.total_soc_stock_t_ha.toFixed(1)} t/ha</dd>
+                                </div>
+                            )}
+                            {report.soil_summary.drainage_class && (
+                                <div>
+                                    <dt className="text-xs text-muted-foreground">{t("soilDrainage")}</dt>
+                                    <dd className="text-sm font-medium mt-0.5 capitalize">{report.soil_summary.drainage_class}</dd>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

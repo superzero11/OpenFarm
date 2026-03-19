@@ -8,6 +8,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.0] - 2026-03-19
+
+### Added
+- **Soil intelligence engine** — 2,200+ lines of agronomic logic in `core/soil_intelligence.py` powering crop suitability, nutrient analysis, carbon estimation, sampling recommendations, and stress monitoring.
+- **Crop suitability assessment** — 4-pillar weighted scoring system: Soil Fit (40%), Water Match (25%), Climate Fit (20%), Stress Resilience (15%) with 68 crop profiles spanning cereals, legumes, industrial crops, root/tuber, vegetables, fruits, plantations, and spices.
+- Weather-aware crop suitability — integrates annual rainfall, temperature range, drought/flood indices from `weather_daily`; requires ≥180 days of weather data.
+- `GET /fields/{id}/soil/crop-suitability` endpoint — returns top 10 most suitable crops with scores, ratings, and limiting factors; field's current crop type highlighted even if outside top 10.
+- **Sampling zone recommendations** — within-field soil variability analysis identifies locations where clay%, SOC, pH, or AWC differ most from field mean.
+- `GET /fields/{id}/soil/sampling-zones` endpoint — returns GeoJSON FeatureCollection with prioritized sampling points (P1–P3) and rationale.
+- **Nutrient risk classification** — classifies fields into nutrient_loss_risk, nutrient_retentive, or nutrient_responsive zones based on CEC, sand/clay, SOC, pH, and leaching risk.
+- `GET /fields/{id}/soil/nutrient-context` endpoint — returns zone classification with confidence score and agronomic interpretation.
+- **Carbon sequestration estimation** — Hassink (1997) clay-dependent protective capacity model with climate zone adjustment; estimates current SOC stock, saturation deficit, and sequestration potential range.
+- `GET /fields/{id}/soil/carbon-estimate` endpoint — returns current SOC stock, estimated saturation, and conservative sequestration potential (30–70% of deficit).
+- **Soil × weather stress indicators** — combines rootzone AWC with 30-day water balance, drought index, and soil moisture to detect drought/wet/optimal conditions.
+- `GET /fields/{id}/soil/weather-stress` endpoint — returns stress status with severity score (0–1) and contributing factors.
+- **Rosetta PTF integration** — pedotransfer functions estimate field capacity, wilting point, and saturated hydraulic conductivity from texture + bulk density on soil layers.
+- Derived agronomic columns on soil layers — `field_capacity`, `wilting_point`, `saturated_conductivity`, `awc_derived`.
+- SOC stock depth-integrated calculation (t/ha) in field summary.
+- Refined risk scoring — waterlogging risk from poor drainage + low Ksat; updated compaction and leaching formulas.
+- **Soil-aware alerts** — automatic alert generation on soil fetch for: pH < 5.5 (acidic), pH < 4.5 (very acidic), SOC < 10 g/kg (low), SOC < 5 g/kg (very low), compaction risk > 0.6, waterlogging risk > 0.6, sand > 80% (leaching), CEC < 5 cmol/kg (low retention).
+- `soil_context` JSONB column on alerts table — stores soil property values at alert creation time (same pattern as `weather_context`).
+- Soil alerts displayed in alert list with soil-specific icons, property values, and thresholds.
+- **Soil summary in share reports** — texture class, pH, SOC, CEC, drainage included in public share page report alongside weather summary.
+- `soil_summary` in `ShareReportOut` API schema.
+- Soil summary section on public share page with cards for texture, pH, organic carbon, CEC, AWC, drainage.
+- **Sampling zone map markers** — bullseye-style markers on MapLibre (outer ring + inner disc + center dot) with priority color coding (P1=red, P2=yellow, P3=blue).
+- **Scouting observation map markers** — amber circle markers with white stroke and observation detail popups.
+- **Interactive map popups** — CSS-based popup styling using shadcn design tokens (`--popover`, `--popover-foreground`, `--muted-foreground`) for dark mode compatibility.
+- Click-to-zoom on sampling zone sidebar cards — `flyTo` with zoom level 17.
+- Tab-based marker visibility toggling — scouting markers only visible on scouting tab, sampling markers only visible on soil tab.
+- Soil tab intelligence panels — crop suitability card with ranked list, nutrient context badges, carbon estimation gauge with sequestration range, weather stress traffic-light indicator, sampling zones sidebar.
+- Crop suitability weather-required info banner when weather data is insufficient.
+- Alembic migration `0012_add_derived_agronomic_columns` — field capacity, wilting point, saturated conductivity, AWC derived columns on soil layers.
+- Alembic migration `0013_add_soil_context_to_alerts` — `soil_context` JSONB column on alerts table.
+- English and Spanish translations for all intelligence UI strings (~100 i18n keys).
+
+### Fixed
+- **Crop suitability sign convention** — drought severity now correctly uses `di < 0` for drought (was `di > 0`) in soil router; flood detection uses `drought_idx > 1.0` (was `< -1.0`) in intelligence engine.
+- Field's own crop suitability returned even when outside top 10 — endpoint now searches full list before truncating.
+- Race condition in field creation task dispatch — weather refresh and backfill tasks now dispatched after commit.
+- Rosetta-soil API compatibility — updated to work with rosetta-soil v0.3.x response format.
+- Popup title no longer overlaps close button — added `padding-right: 18px` to popup title CSS.
+
+---
+
 ## [0.7.0] - 2026-03-19
 
 ### Added

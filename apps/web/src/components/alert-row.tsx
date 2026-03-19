@@ -11,6 +11,7 @@ import {
     CheckCircle2,
     ChevronRight,
     CloudRain,
+    Layers,
     Loader2,
     RotateCcw,
     ShieldAlert,
@@ -53,6 +54,14 @@ const RULE_LABELS: Record<string, string> = {
     savi_threshold: "Low SAVI",
     ndwi_drop: "NDWI Drop",
     ndwi_threshold: "Low NDWI",
+    soil_ph_critical: "Soil pH Critical",
+    soil_ph_warning: "Soil pH Warning",
+    soil_soc_critical: "SOC Critical",
+    soil_soc_warning: "SOC Warning",
+    soil_sand_erosion: "Erosion Risk",
+    soil_cec_low: "Low CEC",
+    soil_compaction: "Compaction Risk",
+    soil_waterlogging: "Waterlogging Risk",
 };
 
 /* ── Props ─────────────────────────────────────────────────── */
@@ -134,6 +143,19 @@ export function AlertRow({
                             Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "—"}mm
                             {alert.weather_context.water_deficit_mm != null && (
                                 <> · Deficit: {alert.weather_context.water_deficit_mm}mm</>
+                            )}
+                        </span>
+                    </div>
+                )}
+
+                {/* Soil context */}
+                {alert.soil_context && (
+                    <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+                        <Layers className="h-3 w-3 shrink-0" />
+                        <span>
+                            {alert.soil_context.layer_depth ?? ""}
+                            {alert.soil_context.trigger_value != null && (
+                                <> · Value: {typeof alert.soil_context.trigger_value === "number" ? alert.soil_context.trigger_value.toFixed(1) : alert.soil_context.trigger_value}</>
                             )}
                         </span>
                     </div>
@@ -229,6 +251,22 @@ export function AlertRow({
                         )}
                         {alert.weather_context.soil_moisture_top != null && (
                             <span>Soil: {(alert.weather_context.soil_moisture_top * 100).toFixed(0)}%</span>
+                        )}
+                    </div>
+                )}
+
+                {/* Soil context */}
+                {alert.soil_context && (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                            <Layers className="h-3 w-3" />
+                            {alert.soil_context.layer_depth ?? "Soil alert"}
+                        </span>
+                        {alert.soil_context.trigger_value != null && (
+                            <span>Value: {typeof alert.soil_context.trigger_value === "number" ? alert.soil_context.trigger_value.toFixed(1) : alert.soil_context.trigger_value}</span>
+                        )}
+                        {alert.soil_context.threshold != null && (
+                            <span>Threshold: {alert.soil_context.threshold}</span>
                         )}
                     </div>
                 )}

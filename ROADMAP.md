@@ -32,7 +32,7 @@ Collects, standardizes, and stores raw signals about every field. Source-agnosti
 |---|---|---|
 | **Satellite** | Sentinel-2 (NDVI, EVI, SAVI, NDWI), STAC ingestion, COG storage, 24-month backfill | Landsat, Planet, SAR (Sentinel-1), cloud masking, fusion |
 | **Weather** | Open-Meteo (ERA5 + forecast), GDD, ET₀, water balance, drought index | Additional providers, irrigation scheduling inputs |
-| **Soil** | SoilGrids (global 250m) + POLARIS (US 30m), 10 properties × 6 depths, texture classification, AWC, risk scoring | Derived hydraulic properties (Rosetta PTF), terrain layers |
+| **Soil** | SoilGrids (global 250m) + POLARIS (US 30m), 10 properties × 6 depths, texture classification, AWC, risk scoring, Rosetta PTF hydraulic properties, crop suitability, sampling zones, carbon estimation | Terrain layers (DEM), sensor calibration |
 | **Boundaries** | FTW deep learning model, interactive review, GeoJSON/KML import | Multi-model ensemble, higher-res detection |
 | **Sensors** | — | IoT soil sensors, weather stations, device plugin framework |
 
@@ -42,11 +42,11 @@ Transforms raw observations into explainable, agronomically meaningful insights.
 
 | Tier | Capabilities | Dependencies |
 |---|---|---|
-| **Statistical analysis** | Anomaly detection (z-score, CUSUM), phenology tracking, drought/water stress composite scoring | Existing indices + weather + soil |
-| **Composite intelligence** | Disease/pest risk signals, enhanced soil moisture modeling, nutrient interaction modeling | Tier 1 outputs |
+| **Statistical analysis** | Anomaly detection (z-score, CUSUM), phenology tracking, drought/water stress composite scoring, soil×weather stress indicators | Existing indices + weather + soil |
+| **Composite intelligence** | Crop suitability (4-pillar scoring, 68 profiles), nutrient risk classification, carbon sequestration estimation, soil-aware alerts, sampling zone recommendations | Tier 1 outputs |
 | **Actionable recommendations** | Yield forecasting, harvest timing, fertilizer/irrigation advisory | Tier 2 outputs |
 | **ML classification** | Crop type detection, tree detection, nutrient deficiency signatures | GPU + fine-tuned models |
-| **Advanced modeling** | Climate impact, carbon sequestration, sustainability reporting | All prior tiers |
+| **Advanced modeling** | Climate impact, advanced carbon modeling, sustainability reporting | All prior tiers |
 
 Every insight carries: confidence score, contributing signal breakdown ("NDVI drop + rainfall deficit + sandy soil"), and historical comparison ("This field behaved similarly in 2022").
 
@@ -56,8 +56,8 @@ Ensures OpenFarm is a platform others can build on, not just a tool.
 
 | Surface | Current State | Next |
 |---|---|---|
-| **Map UI** | MapLibre + PMTiles, layer toggles, ECharts time series, dark/light theme | Zone visualization, field comparison |
-| **Reports** | Share links with multi-index + weather + soil summary | PDF export, scheduled reports, seasonal summaries |
+| **Map UI** | MapLibre + PMTiles, layer toggles, ECharts time series, dark/light theme, scouting + sampling zone markers with popups | Field comparison, zone visualization |
+| **Reports** | Share links with multi-index + weather + soil summary (incl. crop suitability, carbon) | PDF export, scheduled reports, seasonal summaries |
 | **API** | REST (`/v1`), JWT + RBAC, pagination, org-scoped | Versioned public API with API keys, webhooks |
 | **Scouting** | Geotagged observations, photo upload, weather snapshots | Mobile-optimized, offline sync |
 | **Integrations** | — | MCP server for AI agents, plugin system, machinery telemetry |
@@ -67,7 +67,7 @@ Ensures OpenFarm is a platform others can build on, not just a tool.
 
 ## Current Status
 
-OpenFarm **Milestone 10 (Soil Intelligence Foundation) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, daily weather data with agricultural indices, automatic 24-month historical index backfill, and soil profile intelligence from SoilGrids/POLARIS — all functional and deployed. New fields automatically receive vegetation index history, weather data, and soil profile analysis on creation. The focus now shifts to derived agronomic layers (hydraulic properties, refined risk scoring) and broader agricultural intelligence. See [Future Ideas](#future-ideas-post-mvp) for what's next.
+OpenFarm **Milestone 11 (Soil Intelligence & Decision Support) is complete**. The platform delivers end-to-end satellite-powered crop intelligence with four vegetation indices (NDVI, EVI, SAVI, NDWI), ML-powered automatic field boundary detection, daily weather data with agricultural indices, automatic 24-month historical index backfill, soil profile intelligence with derived agronomic layers, and a full intelligence engine — crop suitability scoring (68 crops, 4-pillar model), nutrient risk classification, carbon sequestration estimation, soil×weather stress monitoring, intelligent sampling zones, and soil-aware alerts — all functional and deployed. The focus now shifts to anomaly detection, phenology tracking, and broader agricultural intelligence. See [Future Ideas](#future-ideas-post-mvp) for what's next.
 
 ---
 
@@ -231,6 +231,39 @@ OpenFarm **Milestone 10 (Soil Intelligence Foundation) is complete**. The platfo
 - [x] Config settings: SoilGrids WCS URL, POLARIS bucket, fetch timeout, source priority
 - [x] i18n translations (English + Spanish) for all soil UI strings
 
+## Milestone 11 — Soil Intelligence & Decision Support ✅
+
+- [x] Soil intelligence engine (`core/soil_intelligence.py`) — 2,200+ lines of agronomic logic
+- [x] Rosetta PTF integration — pedotransfer functions for estimating field capacity, wilting point, saturated conductivity from texture + bulk density
+- [x] Derived agronomic columns — `field_capacity`, `wilting_point`, `saturated_conductivity`, `awc_derived` on soil layers
+- [x] Refined risk scoring — waterlogging risk from poor drainage + low Ksat, updated compaction/leaching formulas
+- [x] SOC stock calculation — depth-integrated organic carbon stock (t/ha) in field summary
+- [x] Crop suitability assessment — 4-pillar weighted scoring (Soil 40%, Water 25%, Climate 20%, Stress 15%) with 68 crop profiles
+- [x] Crop profiles spanning cereals, legumes, oilseeds, industrial, root/tuber, vegetables, fruits, plantations, spices
+- [x] Weather-aware suitability — integrates annual rainfall, temperature range, drought/flood indices from `weather_daily` table
+- [x] API: `GET /fields/{id}/soil/crop-suitability` — top 10 crops with scores, ratings, limiting factors; field crop highlighted
+- [x] Sampling zone recommendations — within-field variability analysis for clay, SOC, pH, AWC
+- [x] API: `GET /fields/{id}/soil/sampling-zones` — GeoJSON FeatureCollection with prioritized sampling points
+- [x] Nutrient risk classification — zones classified as nutrient_loss_risk, nutrient_retentive, or nutrient_responsive
+- [x] API: `GET /fields/{id}/soil/nutrient-context` — zone classification with confidence and interpretation
+- [x] Carbon sequestration estimation — Hassink (1997) clay-dependent model with climate adjustment
+- [x] API: `GET /fields/{id}/soil/carbon-estimate` — current SOC stock, saturation deficit, sequestration potential
+- [x] Soil × weather stress indicators — combines AWC with 30-day water balance, drought index, soil moisture
+- [x] API: `GET /fields/{id}/soil/weather-stress` — drought/wet/optimal status with severity score
+- [x] Soil-aware alerts — automatic alert generation for pH, SOC, compaction, waterlogging, sand, CEC thresholds
+- [x] `soil_context` JSONB column on alerts table — stores soil property values at alert creation time
+- [x] Soil summary in share reports — texture, pH, SOC, CEC, drainage in public share page
+- [x] Sampling zone map markers (MapLibre) — bullseye-style with priority color coding (P1=red, P2=yellow, P3=blue)
+- [x] Scouting observation map markers — circle style with popups showing observation details
+- [x] Interactive map popups — dark-mode-aware popup styling with CSS variables for both marker types
+- [x] Click-to-zoom on sampling zone sidebar cards — `flyTo` with zoom 17
+- [x] Tab-based marker visibility toggling — markers only visible on their respective tabs
+- [x] Soil tab intelligence panels — crop suitability, nutrient context, carbon estimation, weather stress, sampling zones
+- [x] Crop suitability UI — top 10 ranked list with scores, ratings, limiting factors, weather-required banner
+- [x] Carbon estimation UI — SOC gauge, saturation %, sequestration opportunity range with disclaimer
+- [x] Alembic migrations: `0012_add_derived_agronomic_columns`, `0013_add_soil_context_to_alerts`
+- [x] i18n translations (English + Spanish) for all intelligence UI strings (~100 keys)
+
 ---
 
 ## Future Ideas (Post-MVP)
@@ -242,6 +275,7 @@ Organized by architecture layer and ordered by dependency. Items higher in each 
 **Completed:**
 - ~~Historical data backfill~~ — ✅ Milestone 9
 - ~~Soil data integration~~ — ✅ Milestone 10
+- ~~Derived agronomic layers (Rosetta PTF)~~ — ✅ Milestone 11
 
 **Satellite & Imagery:**
 - **Multi-satellite support** — Landsat, Planet (currently Sentinel-2 only) _(prerequisite for higher-frequency monitoring)_
@@ -263,15 +297,21 @@ Organized by architecture layer and ordered by dependency. Items higher in each 
 
 Each tier builds on the one above it.
 
+**Completed:**
+- ~~Drought and water stress monitoring~~ — ✅ Milestone 11 (soil×weather stress indicators)
+- ~~Crop suitability assessment~~ — ✅ Milestone 11 (4-pillar scoring, 68 crop profiles)
+- ~~Nutrient risk classification~~ — ✅ Milestone 11
+- ~~Carbon sequestration estimation~~ — ✅ Milestone 11
+- ~~Soil-aware alerts~~ — ✅ Milestone 11
+- ~~Sampling zone recommendations~~ — ✅ Milestone 11
+
 **Tier 1 — Statistical analysis (CPU-only, builds on existing observations):**
 - **Anomaly detection** — z-score, CUSUM, moving average deviation from historical baseline _(historical backfill ✅)_
 - **Phenology tracking** — crop growth stages from NDVI/EVI temporal curves _(historical backfill ✅)_
-- **Drought and water stress monitoring** — composite scoring from drought index, NDWI, soil moisture, ET₀, water balance _(extends weather + NDWI + soil)_
 
 **Tier 2 — Composite intelligence (builds on Tier 1):**
 - **Disease/pest risk signals** — risk scoring combining vegetation anomalies + weather + regional pest data _(depends on anomaly detection)_
-- **Soil moisture estimation** — enhanced modeling combining remote sensing with in-situ sensor data _(depends on water stress monitoring)_
-- **Soil × weather × crop interaction modeling** — nutrient buffering, salinity, compaction susceptibility _(depends on soil + weather observations)_
+- **Soil moisture estimation** — enhanced modeling combining remote sensing with in-situ sensor data
 
 **Tier 3 — Actionable recommendations (builds on Tier 2):**
 - **Yield forecasting** — predict from historical trends, weather, soil, and field data _(depends on phenology + anomaly detection)_

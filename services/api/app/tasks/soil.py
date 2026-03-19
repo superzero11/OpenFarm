@@ -22,6 +22,7 @@ from app.core.config import settings
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.models.tables import (
+    Alert,
     AuditEvent,
     Field,
     Job,
@@ -30,6 +31,7 @@ from app.models.tables import (
     SoilProfile,
 )
 from app.worker import celery_app
+from app.core.soil_intelligence import evaluate_soil_alerts
 
 logger = structlog.get_logger()
 
@@ -1253,6 +1255,39 @@ def fetch_soil_for_field(self, field_id: str, job_id: str | None = None) -> dict
         )
 
         session.commit()
+
+        # Step 4b: Evaluate soil alerts
+        try:
+            alert_candidates = evaluate_soil_alerts(summary_data, layer_dicts)
+            today = datetime.now(timezone.utc).date()
+            for candidate in alert_candidates:
+                alert = Alert(
+                    field_id=field.id,
+                    org_id=field.org_id,
+                    date=today,
+                    severity=candidate.severity,
+                    rule_name=candidate.rule_name,
+                    rule_params_json=candidate.rule_params,
+                    message=candidate.message,
+                    status="open",
+                    soil_context={
+                        "trigger_value": candidate.trigger_value,
+                        "threshold": candidate.threshold,
+                        "layer_depth": candidate.layer_depth,
+                    },
+                )
+                session.add(alert)
+            if alert_candidates:
+                session.commit()
+                logger.info(
+                    "soil_alerts_created",
+                    field_id=field_id,
+                    count=len(alert_candidates),
+                )
+        except Exception:
+            logger.warning(
+                "soil_alert_evaluation_failed", field_id=field_id, exc_info=True
+            )
 
         # Step 5: Complete
         _update_soil_job(session, job, "compute_summary", "completed")

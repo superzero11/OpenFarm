@@ -108,6 +108,7 @@ class AlertOut(BaseModel):
     message: str
     status: str
     weather_context: dict[str, Any] | None = None
+    soil_context: dict[str, Any] | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -183,6 +184,7 @@ class ShareReportOut(BaseModel):
     scouting: list[ScoutingOut] = []
     weather_summary: dict[str, Any] | None = None
     weather_data: list[dict[str, Any]] = []
+    soil_summary: dict[str, Any] | None = None
 
 
 # ── Presigned Upload ─────────────────────────────────────────────────

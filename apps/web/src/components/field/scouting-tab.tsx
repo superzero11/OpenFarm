@@ -58,7 +58,6 @@ const PICK_SOURCE = "scouting-pick-point";
 const PICK_LAYER = "scouting-pick-marker";
 
 const MARKER_COLOR = "#f59e0b"; // amber-500
-const MARKER_HIGHLIGHT = "#ef4444"; // red-500
 const PICK_COLOR = "#3b82f6"; // blue-500
 
 /* ── Props ─────────────────────────────────────────────────── */
@@ -66,11 +65,12 @@ const PICK_COLOR = "#3b82f6"; // blue-500
 interface ScoutingTabProps {
     fieldId: string;
     mapInstance: maplibregl.Map | null;
+    activeTab?: string;
 }
 
 /* ── Component ─────────────────────────────────────────────── */
 
-export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) {
+export default function ScoutingTab({ fieldId, mapInstance, activeTab }: ScoutingTabProps) {
     const t = useTranslations("scoutingTab");
     const confirm = useConfirm();
 
@@ -136,7 +136,7 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
 
     /* ── Map markers ───────────────────────────────────────── */
 
-    // Add/update scouting markers on the map
+    // Add/update scouting markers on the map (pin icon)
     useEffect(() => {
         const map = mapInstance;
         if (!map) return;
@@ -161,6 +161,17 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
 
             if (!map.getLayer(SCOUTING_LAYER)) {
                 map.addLayer({
+                    id: SCOUTING_LAYER_STROKE,
+                    type: "circle",
+                    source: SCOUTING_SOURCE,
+                    paint: {
+                        "circle-radius": 10,
+                        "circle-color": "transparent",
+                        "circle-stroke-width": 2.5,
+                        "circle-stroke-color": "#ffffff",
+                    },
+                });
+                map.addLayer({
                     id: SCOUTING_LAYER,
                     type: "circle",
                     source: SCOUTING_SOURCE,
@@ -168,17 +179,6 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
                         "circle-radius": 7,
                         "circle-color": MARKER_COLOR,
                         "circle-opacity": 0.9,
-                    },
-                });
-                map.addLayer({
-                    id: SCOUTING_LAYER_STROKE,
-                    type: "circle",
-                    source: SCOUTING_SOURCE,
-                    paint: {
-                        "circle-radius": 9,
-                        "circle-color": "transparent",
-                        "circle-stroke-width": 2,
-                        "circle-stroke-color": "#ffffff",
                     },
                 });
             }
@@ -195,24 +195,57 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
         };
     }, [mapInstance, observations]);
 
-    // Click handler on map markers → highlight observation
+    // Toggle scouting layer visibility based on active tab
+    useEffect(() => {
+        const map = mapInstance;
+        if (!map) return;
+        const visible = activeTab === "scouting" ? "visible" : "none";
+        try {
+            if (map.getLayer(SCOUTING_LAYER)) map.setLayoutProperty(SCOUTING_LAYER, "visibility", visible);
+            if (map.getLayer(SCOUTING_LAYER_STROKE)) map.setLayoutProperty(SCOUTING_LAYER_STROKE, "visibility", visible);
+        } catch { /* layer may not exist yet */ }
+    }, [mapInstance, activeTab]);
+
+    // Click handler on map markers → show popup + highlight sidebar card
+    const observationsRef = useRef(observations);
+    observationsRef.current = observations;
+
     useEffect(() => {
         const map = mapInstance;
         if (!map) return;
 
+        const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: "260px", className: "openfarm-popup" });
+
         const onClick = (e: maplibregl.MapMouseEvent) => {
-            if (pickingRef.current) return; // Don't handle marker clicks during point picking
+            if (pickingRef.current) return;
             const features = map.queryRenderedFeatures(e.point, {
                 layers: [SCOUTING_LAYER],
             });
             if (features.length > 0) {
                 const obsId = features[0].properties?.id as string;
                 highlightedRef.current = obsId;
-                // Scroll to observation
+
+                // Scroll to sidebar card
                 const el = document.getElementById(`scouting-obs-${obsId}`);
                 el?.scrollIntoView({ behavior: "smooth", block: "center" });
                 el?.classList.add("ring-2", "ring-primary");
                 setTimeout(() => el?.classList.remove("ring-2", "ring-primary"), 2000);
+
+                // Show popup on map
+                const obs = observationsRef.current.find((o) => o.id === obsId);
+                if (obs && obs.geom_point) {
+                    const coords = obs.geom_point.coordinates as [number, number];
+                    const date = new Date(obs.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+                    const tagsHtml = obs.tags?.length ? obs.tags.map((tg) => `<span class="openfarm-popup-tag">${tg}</span>`).join("") : "";
+                    const noteHtml = obs.note ? `<div class="openfarm-popup-note">${obs.note.length > 100 ? obs.note.slice(0, 100) + "\u2026" : obs.note}</div>` : "";
+                    const html = `<div class="openfarm-popup-body">
+                        <div class="openfarm-popup-title">\ud83d\udccd ${obs.title}</div>
+                        <div class="openfarm-popup-meta">${date}</div>
+                        ${noteHtml}
+                        ${tagsHtml ? `<div class="openfarm-popup-tags">${tagsHtml}</div>` : ""}
+                    </div>`;
+                    popup.setLngLat(coords).setHTML(html).addTo(map);
+                }
             }
         };
 
@@ -225,6 +258,7 @@ export default function ScoutingTab({ fieldId, mapInstance }: ScoutingTabProps) 
         map.on("mouseleave", SCOUTING_LAYER, onLeave);
 
         return () => {
+            popup.remove();
             map.off("click", SCOUTING_LAYER, onClick);
             map.off("mouseenter", SCOUTING_LAYER, onEnter);
             map.off("mouseleave", SCOUTING_LAYER, onLeave);

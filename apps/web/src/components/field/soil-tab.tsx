@@ -1,11 +1,22 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import maplibregl from "maplibre-gl";
 import { soilApi, jobsApi } from "@/lib/api";
-import type { SoilProfile, SoilFieldSummary, SoilLayer, NdviJob } from "@/lib/api";
+import type {
+    SoilProfile,
+    SoilFieldSummary,
+    SoilLayer,
+    NdviJob,
+    CropSuitabilityResponse,
+    NutrientContextResponse,
+    CarbonEstimateResponse,
+    SoilWeatherStressResponse,
+    SamplingZonesResponse,
+} from "@/lib/api";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { Loader2, RefreshCw, Info, Layers, Check } from "lucide-react";
+import { Loader2, RefreshCw, Info, Layers, Check, Leaf, Droplets, AlertTriangle, Sprout, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -75,17 +86,184 @@ function qualityLabel(score: number | null, t: (key: string) => string): string 
 
 /* ── Component ───────────────────────────────────────────── */
 
+/* ── Map layer constants ──────────────────────────────────── */
+
+const SAMPLING_SOURCE = "sampling-zones";
+const SAMPLING_LAYER = "sampling-inner";
+const SAMPLING_LAYER_RING = "sampling-ring";
+const SAMPLING_LAYER_CENTER = "sampling-center";
+
+const PRIORITY_COLORS: Record<number, string> = {
+    1: "#ef4444", // red-500
+    2: "#eab308", // yellow-500
+    3: "#3b82f6", // blue-500
+};
+
+/* ── Component ───────────────────────────────────────────── */
+
 interface SoilTabProps {
     fieldId: string;
+    mapInstance?: maplibregl.Map | null;
+    activeTab?: string;
 }
 
-export default function SoilTab({ fieldId }: SoilTabProps) {
+export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProps) {
     const t = useTranslations("soil");
 
     const [profile, setProfile] = useState<SoilProfile | null>(null);
     const [summary, setSummary] = useState<SoilFieldSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [cropSuitability, setCropSuitability] = useState<CropSuitabilityResponse | null>(null);
+    const [nutrientContext, setNutrientContext] = useState<NutrientContextResponse | null>(null);
+    const [carbonEstimate, setCarbonEstimate] = useState<CarbonEstimateResponse | null>(null);
+    const [weatherStress, setWeatherStress] = useState<SoilWeatherStressResponse | null>(null);
+    const [samplingZones, setSamplingZones] = useState<SamplingZonesResponse | null>(null);
+
+    /* ── Sampling zone map markers (target / bullseye style) ── */
+
+    useEffect(() => {
+        const map = mapInstance;
+        if (!map || !samplingZones) return;
+
+        const geojson: GeoJSON.FeatureCollection = {
+            type: "FeatureCollection",
+            features: samplingZones.features.map((f, i) => ({
+                type: "Feature" as const,
+                geometry: f.geometry,
+                properties: {
+                    idx: i,
+                    zone_type: f.properties.zone_type,
+                    priority: f.properties.priority,
+                    rationale: f.properties.rationale,
+                    color: PRIORITY_COLORS[f.properties.priority] ?? "#6b7280",
+                },
+            })),
+        };
+
+        const addLayers = () => {
+            try {
+                if (!map.getSource(SAMPLING_SOURCE)) {
+                    map.addSource(SAMPLING_SOURCE, { type: "geojson", data: geojson });
+                } else {
+                    (map.getSource(SAMPLING_SOURCE) as maplibregl.GeoJSONSource).setData(geojson);
+                }
+
+                if (!map.getLayer(SAMPLING_LAYER)) {
+                    // Outer ring
+                    map.addLayer({
+                        id: SAMPLING_LAYER_RING,
+                        type: "circle",
+                        source: SAMPLING_SOURCE,
+                        paint: {
+                            "circle-radius": 12,
+                            "circle-color": "transparent",
+                            "circle-stroke-width": 2,
+                            "circle-stroke-color": ["get", "color"],
+                        },
+                    });
+                    // Filled inner disc
+                    map.addLayer({
+                        id: SAMPLING_LAYER,
+                        type: "circle",
+                        source: SAMPLING_SOURCE,
+                        paint: {
+                            "circle-radius": 6,
+                            "circle-color": ["get", "color"],
+                            "circle-opacity": 0.85,
+                        },
+                    });
+                    // White center dot
+                    map.addLayer({
+                        id: SAMPLING_LAYER_CENTER,
+                        type: "circle",
+                        source: SAMPLING_SOURCE,
+                        paint: {
+                            "circle-radius": 2,
+                            "circle-color": "#ffffff",
+                        },
+                    });
+                }
+            } catch (e) {
+                console.warn("Failed to add sampling zone layers", e);
+            }
+        };
+
+        if (map.isStyleLoaded()) {
+            addLayers();
+        } else {
+            map.once("style.load", addLayers);
+        }
+
+        return () => {
+            // Don't remove on unmount — keep markers while tab switches
+        };
+    }, [mapInstance, samplingZones]);
+
+    // Toggle sampling layer visibility based on active tab
+    useEffect(() => {
+        const map = mapInstance;
+        if (!map) return;
+        const visible = activeTab === "soil" ? "visible" : "none";
+        try {
+            if (map.getLayer(SAMPLING_LAYER)) map.setLayoutProperty(SAMPLING_LAYER, "visibility", visible);
+            if (map.getLayer(SAMPLING_LAYER_RING)) map.setLayoutProperty(SAMPLING_LAYER_RING, "visibility", visible);
+            if (map.getLayer(SAMPLING_LAYER_CENTER)) map.setLayoutProperty(SAMPLING_LAYER_CENTER, "visibility", visible);
+        } catch { /* layers may not exist yet */ }
+    }, [mapInstance, activeTab]);
+
+    /* ── Sampling zone popup on map click ─────────────────── */
+
+    useEffect(() => {
+        const map = mapInstance;
+        if (!map) return;
+
+        const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: "260px", className: "openfarm-popup" });
+
+        const onClick = (e: maplibregl.MapMouseEvent) => {
+            const features = map.queryRenderedFeatures(e.point, { layers: [SAMPLING_LAYER] });
+            if (!features.length) return;
+            const props = features[0].properties!;
+            const coords = (features[0].geometry as GeoJSON.Point).coordinates as [number, number];
+            const priorityLabel = props.priority === 1 ? "High" : props.priority === 2 ? "Medium" : "Low";
+            const zoneLabel = (props.zone_type as string).replace(/_/g, " ");
+            const html = `<div class="openfarm-popup-body">
+                <div class="openfarm-popup-title">🎯 Sampling Zone</div>
+                <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${props.color}"></span>
+                    <span style="font-weight:500;text-transform:capitalize">${zoneLabel}</span>
+                </div>
+                <div class="openfarm-popup-meta"><b>Priority:</b> ${priorityLabel} (P${props.priority})</div>
+                <div class="openfarm-popup-note">${props.rationale}</div>
+            </div>`;
+            popup.setLngLat(coords).setHTML(html).addTo(map);
+        };
+
+        const onEnter = () => { map.getCanvas().style.cursor = "pointer"; };
+        const onLeave = () => { map.getCanvas().style.cursor = ""; };
+
+        map.on("click", SAMPLING_LAYER, onClick);
+        map.on("mouseenter", SAMPLING_LAYER, onEnter);
+        map.on("mouseleave", SAMPLING_LAYER, onLeave);
+
+        return () => {
+            popup.remove();
+            map.off("click", SAMPLING_LAYER, onClick);
+            map.off("mouseenter", SAMPLING_LAYER, onEnter);
+            map.off("mouseleave", SAMPLING_LAYER, onLeave);
+        };
+    }, [mapInstance]);
+
+    /* ── Fly to sampling zone on sidebar click ────────────── */
+
+    const flyToZone = useCallback(
+        (feature: SamplingZonesResponse["features"][number]) => {
+            if (!mapInstance || !feature.geometry) return;
+            const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+            mapInstance.flyTo({ center: coords, zoom: 17, duration: 1000 });
+        },
+        [mapInstance],
+    );
 
     // Job tracking
     const [activeJob, setActiveJob] = useState<NdviJob | null>(null);
@@ -100,6 +278,22 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
             ]);
             if (p.status === "fulfilled") setProfile(p.value);
             if (s.status === "fulfilled") setSummary(s.value);
+
+            // Load intelligence data (only if soil data exists)
+            if (p.status === "fulfilled" && p.value) {
+                const [cs, nc, ce, ws, sz] = await Promise.allSettled([
+                    soilApi.getCropSuitability(fieldId),
+                    soilApi.getNutrientContext(fieldId),
+                    soilApi.getCarbon(fieldId),
+                    soilApi.getWeatherStress(fieldId),
+                    soilApi.getSamplingZones(fieldId),
+                ]);
+                if (cs.status === "fulfilled") setCropSuitability(cs.value);
+                if (nc.status === "fulfilled") setNutrientContext(nc.value);
+                if (ce.status === "fulfilled") setCarbonEstimate(ce.value);
+                if (ws.status === "fulfilled") setWeatherStress(ws.value);
+                if (sz.status === "fulfilled") setSamplingZones(sz.value);
+            }
         } catch {
             // empty state shown
         } finally {
@@ -402,6 +596,262 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
                                 />
                             </div>
                         </div>
+                    </div>
+                </section>
+            )}
+
+            {/* ── Intelligence Sections ──────────────────────── */}
+
+            {/* Weather × Soil Stress */}
+            {weatherStress && (
+                <section className="space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5">
+                        <Droplets className="h-3.5 w-3.5" />
+                        {t("weatherStress")}
+                    </h4>
+                    <div className="rounded-lg border bg-card p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className={cn(
+                                "h-2.5 w-2.5 rounded-full shrink-0",
+                                weatherStress.status === "optimal" ? "bg-green-500" :
+                                    weatherStress.status === "drought_stress" ? "bg-red-500" :
+                                        weatherStress.status === "wet_stress" ? "bg-blue-500" :
+                                            weatherStress.status === "approaching_drought" ? "bg-yellow-500" :
+                                                "bg-muted-foreground"
+                            )} />
+                            <span className="text-sm font-medium capitalize">
+                                {t(`stressStatus_${weatherStress.status}`, { defaultMessage: weatherStress.status.replace(/_/g, " ") })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground ml-auto">
+                                {t("severity")}: {(weatherStress.severity * 100).toFixed(0)}%
+                            </span>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-2">
+                            <div
+                                className={cn("h-full rounded-full transition-all",
+                                    weatherStress.severity < 0.3 ? "bg-green-500" :
+                                        weatherStress.severity < 0.6 ? "bg-yellow-500" : "bg-red-500"
+                                )}
+                                style={{ width: `${Math.min(weatherStress.severity * 100, 100)}%` }}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+                            {weatherStress.awc_rootzone_mm != null && (
+                                <span>{t("rootzoneAwc")}: {weatherStress.awc_rootzone_mm.toFixed(0)} mm</span>
+                            )}
+                            {weatherStress.water_balance_30d_mm != null && (
+                                <span>{t("waterBalance30d")}: {weatherStress.water_balance_30d_mm.toFixed(0)} mm</span>
+                            )}
+                        </div>
+                        {weatherStress.factors.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                                {weatherStress.factors.map((f) => (
+                                    <span key={f} className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{f}</span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* Crop Suitability */}
+            {cropSuitability && !cropSuitability.weather_available && (
+                <section className="space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5">
+                        <Sprout className="h-3.5 w-3.5" />
+                        {t("cropSuitability")}
+                    </h4>
+                    <div className="rounded-lg border border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20 p-3">
+                        <p className="text-[11px] text-yellow-700 dark:text-yellow-400">
+                            {t("cropSuitabilityWeatherRequired")}
+                        </p>
+                    </div>
+                </section>
+            )}
+            {cropSuitability && cropSuitability.weather_available && cropSuitability.crops.length > 0 && (
+                <section className="space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5">
+                        <Sprout className="h-3.5 w-3.5" />
+                        {t("cropSuitability")}
+                    </h4>
+                    {cropSuitability.field_crop_suitability && (
+                        <div className={cn(
+                            "rounded-lg border p-2.5",
+                            cropSuitability.field_crop_suitability.score >= 70 ? "border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950/20" :
+                                cropSuitability.field_crop_suitability.score >= 40 ? "border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20" :
+                                    "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20"
+                        )}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-medium">{cropSuitability.field_crop_suitability.name}</span>
+                                <span className={cn("text-xs font-bold tabular-nums",
+                                    cropSuitability.field_crop_suitability.score >= 70 ? "text-green-600 dark:text-green-400" :
+                                        cropSuitability.field_crop_suitability.score >= 40 ? "text-yellow-600 dark:text-yellow-400" :
+                                            "text-red-600 dark:text-red-400"
+                                )}>
+                                    {cropSuitability.field_crop_suitability.score.toFixed(0)}%
+                                </span>
+                            </div>
+                            {cropSuitability.field_crop_suitability.limiting_factors.length > 0 && (
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                    {t("limitingFactors")}: {cropSuitability.field_crop_suitability.limiting_factors.join(", ")}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                    <div className="rounded-lg border bg-white dark:bg-card p-3 max-h-[280px] overflow-y-auto space-y-1.5">
+                        {cropSuitability.crops.map((c) => (
+                            <div key={c.crop} className="flex items-center gap-2 text-[11px]">
+                                <span className="w-28 shrink-0 truncate font-medium">{c.name}</span>
+                                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className={cn("h-full rounded-full",
+                                            c.score >= 70 ? "bg-green-500" :
+                                                c.score >= 40 ? "bg-yellow-500" : "bg-red-500"
+                                        )}
+                                        style={{ width: `${c.score}%` }}
+                                    />
+                                </div>
+                                <span className="w-8 text-right tabular-nums text-muted-foreground">{c.score.toFixed(0)}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Sampling Zones */}
+            {samplingZones && samplingZones.features.length > 0 && (
+                <section className="space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {t("samplingZones")}
+                    </h4>
+                    <div className="rounded-lg border bg-white dark:bg-card p-3 space-y-2">
+                        {samplingZones.features.map((f, i) => {
+                            const p = f.properties;
+                            const priorityColor = p.priority === 1
+                                ? "bg-red-500" : p.priority === 2
+                                    ? "bg-yellow-500" : "bg-blue-500";
+                            return (
+                                <div
+                                    key={i}
+                                    className="flex items-start gap-2 text-[11px] cursor-pointer rounded-md px-1 py-0.5 hover:bg-muted/60 transition-colors"
+                                    onClick={() => flyToZone(f)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => { if (e.key === "Enter") flyToZone(f); }}
+                                >
+                                    <span className={cn("mt-0.5 h-2.5 w-2.5 rounded-full shrink-0", priorityColor)} />
+                                    <div className="min-w-0">
+                                        <span className="font-medium">
+                                            {t(`zoneType_${p.zone_type}`, { defaultMessage: p.zone_type.replace(/_/g, " ") })}
+                                        </span>
+                                        <p className="text-[10px] text-muted-foreground">{p.rationale}</p>
+                                    </div>
+                                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular-nums">
+                                        P{p.priority}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
+
+            {/* Nutrient Context */}
+            {nutrientContext && (
+                <section className="space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        {t("nutrientContext")}
+                    </h4>
+                    <div className="rounded-lg border bg-card p-3">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className={cn(
+                                "h-2.5 w-2.5 rounded-full shrink-0",
+                                nutrientContext.zone_class === "nutrient_retentive" ? "bg-green-500" :
+                                    nutrientContext.zone_class === "nutrient_responsive" ? "bg-yellow-500" :
+                                        "bg-red-500"
+                            )} />
+                            <span className="text-sm font-medium">
+                                {t(`nutrientZone_${nutrientContext.zone_class}`, { defaultMessage: nutrientContext.zone_class.replace(/_/g, " ") })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground ml-auto">
+                                {(nutrientContext.confidence * 100).toFixed(0)}% {t("confidence")}
+                            </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mb-2">{nutrientContext.interpretation}</p>
+                        {nutrientContext.factors.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                                {nutrientContext.factors.map((f) => (
+                                    <span key={f} className="text-[10px] px-1.5 py-0.5 rounded bg-muted">{f}</span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+            )}
+
+            {/* Carbon & Sequestration */}
+            {carbonEstimate && (
+                <section className="space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5">
+                        <Leaf className="h-3.5 w-3.5" />
+                        {t("carbonSequestration")}
+                    </h4>
+                    <div className="rounded-lg border bg-card p-3">
+                        {carbonEstimate.saturation_pct != null && (
+                            <div className="mb-2">
+                                <div className="flex items-baseline justify-between mb-1">
+                                    <span className="text-[10px] text-muted-foreground">{t("carbonSaturation")}</span>
+                                    <span className="text-xs font-semibold tabular-nums">
+                                        {carbonEstimate.saturation_pct.toFixed(0)}%
+                                    </span>
+                                </div>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className={cn("h-full rounded-full transition-all",
+                                            carbonEstimate.saturation_pct < 50 ? "bg-green-500" :
+                                                carbonEstimate.saturation_pct < 80 ? "bg-yellow-500" : "bg-red-500"
+                                        )}
+                                        style={{ width: `${Math.min(carbonEstimate.saturation_pct, 100)}%` }}
+                                    />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                    {carbonEstimate.saturation_pct >= 80
+                                        ? t("socHintHigh")
+                                        : carbonEstimate.saturation_pct >= 50
+                                            ? t("socHintModerate")
+                                            : t("socHintLow")}
+                                </p>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                            {carbonEstimate.current_soc_t_ha != null && (
+                                <div>
+                                    <span className="text-muted-foreground">{t("currentSoc")}</span>
+                                    <span className="font-medium ml-1">{carbonEstimate.current_soc_t_ha.toFixed(1)} t/ha</span>
+                                </div>
+                            )}
+                            {carbonEstimate.saturation_t_ha != null && (
+                                <div>
+                                    <span className="text-muted-foreground">{t("saturationCapacity")}</span>
+                                    <span className="font-medium ml-1">{carbonEstimate.saturation_t_ha.toFixed(1)} t/ha</span>
+                                </div>
+                            )}
+                            {carbonEstimate.seq_potential_low_t_ha_yr != null && carbonEstimate.seq_potential_high_t_ha_yr != null && (
+                                <div className="col-span-2 mt-1">
+                                    <span className="text-muted-foreground">{t("seqPotential")}</span>
+                                    <span className="font-medium ml-1">
+                                        {carbonEstimate.seq_potential_low_t_ha_yr.toFixed(2)}–{carbonEstimate.seq_potential_high_t_ha_yr.toFixed(2)} t/ha/yr
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                        {carbonEstimate.climate_zone && (
+                            <p className="text-[10px] text-muted-foreground mt-1.5">
+                                {t("climateZone")}: {carbonEstimate.climate_zone}
+                            </p>
+                        )}
                     </div>
                 </section>
             )}

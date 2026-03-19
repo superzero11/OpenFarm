@@ -141,3 +141,93 @@
     border-bottom-right-radius: 0 !important;
     border-bottom: none !important;
 }
+
+/* ── Map Popup (shadcn-style) ────────────────────────────── */
+
+.openfarm-popup .maplibregl-popup-content {
+    border-radius: 0.5rem;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    padding: 0;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+}
+
+.openfarm-popup .maplibregl-popup-close-button {
+    font-size: 16px;
+    padding: 2px 6px;
+    color: hsl(var(--muted-foreground));
+    right: 4px;
+    top: 4px;
+    z-index: 1;
+}
+
+.openfarm-popup .maplibregl-popup-close-button:hover {
+    color: hsl(var(--foreground));
+    background: transparent;
+}
+
+.openfarm-popup .maplibregl-popup-tip {
+    border-top-color: hsl(var(--popover));
+}
+
+.openfarm-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    border-top-color: hsl(var(--popover));
+}
+
+.openfarm-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+    border-bottom-color: hsl(var(--popover));
+}
+
+.openfarm-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: hsl(var(--popover));
+}
+
+.openfarm-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: hsl(var(--popover));
+}
+
+/* Popup content classes */
+.openfarm-popup-body {
+    padding: 0.75rem;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.openfarm-popup-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    padding-right: 18px;
+    color: hsl(var(--popover-foreground));
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.openfarm-popup-meta {
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 3px;
+    font-size: 11px;
+}
+
+.openfarm-popup-note {
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 2px;
+}
+
+.openfarm-popup-tags {
+    margin-top: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+
+.openfarm-popup-tag {
+    display: inline-block;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+}

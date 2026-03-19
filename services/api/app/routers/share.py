@@ -27,6 +27,7 @@ from app.models.tables import (
     RasterLayer,
     ScoutingObservation,
     ShareLink,
+    SoilFieldSummary,
     WeatherDaily,
 )
 from app.schemas.monitoring import ScoutingOut, ShareCreate, ShareOut, ShareReportOut
@@ -363,6 +364,37 @@ async def get_shared_report(
             }
         )
 
+    # Soil summary
+    soil_summary_out: dict[str, Any] | None = None
+    soil_result = await db.execute(
+        select(SoilFieldSummary).where(SoilFieldSummary.field_id == field.id)
+    )
+    soil_sum = soil_result.scalar_one_or_none()
+    if soil_sum:
+        soil_summary_out = {
+            "dominant_texture": soil_sum.dominant_texture,
+            "avg_ph": float(soil_sum.avg_ph) if soil_sum.avg_ph is not None else None,
+            "total_soc_stock_t_ha": float(soil_sum.total_soc_stock_t_ha)
+            if soil_sum.total_soc_stock_t_ha is not None
+            else None,
+            "rootzone_awc_mm": float(soil_sum.rootzone_awc_mm)
+            if soil_sum.rootzone_awc_mm is not None
+            else None,
+            "drainage_class": soil_sum.drainage_class,
+            "compaction_risk": float(soil_sum.compaction_risk)
+            if soil_sum.compaction_risk is not None
+            else None,
+            "waterlogging_risk": float(soil_sum.waterlogging_risk)
+            if soil_sum.waterlogging_risk is not None
+            else None,
+            "acidification_risk": float(soil_sum.acidification_risk)
+            if soil_sum.acidification_risk is not None
+            else None,
+            "leaching_risk": float(soil_sum.leaching_risk)
+            if soil_sum.leaching_risk is not None
+            else None,
+        }
+
     return ShareReportOut(
         field=field_data,
         latest_layer=latest_layer,
@@ -374,6 +406,7 @@ async def get_shared_report(
         scouting=scouting_out,
         weather_summary=weather_summary,
         weather_data=weather_data_out,
+        soil_summary=soil_summary_out,
     )
 
 

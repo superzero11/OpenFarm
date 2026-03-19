@@ -47,3 +47,4 @@ docs/
 
 # ── MinIO / Storage (local dev volumes) ──────────────────────────────
 minio-data/
+.agents/

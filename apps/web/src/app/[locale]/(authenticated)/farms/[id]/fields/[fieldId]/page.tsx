@@ -752,7 +752,7 @@ export default function FieldDetailPage() {
                                     </TabsContent>
 
                                     <TabsContent value="scouting" className="mt-0">
-                                        <ScoutingTab fieldId={fieldId} mapInstance={mapInstance} />
+                                        <ScoutingTab fieldId={fieldId} mapInstance={mapInstance} activeTab={activeTab} />
                                     </TabsContent>
 
                                     <TabsContent value="weather" className="mt-0 p-4">
@@ -760,7 +760,7 @@ export default function FieldDetailPage() {
                                     </TabsContent>
 
                                     <TabsContent value="soil" className="mt-0 p-4">
-                                        <SoilTab fieldId={fieldId} />
+                                        <SoilTab fieldId={fieldId} mapInstance={mapInstance} activeTab={activeTab} />
                                     </TabsContent>
 
                                     <TabsContent value="share" className="mt-0">

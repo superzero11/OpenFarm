@@ -273,6 +273,7 @@ class Alert(Base):
         String(20), nullable=True, default="ndvi"
     )
     weather_context = mapped_column(JSONB, nullable=True)
+    soil_context = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

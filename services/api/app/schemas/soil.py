@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -88,3 +89,64 @@ class SoilRefreshResponse(BaseModel):
     job_id: str
     status: str
     message: str
+
+
+# ── Intelligence Schemas ─────────────────────────────────────────────
+
+
+class SamplingZoneFeature(BaseModel):
+    type: str = "Feature"
+    geometry: dict[str, Any]
+    properties: dict[str, Any]
+
+
+class SamplingZonesResponse(BaseModel):
+    type: str = "FeatureCollection"
+    features: list[SamplingZoneFeature] = []
+
+
+class CropSuitabilityItem(BaseModel):
+    crop: str
+    name: str  # human-readable display name
+    score: float  # 0-100
+    rating: str  # excellent / good / moderate / poor
+    limiting_factors: list[str] = []
+
+
+class CropSuitabilityResponse(BaseModel):
+    crops: list[CropSuitabilityItem] = []
+    field_crop_type: str | None = None
+    field_crop_suitability: CropSuitabilityItem | None = None
+    weather_available: bool = True
+    message: str | None = None
+
+
+class NutrientContextResponse(BaseModel):
+    zone_class: str
+    confidence: float
+    factors: list[str] = []
+    interpretation: str
+    disclaimer: str = (
+        "This is soil context for planning purposes, not a fertilizer recommendation. "
+        "Consult a local agronomist for specific nutrient management advice."
+    )
+
+
+class CarbonEstimateResponse(BaseModel):
+    current_soc_stock_t_ha: float | None = None
+    topsoil_soc_stock_t_ha: float | None = None
+    estimated_soc_saturation_t_ha: float | None = None
+    saturation_pct: float | None = None
+    sequestration_potential_low_t_ha: float | None = None
+    sequestration_potential_high_t_ha: float | None = None
+    climate_zone: str | None = None
+    disclaimer: str = ""
+
+
+class SoilWeatherStressResponse(BaseModel):
+    status: str  # drought_stress | optimal | wet_stress | approaching_drought | unknown
+    severity: float
+    moisture_status: str
+    awc_rootzone_mm: float | None = None
+    water_balance_30d_mm: float | None = None
+    factors: list[str] = []

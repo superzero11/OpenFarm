@@ -40,7 +40,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 - Multi-index vegetation monitoring — NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery with automatic 24-month historical backfill
 - ML-powered automatic field boundary detection (FTW model) with interactive review workflow
 - Daily weather data with agricultural indices (GDD, water balance, drought index) via Open-Meteo
-- Soil intelligence — automatic soil profile ingestion from SoilGrids (global, 250m) and POLARIS (US, 30m) with texture, pH, carbon, risk scoring, and interactive depth visualization
+- Soil intelligence — automatic soil profile ingestion from SoilGrids (global, 250m) and POLARIS (US, 30m) with crop suitability scoring (68 crops), sampling zone recommendations, carbon sequestration estimation, nutrient risk classification, and soil×weather stress monitoring
 - Reproducible pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
 - Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
 - MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
@@ -171,17 +171,19 @@ ruff format --check .
 ### Layer A — Observation
 - **Satellite Intelligence**: NDVI, EVI, SAVI (configurable L), NDWI from Sentinel-2 — STAC search → COG → TiTiler tiles → time-series stats, with automatic 24-month historical backfill and weekly auto-compute
 - **Weather Intelligence**: daily historical + 7-day forecast via Open-Meteo — temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
-- **Soil Intelligence**: automatic soil profile from SoilGrids (global, 250m) and POLARIS (US, 30m) — texture-by-depth, pH, organic carbon, CEC, bulk density, AWC, risk scoring, data quality indicators
+- **Soil Intelligence**: automatic soil profile from SoilGrids (global, 250m) and POLARIS (US, 30m) — texture-by-depth, pH, organic carbon, CEC, bulk density, AWC, Rosetta PTF hydraulic properties, risk scoring, crop suitability (68 profiles, 4-pillar model), sampling zones, carbon estimation, nutrient context
 - **Boundary Detection**: ML-powered field boundary detection (FTW model) from Sentinel-2 — draw area, review with confidence scores, accept as fields
 - **Farms & Fields**: draw/upload GeoJSON/KML polygons, auto area calculation, soft delete
 
 ### Layer B — Intelligence
 - **Per-Index Alerts**: configurable threshold and drop-percentage rules, enriched with weather context and soil data
-- **Risk Scoring**: acidification, compaction, leaching, and rooting risk from soil properties
+- **Crop Suitability**: 4-pillar weighted scoring (Soil 40%, Water 25%, Climate 20%, Stress 15%) across 68 crop profiles with limiting factors
+- **Soil Intelligence**: nutrient risk zones, carbon sequestration potential, sampling zone recommendations, soil×weather stress indicators
+- **Risk Scoring**: acidification, compaction, leaching, waterlogging, and rooting risk from soil properties
 - **Multi-Signal Context**: alerts combine vegetation anomalies + weather conditions + soil characteristics
 
 ### Layer C — Delivery
-- **Interactive Map**: MapLibre + PMTiles (no Mapbox needed), multi-layer toggle, per-index colormaps
+- **Interactive Map**: MapLibre + PMTiles (no Mapbox needed), multi-layer toggle, per-index colormaps, scouting and sampling zone markers with interactive popups
 - **Time-Series Charts**: ECharts with percentile bands, NDVI + weather overlay, soil depth visualization
 - **Scouting**: geotagged observations with photo upload and auto-attached weather snapshot
 - **Sharing**: read-only field health reports via share links with multi-index, weather, and soil summary

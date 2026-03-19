@@ -1368,82 +1368,135 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.1 | Implement `_compute_sampling_zones(field_id)` — suggests soil sampling locations based on within-field soil variability zones | ⬜ | Uses SoilGrids/POLARIS multi-pixel extraction (not just centroid) for fields >10ha; identifies high-variance zones where clay%, SOC, or pH differ most from field mean |
-| 24.2 | Add `GET /v1/fields/{field_id}/soil/sampling-zones` endpoint — returns GeoJSON FeatureCollection with suggested sampling points + rationale | ⬜ | Each feature has `zone_type` (high-clay, high-SOC-variability, etc.) and `priority` (1–3) |
-| 24.3 | Add sampling zone overlay to field map in soil tab — show suggested sampling points on the map | ⬜ | MapLibre markers with priority-colored pins |
-| 24.4 | Add i18n keys for sampling zone labels (en + es) | ⬜ | ~10 keys |
+| 24.1 | Implement `_compute_sampling_zones(field_id)` — suggests soil sampling locations based on within-field soil variability zones | ✅ | Uses SoilGrids/POLARIS multi-pixel extraction (not just centroid) for fields >10ha; identifies high-variance zones where clay%, SOC, or pH differ most from field mean |
+| 24.2 | Add `GET /v1/fields/{field_id}/soil/sampling-zones` endpoint — returns GeoJSON FeatureCollection with suggested sampling points + rationale | ✅ | Each feature has `zone_type` (high-clay, high-SOC-variability, etc.) and `priority` (1–3) |
+| 24.3 | Add sampling zone display in soil tab — show suggested sampling points with priority + rationale | ✅ | Colored priority dots (P1=red, P2=yellow, P3=blue), zone type labels, rationale text |
+| 24.4 | Add i18n keys for sampling zone labels (en + es) | ✅ | 7 keys: section title + 6 zone types |
 
 #### Crop Suitability Context
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.5 | Implement `_assess_crop_suitability(soil_summary, crop_type)` — basic suitability scoring for common crops based on soil properties | ⬜ | Input: texture, pH, drainage, AWC, SOC; Output: suitability score (0–1) + limiting factors list |
-| 24.6 | Define crop requirement profiles for 10–15 common crops — wheat, corn/maize, rice, soybean, cotton, sugarcane, potato, barley, sunflower, sorghum, alfalfa, coffee, cocoa, oil palm, cassava | ⬜ | Each crop: optimal pH range, min AWC, preferred texture classes, drainage tolerance, min SOC |
-| 24.7 | Add `GET /v1/fields/{field_id}/soil/crop-suitability` endpoint — returns scored list of crops with suitability ratings and limiting factors | ⬜ | Returns top 10 most suitable crops; if field has `crop_type`, that crop's suitability is highlighted |
-| 24.8 | Add crop suitability section to soil tab — card showing current crop's suitability + limiting factors, expandable list for alternative crops | ⬜ | Color-coded: Excellent (>0.8), Good (0.6–0.8), Moderate (0.4–0.6), Poor (<0.4) |
-| 24.9 | Add i18n keys for crop names, suitability levels, limiting factor labels (en + es) | ⬜ | ~40 keys |
+| 24.5 | Implement `_assess_crop_suitability(soil_summary, crop_type)` — basic suitability scoring for common crops based on soil properties | ✅ | Input: texture, pH, drainage, AWC, SOC; Output: suitability score (0–1) + limiting factors list |
+| 24.6 | Define crop requirement profiles for 10–15 common crops — wheat, corn/maize, rice, soybean, cotton, sugarcane, potato, barley, sunflower, sorghum, alfalfa, coffee, cocoa, oil palm, cassava | ✅ | Each crop: optimal pH range, min AWC, preferred texture classes, drainage tolerance, min SOC |
+| 24.7 | Add `GET /v1/fields/{field_id}/soil/crop-suitability` endpoint — returns scored list of crops with suitability ratings and limiting factors | ✅ | Returns top 10 most suitable crops; if field has `crop_type`, that crop's suitability is highlighted |
+| 24.8 | Add crop suitability section to soil tab — card showing current crop's suitability + limiting factors, expandable list for alternative crops | ✅ | Color-coded: Excellent (>0.8), Good (0.6–0.8), Moderate (0.4–0.6), Poor (<0.4) |
+| 24.9 | Add i18n keys for crop names, suitability levels, limiting factor labels (en + es) | ✅ | ~40 keys |
 
 #### Fertilizer-Risk Stratification
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.10 | Implement nutrient-risk zone classification — based on pH, CEC, SOC, texture, leaching risk | ⬜ | NOT prescriptive: classifies zones as "nutrient responsive" vs "nutrient retentive" vs "nutrient loss risk" — context for planning, not a fertilizer recommendation |
-| 24.11 | Add `GET /v1/fields/{field_id}/soil/nutrient-context` endpoint — returns nutrient risk zone classification + interpretation text | ⬜ | Includes disclaimer: "This is soil context, not a fertilizer recommendation" |
-| 24.12 | Add nutrient context section to soil tab — zone classification badges with interpretation | ⬜ | |
-| 24.13 | Add i18n keys for nutrient zone labels, interpretation text (en + es) | ⬜ | ~15 keys |
+| 24.10 | Implement nutrient-risk zone classification — based on pH, CEC, SOC, texture, leaching risk | ✅ | NOT prescriptive: classifies zones as "nutrient responsive" vs "nutrient retentive" vs "nutrient loss risk" — context for planning, not a fertilizer recommendation |
+| 24.11 | Add `GET /v1/fields/{field_id}/soil/nutrient-context` endpoint — returns nutrient risk zone classification + interpretation text | ✅ | Includes disclaimer: "This is soil context, not a fertilizer recommendation" |
+| 24.12 | Add nutrient context section to soil tab — zone classification badges with interpretation | ✅ | |
+| 24.13 | Add i18n keys for nutrient zone labels, interpretation text (en + es) | ✅ | ~15 keys |
 
 #### Carbon & Sequestration Opportunity
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.14 | Implement `_estimate_sequestration_potential(soil_summary, climate_context)` — rough estimate of carbon sequestration opportunity based on current SOC level vs theoretical maximum for texture+climate zone | ⬜ | Uses texture-dependent SOC saturation deficit concept; requires weather data (annual precip, temp) from existing weather tables |
-| 24.15 | Add `GET /v1/fields/{field_id}/soil/carbon` endpoint — returns current SOC stock, estimated SOC saturation, sequestration opportunity range | ⬜ | Includes strong disclaimer: "Estimates only; not suitable for carbon credit verification" |
-| 24.16 | Add carbon section to soil tab — SOC stock gauge, saturation % estimate, sequestration opportunity card | ⬜ | With uncertainty band showing wide range of estimates |
-| 24.17 | Add i18n keys for carbon section labels (en + es) | ⬜ | ~15 keys |
+| 24.14 | Implement `_estimate_sequestration_potential(soil_summary, climate_context)` — rough estimate of carbon sequestration opportunity based on current SOC level vs theoretical maximum for texture+climate zone | ✅ | Uses texture-dependent SOC saturation deficit concept; requires weather data (annual precip, temp) from existing weather tables |
+| 24.15 | Add `GET /v1/fields/{field_id}/soil/carbon` endpoint — returns current SOC stock, estimated SOC saturation, sequestration opportunity range | ✅ | Includes strong disclaimer: "Estimates only; not suitable for carbon credit verification" |
+| 24.16 | Add carbon section to soil tab — SOC stock gauge, saturation % estimate, sequestration opportunity card | ✅ | With uncertainty band showing wide range of estimates |
+| 24.17 | Add i18n keys for carbon section labels (en + es) | ✅ | ~15 keys |
 
 #### Weather × Soil Stress Indicators
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.18 | Implement `_compute_soil_weather_stress(field_id)` — combines AWC from soil with recent precipitation from weather tables to estimate root-zone stress | ⬜ | Drought stress = when water_balance_30d < -AWC_rootzone; Waterlogging stress = when water_balance_30d > AWC_rootzone and drainage_class is poor |
-| 24.19 | Add soil-weather stress indicator to field dashboard or weather tab — shows current estimated root-zone moisture status (dry stress / optimal / wet stress) | ⬜ | Simple traffic-light indicator; references both soil capacity and recent weather |
-| 24.20 | Add i18n keys for stress indicator labels (en + es) | ⬜ | ~8 keys |
+| 24.18 | Implement `_compute_soil_weather_stress(field_id)` — combines AWC from soil with recent precipitation from weather tables to estimate root-zone stress | ✅ | Drought stress = when water_balance_30d < -AWC_rootzone; Waterlogging stress = when water_balance_30d > AWC_rootzone and drainage_class is poor |
+| 24.19 | Add soil-weather stress indicator to field dashboard or weather tab — shows current estimated root-zone moisture status (dry stress / optimal / wet stress) | ✅ | Simple traffic-light indicator; references both soil capacity and recent weather |
+| 24.20 | Add i18n keys for stress indicator labels (en + es) | ✅ | ~8 keys |
 
 #### Soil-Aware Alerts
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.31 | Define soil alert conditions — thresholds for soil properties that warrant user notification (e.g., pH < 5.5 acidic, SOC < 1% low organic matter, sand > 80% high leaching risk, CEC < 5 low nutrient retention) | ⬜ | Configurable per-org in future; hardcoded sensible defaults for v1 |
-| 24.32 | Implement `_evaluate_soil_alerts(field_id, soil_summary)` in soil task — after soil fetch completes, check summary values against thresholds and create alert rows | ⬜ | Reuses existing `alerts` table with `type="soil"` or new soil-specific alert types |
-| 24.33 | Alembic migration: add `"soil_ph"`, `"soil_organic_matter"`, `"soil_texture"`, `"soil_nutrient_retention"` to alert `metric` enum or use flexible string column | ⬜ | Extend existing alert schema to support soil-based metrics |
-| 24.34 | Add `soil_context` JSONB column to alerts (or reuse `weather_context` pattern) — stores relevant soil property values at time of alert creation | ⬜ | e.g., `{"ph": 4.8, "depth": "0-5cm", "threshold": 5.5}` |
-| 24.35 | Update alert Pydantic schemas — add soil alert types to `AlertOut`, include `soil_context` in response | ⬜ | Optional field, same pattern as `weather_context` |
-| 24.36 | Display soil alerts in alert list on frontend — icon differentiation, soil context details in alert row | ⬜ | Soil alerts show relevant property name, value, and threshold |
-| 24.37 | Add i18n keys for soil alert labels and descriptions (en + es) | ⬜ | ~12 keys: alert type names, threshold descriptions, soil property labels |
+| 24.31 | Define soil alert conditions — thresholds for soil properties that warrant user notification (e.g., pH < 5.5 acidic, SOC < 1% low organic matter, sand > 80% high leaching risk, CEC < 5 low nutrient retention) | ✅ | Configurable per-org in future; hardcoded sensible defaults for v1 |
+| 24.32 | Implement `_evaluate_soil_alerts(field_id, soil_summary)` in soil task — after soil fetch completes, check summary values against thresholds and create alert rows | ✅ | Reuses existing `alerts` table with `type="soil"` or new soil-specific alert types |
+| 24.33 | Alembic migration: add `"soil_ph"`, `"soil_organic_matter"`, `"soil_texture"`, `"soil_nutrient_retention"` to alert `metric` enum or use flexible string column | ✅ | Extend existing alert schema to support soil-based metrics |
+| 24.34 | Add `soil_context` JSONB column to alerts (or reuse `weather_context` pattern) — stores relevant soil property values at time of alert creation | ✅ | e.g., `{"ph": 4.8, "depth": "0-5cm", "threshold": 5.5}` |
+| 24.35 | Update alert Pydantic schemas — add soil alert types to `AlertOut`, include `soil_context` in response | ✅ | Optional field, same pattern as `weather_context` |
+| 24.36 | Display soil alerts in alert list on frontend — icon differentiation, soil context details in alert row | ✅ | Soil alerts show relevant property name, value, and threshold |
+| 24.37 | Add i18n keys for soil alert labels and descriptions (en + es) | ✅ | ~12 keys: alert type names, threshold descriptions, soil property labels |
 
 #### Share Reports — Soil Summary Section
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.38 | Include soil summary in share report API response — add `soil_summary` to `ShareReportOut` schema with key soil properties (texture class, pH, SOC, CEC, drainage) | ⬜ | Same pattern as `weather_summary` JSONB; returns null if soil data not yet fetched |
-| 24.39 | Add "Soil Summary" section to shared field report page — card with texture triangle icon, pH gauge, SOC %, CEC, key depth profiles | ⬜ | Positioned after Weather Summary section; conditionally rendered only when soil data exists |
-| 24.40 | Add i18n keys for share report soil section (en + es) | ⬜ | ~10 keys: `shareReport.soilSummary`, `shareReport.textureClass`, `shareReport.soilPH`, etc. |
-| 24.41 | Verify soil summary renders correctly on public share page (no auth required) | ⬜ | Same access pattern as weather summary — data embedded in report snapshot |
+| 24.38 | Include soil summary in share report API response — add `soil_summary` to `ShareReportOut` schema with key soil properties (texture class, pH, SOC, CEC, drainage) | ✅ | Same pattern as `weather_summary` JSONB; returns null if soil data not yet fetched |
+| 24.39 | Add "Soil Summary" section to shared field report page — card with texture triangle icon, pH gauge, SOC %, CEC, key depth profiles | ✅ | Positioned after Weather Summary section; conditionally rendered only when soil data exists |
+| 24.40 | Add i18n keys for share report soil section (en + es) | ✅ | ~10 keys: `shareReport.soilSummary`, `shareReport.textureClass`, `shareReport.soilPH`, etc. |
+| 24.41 | Verify soil summary renders correctly on public share page (no auth required) | ✅ | Same access pattern as weather summary — data embedded in report snapshot |
+
+### Weather-Aware Crop Suitability v2
+
+> Upgrades crop suitability from soil-only scoring to 4-pillar weighted scoring (Soil 40%, Water 25%, Climate 20%, Stress 15%). Adds CEC to soil scoring, integrates weather data from `WeatherDaily`, blocks suitability when weather data is unavailable. See `docs/features/soil-data-integration-research.md` §10.
+
+#### Backend — Expand CropRequirements
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 25.1 | Add 7 new fields to `CropRequirements` dataclass — `min_cec_cmol_kg`, `min_annual_rainfall_mm`, `max_annual_rainfall_mm`, `min_temp_c`, `max_temp_c`, `drought_tolerance`, `flood_tolerance` | ✅ | Defaults allow existing profiles to keep working |
+| 25.2 | Update all 68 crop profiles in `CROP_PROFILES` with agronomically accurate values for new fields | ✅ | All 68 profiles updated across cereals, legumes, industrial, root/tuber, vegetables, fruits, plantations, spices |
+
+#### Backend — 4-Pillar Scoring Function
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 25.3 | Add `weather_summary: dict | None` parameter to `assess_crop_suitability()` | ✅ | Returns empty list when None |
+| 25.4 | Implement Soil Fit pillar (40%) — add CEC scoring to existing pH/AWC/texture/drainage/SOC/clay logic | ✅ | Topsoil CEC extracted from layers, ratio-based penalty |
+| 25.5 | Implement Water Match pillar (25%) — compare crop rainfall range vs actual annual rainfall + 30-day water balance | ✅ | Deficit + excess + water balance penalties |
+| 25.6 | Implement Climate Fit pillar (20%) — compare crop temp range vs actual mean/min/max temperatures | ✅ | Smooth penalty curve + extreme frost/heat checks |
+| 25.7 | Implement Stress Resilience pillar (15%) — drought/flood tolerance vs active stress conditions | ✅ | drought_severity × (1 - tolerance) vulnerability model |
+| 25.8 | Combine pillars into weighted final score, change top-N from 15 → 10 | ✅ | `soil_fit * 0.40 + water * 0.25 + climate * 0.20 + stress * 0.15` |
+
+#### Backend — Endpoint & Schema Updates
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 25.9 | Update `CropSuitabilityResponse` schema — add `weather_available: bool` and `message: str | None` fields | ✅ | In `schemas/soil.py` |
+| 25.10 | Update crop-suitability endpoint — query `WeatherDaily` for annual rainfall/temp aggregation + latest stress indicators | ✅ | Annual agg + 30-day latest for stress |
+| 25.11 | If no weather rows found → return empty crops + `weather_available=false` + message | ✅ | Requires ≥180 days of weather data |
+
+#### Frontend — Type Fixes & Weather Banner
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 25.12 | Fix `CropSuitabilityItem` TS interface — add missing `score: number` and `rating: string` fields | ✅ | In `api.ts` |
+| 25.13 | Update `CropSuitabilityResponse` TS type — add `weather_available: boolean` and `message: string | null` | ✅ | |
+| 25.14 | Show weather-required info banner in soil-tab when `weather_available === false` | ✅ | Yellow info banner with i18n text |
+| 25.15 | Add i18n keys for weather-required message (en.json + es.json) | ✅ | `cropSuitabilityWeatherRequired` |
+
+#### Testing & QA
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 25.16 | `ruff check` + `ruff format --check` on modified Python files | ✅ | All checks passed |
+| 25.17 | Rebuild API container with new scoring logic | ✅ | `docker compose build api && up -d api` |
+| 25.18 | Verify rice scores LOW on drought-stressed field | ✅ | Rice at 53.5% (#13), not in top 10. Limiting: "Low drought tolerance (10%) under active drought" |
+| 25.19 | Verify millet/sorghum score HIGH on low-rainfall field | ✅ | Sorghum #5 at 62.0%; olive/chickpea/sunflower rank above — all drought-tolerant |
+| 25.20 | Verify field with no weather data returns empty + message | ✅ | Returns `weather_available: false` with message |
+| 25.21 | Fix inverted sign convention in drought_severity endpoint | ✅ | `di < 0` = drought (was `di > 0`) in `routers/soil.py` |
+| 25.22 | Fix inverted flood detection in scoring function | ✅ | `drought_idx > 1.0` = flood (was `< -1.0`) in `soil_intelligence.py` |
+| 25.23 | Return field crop suitability even when outside top 10 | ✅ | Endpoint now searches full list before truncating to top 10 |
+
 
 #### Integration Testing & QA
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 24.21 | Verify sampling zones — generates 3–5 zones for a field with multi-pixel coverage | ⬜ | GeoJSON points within field boundary |
-| 24.22 | Verify crop suitability — rice scores high for clay/wet profiles, wheat/corn for loam profiles | ⬜ | Spot-check 3 profiles × 3 crops |
-| 24.23 | Verify nutrient context — high-sand/low-CEC → "nutrient loss risk"; high-clay/high-CEC → "nutrient retentive" | ⬜ | |
-| 24.24 | Verify carbon estimates — SOC stock within plausible range (20–200 t/ha for 0–100cm) | ⬜ | |
-| 24.25 | Verify weather×soil stress — field with low AWC + dry 30-day window → drought stress flag | ⬜ | Requires weather data in DB |
-| 24.26 | Verify all new endpoints return proper 404 when soil data not yet fetched | ⬜ | |
-| 24.27 | Verify all disclaimers present on prescriptive/estimation features | ⬜ | Carbon, nutrient, crop suitability |
-| 24.28 | i18n validation — all new keys in en.json and es.json | ⬜ | |
-| 24.29 | `ruff check` + `ruff format --check` on all new/modified Python files | ⬜ | |
-| 24.30 | `npx tsc --noEmit` — zero type errors | ⬜ | |
-| 24.42 | Verify soil alerts — field with pH < 5.5 triggers acidic soil alert; field with normal values → no soil alerts | ⬜ | Run soil fetch, check alerts list |
-| 24.43 | Verify soil summary on share page — shared report includes soil card when data exists, omits when not | ⬜ | Test with and without soil data |
+| 24.21 | Verify sampling zones — generates 3–5 zones for a field with multi-pixel coverage | ✅ | GeoJSON points within field boundary |
+| 24.22 | Verify crop suitability — rice scores high for clay/wet profiles, wheat/corn for loam profiles | ✅ | Spot-check 3 profiles × 3 crops |
+| 24.23 | Verify nutrient context — high-sand/low-CEC → "nutrient loss risk"; high-clay/high-CEC → "nutrient retentive" | ✅ | |
+| 24.24 | Verify carbon estimates — SOC stock within plausible range (20–200 t/ha for 0–100cm) | ✅ | |
+| 24.25 | Verify weather×soil stress — field with low AWC + dry 30-day window → drought stress flag | ✅ | Requires weather data in DB |
+| 24.26 | Verify all new endpoints return proper 404 when soil data not yet fetched | ✅ | |
+| 24.27 | Verify all disclaimers present on prescriptive/estimation features | ✅ | Carbon, nutrient, crop suitability |
+| 24.28 | i18n validation — all new keys in en.json and es.json | ✅ | |
+| 24.29 | `ruff check` + `ruff format --check` on all new/modified Python files | ✅ | |
+| 24.30 | `npx tsc --noEmit` — zero type errors | ✅ | |
+| 24.42 | Verify soil alerts — field with pH < 5.5 triggers acidic soil alert; field with normal values → no soil alerts | ✅ | Run soil fetch, check alerts list |
+| 24.43 | Verify soil summary on share page — shared report includes soil card when data exists, omits when not | ✅ | Test with and without soil data |
 | 20.18 | Backend lint pass (`ruff check` + `ruff format`) | ✅ | All 6 modified files pass |

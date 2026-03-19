@@ -126,22 +126,7 @@ async def create_field(
             },
         )
     )
-    await db.flush()
-    logger.info(
-        "field_created",
-        field_id=str(field.id),
-        farm_id=str(body.farm_id),
-        name=body.name,
-    )
-
-    # Trigger weather backfill for new field (90 days of history)
-    from app.tasks.weather import backfill_weather_for_field
-
-    backfill_weather_for_field.delay(str(field.id))
-
-    # Trigger index backfill for new field (24 months of all vegetation indices)
-    # Create a sentinel job so the backfill-status endpoint immediately
-    # reports an active backfill (avoids race with async task startup).
+    # Sentinel job for backfill progress tracking
     sentinel = Job(
         org_id=ctx.org_id,
         field_id=field.id,
@@ -152,14 +137,24 @@ async def create_field(
     )
     db.add(sentinel)
     await db.flush()
+    logger.info(
+        "field_created",
+        field_id=str(field.id),
+        farm_id=str(body.farm_id),
+        name=body.name,
+    )
 
+    # Commit before dispatching Celery tasks so workers can find the
+    # field row in the DB (prevents race condition).
+    await db.commit()
+
+    # Trigger background tasks for the new field
+    from app.tasks.weather import backfill_weather_for_field
     from app.tasks.backfill import backfill_indices_for_field
-
-    backfill_indices_for_field.delay(str(field.id), sentinel_job_id=str(sentinel.id))
-
-    # Trigger soil data fetch for new field
     from app.tasks.soil import fetch_soil_for_field
 
+    backfill_weather_for_field.delay(str(field.id))
+    backfill_indices_for_field.delay(str(field.id), sentinel_job_id=str(sentinel.id))
     fetch_soil_for_field.delay(str(field.id))
 
     return _field_to_out(field)

@@ -144,10 +144,15 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={loadWeather}
-                    title={t("refresh")}
+                    onClick={data.length === 0 ? async () => { await handleBackfill(); setTimeout(loadWeather, 5000); } : loadWeather}
+                    disabled={backfilling}
+                    title={data.length === 0 ? t("fetchWeather") : t("refresh")}
                 >
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    {backfilling ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                        <RefreshCw className="h-3.5 w-3.5" />
+                    )}
                 </Button>
             </div>
 

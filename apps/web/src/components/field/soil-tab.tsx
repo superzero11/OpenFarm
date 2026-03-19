@@ -341,11 +341,6 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
                 <section>
                     <h3 className="text-xs font-semibold mb-2">{t("summary")}</h3>
                     <div className="space-y-2">
-                        {/* AWC bar */}
-                        {summary.rootzone_awc_mm != null && (
-                            <AwcBar awc={summary.rootzone_awc_mm} t={t} />
-                        )}
-
                         {/* Summary badges */}
                         <div className="flex flex-wrap gap-1.5">
                             {summary.dominant_texture && (
@@ -359,6 +354,11 @@ export default function SoilTab({ fieldId }: SoilTabProps) {
                                 value={qualityLabel(summary.data_quality_score, t)}
                             />
                         </div>
+
+                        {/* AWC bar */}
+                        {summary.rootzone_awc_mm != null && (
+                            <AwcBar awc={summary.rootzone_awc_mm} t={t} />
+                        )}
 
                         {/* SOC stock card */}
                         {summary.total_soc_stock_t_ha != null && (

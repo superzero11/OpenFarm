@@ -126,11 +126,12 @@ if [ ! -f .env ]; then
     echo "▸ Creating .env from template..."
     cp .env.example .env
 
-    # Generate random secrets
-    NEXTAUTH_SECRET=$(openssl rand -base64 32)
-    JWT_SECRET=$(openssl rand -base64 64)
-    POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=' | head -c 24)
-    MINIO_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=' | head -c 24)
+    # Generate random secrets (tr -d '\n': openssl wraps base64 at 76
+    # cols, and an embedded newline breaks the sed expressions below)
+    NEXTAUTH_SECRET=$(openssl rand -base64 32 | tr -d '\n')
+    JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
+    POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=\n' | head -c 24)
+    MINIO_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=\n' | head -c 24)
 
     # Apply generated secrets
     sed -i "s|POSTGRES_PASSWORD=openfarm_dev|POSTGRES_PASSWORD=$POSTGRES_PASSWORD|" .env

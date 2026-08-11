@@ -60,3 +60,5 @@ deploy/terraform/*.tfstate.*
 deploy/terraform/terraform.tfvars
 deploy/terraform/crash.log
 deploy/terraform/crash.*.log
+deploy/terraform/tfplan
+deploy/terraform/*.tfplan

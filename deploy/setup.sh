@@ -21,6 +21,23 @@ echo "────────────────────────�
 echo " OpenFarm — Server Setup"
 echo "──────────────────────────────────────────────────────────"
 
+# ── 0. Wait for apt locks ────────────────────────────────────────────
+# On first boot (cloud-init), unattended-upgrades often holds the apt
+# lock for several minutes; racing it kills the script under set -e.
+wait_for_apt() {
+    local waited=0
+    while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
+        if [ "$waited" -ge 600 ]; then
+            echo "✗ apt lock still held after 10 min, giving up" >&2
+            return 1
+        fi
+        echo "▸ Waiting for apt lock (held by another process)..."
+        sleep 10
+        waited=$((waited + 10))
+    done
+}
+wait_for_apt
+
 # ── 1. System updates ────────────────────────────────────────────────
 echo "▸ Updating system packages..."
 apt-get update -qq && apt-get upgrade -y -qq

@@ -20,6 +20,13 @@ write_files:
 
       INSTALL_DIR=/opt/openfarm
 
+      echo "── OpenFarm bootstrap: wait for apt ──────────────────────"
+      # First boot: unattended-upgrades may hold the apt lock for minutes.
+      while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
+          echo "waiting for apt lock..."
+          sleep 10
+      done
+
       echo "── OpenFarm bootstrap: clone ─────────────────────────────"
       if [ ! -d "$INSTALL_DIR" ]; then
           # setup.sh would clone too, but cloning first means we run the

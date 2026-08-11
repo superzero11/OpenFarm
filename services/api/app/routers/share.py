@@ -1,4 +1,4 @@
-"""Share links router — create, list, revoke, public read, tile proxy."""
+"""Share links router - create, list, revoke, public read, tile proxy."""
 
 from __future__ import annotations
 
@@ -179,7 +179,7 @@ async def get_shared_report(
     token: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Public endpoint — no auth required."""
+    """Public endpoint - no auth required."""
     result = await db.execute(select(ShareLink).where(ShareLink.token == token))
     link = result.scalar_one_or_none()
 
@@ -420,7 +420,7 @@ async def proxy_share_tile(
     db: Annotated[AsyncSession, Depends(get_db)],
     index_type: str = "NDVI",
 ):
-    """Public tile proxy — validates share token, proxies to TiTiler."""
+    """Public tile proxy - validates share token, proxies to TiTiler."""
     result = await db.execute(select(ShareLink).where(ShareLink.token == token))
     link = result.scalar_one_or_none()
 

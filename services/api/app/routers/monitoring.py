@@ -1,4 +1,4 @@
-"""Monitoring router — raster layers, field stats, tile URLs."""
+"""Monitoring router - raster layers, field stats, tile URLs."""
 
 from __future__ import annotations
 

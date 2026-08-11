@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# OpenFarm — Caddy Reverse Proxy Configuration
+# OpenFarm - Caddy Reverse Proxy Configuration
 #
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var.
 # Caddy auto-provisions Let's Encrypt SSL certificates.

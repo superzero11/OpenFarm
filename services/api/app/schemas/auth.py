@@ -1,4 +1,4 @@
-"""Pydantic schemas — users, orgs, invites."""
+"""Pydantic schemas - users, orgs, invites."""
 
 from __future__ import annotations
 

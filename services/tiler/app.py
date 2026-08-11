@@ -1,4 +1,4 @@
-"""OpenFarm TiTiler — custom TiTiler with JWT authentication.
+"""OpenFarm TiTiler - custom TiTiler with JWT authentication.
 
 Per PRD: TiTiler endpoints require a valid JWT so that only authenticated
 users can fetch NDVI tile imagery. The JWT is the same token minted by

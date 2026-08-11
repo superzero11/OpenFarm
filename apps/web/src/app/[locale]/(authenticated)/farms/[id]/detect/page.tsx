@@ -598,7 +598,7 @@ export default function DetectBoundariesPage() {
                 <LocationSearch onSelect={handleLocationSelect} />
             </div>
 
-            {/* Floating sidebar panel — right side */}
+            {/* Floating sidebar panel - right side */}
             <div className="absolute top-4 right-4 z-10 w-80 max-h-[calc(100vh-2rem)] flex flex-col">
                 <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col max-h-full">
                     {/* Panel header */}
@@ -658,9 +658,9 @@ export default function DetectBoundariesPage() {
                                                     area: bboxArea.toFixed(1),
                                                 })}
                                                 {bboxArea > MAX_AREA_KM2 &&
-                                                    ` — ${t("bboxTooLarge")}`}
+                                                    ` - ${t("bboxTooLarge")}`}
                                                 {bboxArea < MIN_AREA_KM2 &&
-                                                    ` — ${t("bboxTooSmall")}`}
+                                                    ` - ${t("bboxTooSmall")}`}
                                             </span>
                                         </div>
                                     )}
@@ -749,7 +749,7 @@ export default function DetectBoundariesPage() {
                                                         area:
                                                             selected.area_ha?.toFixed(
                                                                 2
-                                                            ) || "—",
+                                                            ) || "-",
                                                     })}
                                                 </p>
                                                 <p
@@ -949,7 +949,7 @@ export default function DetectBoundariesPage() {
                                                                         {b.area_ha?.toFixed(
                                                                             2
                                                                         ) ||
-                                                                            "—"}{" "}
+                                                                            "-"}{" "}
                                                                         ha
                                                                     </p>
                                                                 </button>

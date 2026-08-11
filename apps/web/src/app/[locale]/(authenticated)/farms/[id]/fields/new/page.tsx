@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import dynamic from "next/dynamic";
 import { fieldsApi } from "@/lib/api";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, ChevronDown, ChevronUp, Check, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import type maplibregl from "maplibre-gl";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
 
-// Dynamic imports — these need browser APIs
+// Dynamic imports - these need browser APIs
 const DrawMap = dynamic(() => import("@/components/map/draw-map"), {
     ssr: false,
     loading: () => (
@@ -100,7 +100,7 @@ export default function NewFieldPage() {
                 <DrawMap onGeometryChange={handleGeomChange} onMapReady={setMapInstance} />
             </div>
 
-            {/* Back button + Style switcher + Search — top left */}
+            {/* Back button + Style switcher + Search - top left */}
             <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
                 <Link
                     href={`/farms/${farmId}`}
@@ -113,10 +113,10 @@ export default function NewFieldPage() {
                 <LocationSearch onSelect={handleLocationSelect} />
             </div>
 
-            {/* Floating field details panel — top right */}
+            {/* Floating field details panel - top right */}
             <div className="absolute top-4 right-4 z-10 w-80">
                 <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden">
-                    {/* Panel header — always visible, acts as toggle */}
+                    {/* Panel header - always visible, acts as toggle */}
                     <button
                         type="button"
                         onClick={() => setPanelOpen(!panelOpen)}
@@ -174,8 +174,9 @@ export default function NewFieldPage() {
                                 </div>
 
                                 {/* Geometry status */}
-                                <div className={`rounded-lg p-2.5 text-xs font-medium ${geometry ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                                    {geometry ? `✓ ${t("polygonDrawn")}` : `⚠ ${t("drawPolygon")}`}
+                                <div className={`flex items-center gap-1.5 rounded-lg p-2.5 text-xs font-medium ${geometry ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                                    {geometry ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />}
+                                    {geometry ? t("polygonDrawn") : t("drawPolygon")}
                                 </div>
 
                                 <Button

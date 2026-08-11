@@ -29,6 +29,7 @@ import {
     Mail,
     X,
     Clock,
+    Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -554,7 +555,7 @@ export default function SettingsPage() {
                                                                             onClick={() => handleRoleChange(member.user_id, r)}
                                                                             className="capitalize"
                                                                         >
-                                                                            {r === member.role && <span className="mr-2">✓</span>}
+                                                                            {r === member.role && <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
                                                                             {r}
                                                                         </DropdownMenuItem>
                                                                     ))}

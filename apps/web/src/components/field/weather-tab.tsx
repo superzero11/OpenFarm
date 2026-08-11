@@ -66,7 +66,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
             setForecast(res.forecast);
             setSummary(res.summary);
         } catch {
-            // silent — empty state shown
+            // silent - empty state shown
         } finally {
             setLoading(false);
         }
@@ -174,7 +174,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         <div className="col-span-2 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("avgTemp")}</p>
                             <p className="text-lg font-bold leading-tight mt-0.5 text-orange-600 dark:text-orange-400">
-                                {summary.avg_temperature != null ? `${summary.avg_temperature.toFixed(1)}°C` : "—"}
+                                {summary.avg_temperature != null ? `${summary.avg_temperature.toFixed(1)}°C` : "-"}
                             </p>
                             {summary.min_temperature != null && summary.max_temperature != null && (
                                 <p className="text-[10px] text-muted-foreground mt-0.5">{summary.min_temperature.toFixed(1)}° – {summary.max_temperature.toFixed(1)}°</p>
@@ -183,7 +183,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         <div className="col-span-2 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("totalPrecip")}</p>
                             <p className="text-lg font-bold leading-tight mt-0.5 text-blue-600 dark:text-blue-400">
-                                {summary.total_precipitation != null ? `${summary.total_precipitation.toFixed(1)} mm` : "—"}
+                                {summary.total_precipitation != null ? `${summary.total_precipitation.toFixed(1)} mm` : "-"}
                             </p>
                         </div>
 
@@ -191,19 +191,19 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         <div className="col-span-2 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("waterDeficit")}</p>
                             <p className={`text-lg font-bold leading-tight mt-0.5 ${summary.water_deficit_mm != null && summary.water_deficit_mm < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-                                {summary.water_deficit_mm != null ? `${summary.water_deficit_mm.toFixed(1)} mm` : "—"}
+                                {summary.water_deficit_mm != null ? `${summary.water_deficit_mm.toFixed(1)} mm` : "-"}
                             </p>
                         </div>
                         <div className="col-span-1 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("gddCumulative")}</p>
                             <p className="text-lg font-bold leading-tight mt-0.5 text-amber-600 dark:text-amber-400">
-                                {summary.gdd_cumulative != null ? `${summary.gdd_cumulative.toFixed(0)}` : "—"}
+                                {summary.gdd_cumulative != null ? `${summary.gdd_cumulative.toFixed(0)}` : "-"}
                             </p>
                         </div>
                         <div className="col-span-1 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("soilMoisture")}</p>
                             <p className="text-lg font-bold leading-tight mt-0.5 text-cyan-600 dark:text-cyan-400">
-                                {summary.avg_soil_moisture_top != null ? `${(summary.avg_soil_moisture_top * 100).toFixed(0)}%` : "—"}
+                                {summary.avg_soil_moisture_top != null ? `${(summary.avg_soil_moisture_top * 100).toFixed(0)}%` : "-"}
                             </p>
                         </div>
 
@@ -241,7 +241,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                 </div>
             )}
 
-            {/* Temperature & Precipitation chart — in card */}
+            {/* Temperature & Precipitation chart - in card */}
             <div className="rounded-lg border bg-card p-3 shadow-sm">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     {t("tempAndPrecip")}
@@ -249,7 +249,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                 <WeatherChart data={data} height={200} />
             </div>
 
-            {/* ET₀ & Water Balance chart — in card */}
+            {/* ET₀ & Water Balance chart - in card */}
             <div className="rounded-lg border bg-card p-3 shadow-sm">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     {t("waterBalanceTitle")}
@@ -257,7 +257,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                 <WaterBalanceChart data={data} height={180} />
             </div>
 
-            {/* Soil Moisture by Depth — in card */}
+            {/* Soil Moisture by Depth - in card */}
             {data.length > 0 && data[data.length - 1].soil_moisture_0_1cm != null && (
                 <div className="rounded-lg border bg-card p-3 shadow-sm">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
@@ -267,7 +267,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                 </div>
             )}
 
-            {/* Soil Temperature by Depth — in card */}
+            {/* Soil Temperature by Depth - in card */}
             {data.length > 0 && data[data.length - 1].soil_temperature_0cm != null && (
                 <div className="rounded-lg border bg-card p-3 shadow-sm">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">

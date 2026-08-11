@@ -1,16 +1,16 @@
 #!/bin/sh
 
-echo "🔍 Running pre-commit checks..."
+echo "Running pre-commit checks..."
 
 # ── Web: lint + type-check ───────────────────────────────────────────
 CHANGED_WEB=$(git diff --cached --name-only -- 'apps/web/')
 if [ -n "$CHANGED_WEB" ]; then
   echo "▸ Web: lint"
   cd apps/web
-  npm run lint --silent || { echo "❌ Web lint failed"; exit 1; }
+  npm run lint --silent || { echo "FAIL: Web lint failed"; exit 1; }
 
   echo "▸ Web: type-check"
-  npm run type-check --silent || { echo "❌ Web type-check failed"; exit 1; }
+  npm run type-check --silent || { echo "FAIL: Web type-check failed"; exit 1; }
   cd ../..
 fi
 
@@ -19,11 +19,11 @@ CHANGED_API=$(git diff --cached --name-only -- 'services/api/')
 if [ -n "$CHANGED_API" ]; then
   echo "▸ API: ruff check"
   cd services/api
-  ruff check . || python3 -m ruff check . || { echo "❌ API ruff check failed"; exit 1; }
+  ruff check . || python3 -m ruff check . || { echo "FAIL: API ruff check failed"; exit 1; }
 
   echo "▸ API: ruff format"
-  ruff format --check . || python3 -m ruff format --check . || { echo "❌ API ruff format failed"; exit 1; }
+  ruff format --check . || python3 -m ruff format --check . || { echo "FAIL: API ruff format failed"; exit 1; }
   cd ../..
 fi
 
-echo "✅ All checks passed"
+echo "OK: All checks passed"

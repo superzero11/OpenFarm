@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models — mirrors 0001_initial_schema.py."""
+"""SQLAlchemy ORM models - mirrors 0001_initial_schema.py."""
 
 from __future__ import annotations
 

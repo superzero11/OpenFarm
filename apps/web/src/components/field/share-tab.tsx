@@ -187,7 +187,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                                 key={link.id}
                                 className="rounded-lg border bg-card shadow-sm p-3 space-y-2.5"
                             >
-                                {/* URL — allow wrapping so it's fully visible */}
+                                {/* URL - allow wrapping so it's fully visible */}
                                 <code className="block text-[11px] bg-muted px-2.5 py-2 rounded font-mono break-all select-all leading-relaxed">
                                     {getShareUrl(link.token)}
                                 </code>
@@ -198,7 +198,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                                     {formatExpiry(link.expires_at)}
                                 </div>
 
-                                {/* Actions — full-width row of equal buttons */}
+                                {/* Actions - full-width row of equal buttons */}
                                 <div className="flex gap-1.5">
                                     <Button
                                         variant="outline"

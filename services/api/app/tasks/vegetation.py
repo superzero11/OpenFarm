@@ -1,4 +1,4 @@
-"""Vegetation index tasks — EVI, SAVI, NDWI.
+"""Vegetation index tasks - EVI, SAVI, NDWI.
 
 Each task follows the same 7-step pipeline as NDVI but uses the
 index registry for formula selection, band resolution, and alert defaults.

@@ -6,7 +6,7 @@ const logger = rootLogger.child({ component: "health" });
 /**
  * GET /api/health
  *
- * Health check — verifies API service reachability.
+ * Health check - verifies API service reachability.
  */
 export async function GET() {
     // Use INTERNAL_API_URL for server-side (container-to-container) requests,

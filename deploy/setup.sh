@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# OpenFarm — Server Setup Script
+# OpenFarm - Server Setup Script
 #
 # Provisions a fresh Ubuntu 22.04+ server (AMD64 or ARM64) for OpenFarm.
 # Run as root or with sudo on the target server.
@@ -18,7 +18,7 @@ REPO_BRANCH="${REPO_BRANCH:-main}"
 INSTALL_DIR="/opt/openfarm"
 
 echo "──────────────────────────────────────────────────────────"
-echo " OpenFarm — Server Setup"
+echo " OpenFarm - Server Setup"
 echo "──────────────────────────────────────────────────────────"
 
 # ── 0. Wait for apt locks ────────────────────────────────────────────
@@ -28,7 +28,7 @@ wait_for_apt() {
     local waited=0
     while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do
         if [ "$waited" -ge 600 ]; then
-            echo "✗ apt lock still held after 10 min, giving up" >&2
+            echo "ERROR: apt lock still held after 10 min, giving up" >&2
             return 1
         fi
         echo "▸ Waiting for apt lock (held by another process)..."
@@ -88,7 +88,7 @@ ufw allow 443/tcp   # HTTPS
 ufw --force enable
 
 # Oracle Cloud Ubuntu images ship netfilter-persistent rules ending in a
-# blanket REJECT that ufw does not override — insert explicit ACCEPTs.
+# blanket REJECT that ufw does not override - insert explicit ACCEPTs.
 if [ -f /etc/iptables/rules.v4 ]; then
     echo "▸ Opening 80/443 in OCI iptables rules..."
     for p in 80 443; do
@@ -148,7 +148,7 @@ if [ ! -f .env ]; then
     echo "  ║  You still need to configure:                        ║"
     echo "  ║    1. GOOGLE_CLIENT_ID                               ║"
     echo "  ║    2. GOOGLE_CLIENT_SECRET                           ║"
-    echo "  ║    3. DOMAIN (in .env — for Caddy SSL)               ║"
+    echo "  ║    3. DOMAIN (in .env - for Caddy SSL)               ║"
     echo "  ║    4. NEXTAUTH_URL (https://your-domain.com)         ║"
     echo "  ║    5. NEXT_PUBLIC_API_URL (https://your-domain.com/v1)║"
     echo "  ║    6. CORS_ORIGINS (https://your-domain.com)         ║"
@@ -163,7 +163,7 @@ fi
 # ── 9. Summary ───────────────────────────────────────────────────────
 echo ""
 echo "──────────────────────────────────────────────────────────"
-echo " ✅ Server setup complete!"
+echo " Server setup complete!"
 echo ""
 echo " Next steps:"
 echo "   1. Edit .env:     nano $INSTALL_DIR/.env"

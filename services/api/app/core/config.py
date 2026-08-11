@@ -1,4 +1,4 @@
-"""OpenFarm API — Core configuration."""
+"""OpenFarm API - Core configuration."""
 
 from pydantic_settings import BaseSettings
 

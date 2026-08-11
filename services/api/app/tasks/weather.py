@@ -1,4 +1,4 @@
-"""Weather data tasks — fetch from Open-Meteo, compute agricultural indices.
+"""Weather data tasks - fetch from Open-Meteo, compute agricultural indices.
 
 Daily polling + historical backfill via Celery Beat.
 """
@@ -32,7 +32,7 @@ DAILY_VARIABLES = [
     "wind_speed_10m_max",
 ]
 
-# Open-Meteo hourly variables (soil, VPD, cloud — aggregated to daily by us)
+# Open-Meteo hourly variables (soil, VPD, cloud - aggregated to daily by us)
 HOURLY_VARIABLES = [
     "soil_temperature_0cm",
     "soil_temperature_6cm",

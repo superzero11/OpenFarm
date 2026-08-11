@@ -1,4 +1,4 @@
-"""Jobs router — create vegetation index jobs, get job status."""
+"""Jobs router - create vegetation index jobs, get job status."""
 
 from __future__ import annotations
 

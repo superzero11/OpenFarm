@@ -70,7 +70,7 @@ export default function BaseMap({
 
         map.addControl(new maplibregl.NavigationControl(), "top-left");
 
-        // My Location button — custom control below nav controls
+        // My Location button - custom control below nav controls
         const geolocateCtrl = {
             _container: null as HTMLDivElement | null,
             _marker: null as maplibregl.Marker | null,

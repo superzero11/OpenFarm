@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir -e ".[all]" 2>/dev/null || pip install --no-cache
 COPY requirements-ml.txt .
 RUN pip install --no-cache-dir -r requirements-ml.txt
 
-# ── App code (changes frequently — this layer rebuilds on every code edit) ──
+# ── App code (changes frequently - this layer rebuilds on every code edit) ──
 COPY . .
 
 # Create model cache directory

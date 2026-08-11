@@ -1,4 +1,4 @@
-"""Soil intelligence — derived analytics computed from soil + weather data.
+"""Soil intelligence - derived analytics computed from soil + weather data.
 
 Contains computation functions for:
 - Sampling zone recommendations (within-field variability)
@@ -1328,7 +1328,7 @@ def compute_sampling_zones(
             "properties": {
                 "zone_type": "reference",
                 "priority": 1,
-                "rationale": "Field centroid — baseline reference point",
+                "rationale": "Field centroid - baseline reference point",
             },
         }
     )
@@ -1346,7 +1346,7 @@ def compute_sampling_zones(
                     "zone_type": "high_clay_variability",
                     "priority": 2,
                     "rationale": f"High clay variation ({variability['clay']:.0f}% range across depths)"
-                    " — verify texture transition",
+                    " - verify texture transition",
                 },
             }
         )
@@ -1364,7 +1364,7 @@ def compute_sampling_zones(
                     "zone_type": "high_soc_variability",
                     "priority": 2,
                     "rationale": f"High SOC variation ({variability['soc']:.1f} g/kg difference)"
-                    " — check organic matter distribution",
+                    " - check organic matter distribution",
                 },
             }
         )
@@ -1382,7 +1382,7 @@ def compute_sampling_zones(
                     "zone_type": "ph_variability",
                     "priority": 2 if variability["ph"] > 1.5 else 3,
                     "rationale": f"pH varies by {variability['ph']:.1f} units across depth"
-                    " — check liming needs",
+                    " - check liming needs",
                 },
             }
         )
@@ -1402,7 +1402,7 @@ def compute_sampling_zones(
                     "properties": {
                         "zone_type": "water_holding_variability",
                         "priority": 3,
-                        "rationale": "High AWC variability — verify water-holding capacity",
+                        "rationale": "High AWC variability - verify water-holding capacity",
                     },
                 }
             )
@@ -1422,7 +1422,7 @@ def compute_sampling_zones(
                 "properties": {
                     "zone_type": "field_boundary",
                     "priority": 3,
-                    "rationale": "Field boundary zone — edge effects and compaction risk",
+                    "rationale": "Field boundary zone - edge effects and compaction risk",
                 },
             }
         )
@@ -1451,7 +1451,7 @@ def assess_crop_suitability(
 
     Pillars (when weather available):
         Soil Fit (40%) + Water Match (25%) + Climate Fit (20%) + Stress Resilience (15%)
-    Without weather data returns empty list — caller should block.
+    Without weather data returns empty list - caller should block.
 
     Args:
         summary: Field soil summary dict (avg_ph, rootzone_awc_mm, etc.)
@@ -2039,7 +2039,7 @@ def compute_soil_weather_stress(
                 status = "wet_stress"
                 factors.append(f"Moderate water surplus ({water_balance_30d_mm:.0f}mm)")
     else:
-        # Within bounds — check if approaching stress
+        # Within bounds - check if approaching stress
         water_ratio = water_balance_30d_mm / awc if awc > 0 else 0
         if water_ratio < -0.5:
             severity = 0.3
@@ -2068,10 +2068,10 @@ def compute_soil_weather_stress(
             factors.append(f"High top-soil moisture ({soil_moisture_top:.3f})")
 
     statuses = {
-        "drought_stress": "Dry stress — water deficit exceeds rootzone capacity",
+        "drought_stress": "Dry stress - water deficit exceeds rootzone capacity",
         "approaching_drought": "Approaching moisture deficit",
         "optimal": "Adequate moisture conditions",
-        "wet_stress": "Wet stress — waterlogging risk present",
+        "wet_stress": "Wet stress - waterlogging risk present",
         "unknown": "Insufficient data",
     }
 
@@ -2166,7 +2166,7 @@ def evaluate_soil_alerts(
                 SoilAlertCandidate(
                     rule_name="soil_ph_very_low",
                     severity="high",
-                    message=f"Very low soil pH ({ph:.1f}) — aluminum toxicity risk",
+                    message=f"Very low soil pH ({ph:.1f}) - aluminum toxicity risk",
                     soil_context={"ph": ph, "threshold": 4.5},
                 )
             )
@@ -2175,7 +2175,7 @@ def evaluate_soil_alerts(
                 SoilAlertCandidate(
                     rule_name="soil_ph_low",
                     severity="medium",
-                    message=f"Low soil pH ({ph:.1f}) — may limit nutrient availability",
+                    message=f"Low soil pH ({ph:.1f}) - may limit nutrient availability",
                     soil_context={"ph": ph, "threshold": 5.5},
                 )
             )
@@ -2187,7 +2187,7 @@ def evaluate_soil_alerts(
                 SoilAlertCandidate(
                     rule_name="soil_soc_very_low",
                     severity="high",
-                    message=f"Very low organic carbon ({topsoil_soc:.1f} g/kg) — soil health concern",
+                    message=f"Very low organic carbon ({topsoil_soc:.1f} g/kg) - soil health concern",
                     soil_context={
                         "soc_g_kg": round(topsoil_soc, 1),
                         "depth": "0-30cm",
@@ -2200,7 +2200,7 @@ def evaluate_soil_alerts(
                 SoilAlertCandidate(
                     rule_name="soil_soc_low",
                     severity="medium",
-                    message=f"Low organic carbon ({topsoil_soc:.1f} g/kg) — consider organic amendments",
+                    message=f"Low organic carbon ({topsoil_soc:.1f} g/kg) - consider organic amendments",
                     soil_context={
                         "soc_g_kg": round(topsoil_soc, 1),
                         "depth": "0-30cm",
@@ -2209,24 +2209,24 @@ def evaluate_soil_alerts(
                 )
             )
 
-    # Sand alert — high leaching risk
+    # Sand alert - high leaching risk
     if topsoil_sand is not None and topsoil_sand > 80:
         alerts.append(
             SoilAlertCandidate(
                 rule_name="soil_sand_high",
                 severity="medium",
-                message=f"High sand content ({topsoil_sand:.0f}%) — high nutrient leaching risk",
+                message=f"High sand content ({topsoil_sand:.0f}%) - high nutrient leaching risk",
                 soil_context={"sand_pct": round(topsoil_sand, 1), "threshold": 80.0},
             )
         )
 
-    # CEC alert — low nutrient retention
+    # CEC alert - low nutrient retention
     if topsoil_cec is not None and topsoil_cec < 5.0:
         alerts.append(
             SoilAlertCandidate(
                 rule_name="soil_cec_low",
                 severity="medium",
-                message=f"Very low CEC ({topsoil_cec:.1f} cmol/kg) — poor nutrient retention",
+                message=f"Very low CEC ({topsoil_cec:.1f} cmol/kg) - poor nutrient retention",
                 soil_context={"cec_cmol_kg": round(topsoil_cec, 1), "threshold": 5.0},
             )
         )
@@ -2237,7 +2237,7 @@ def evaluate_soil_alerts(
             SoilAlertCandidate(
                 rule_name="soil_compaction",
                 severity="high" if compaction > 0.8 else "medium",
-                message=f"High compaction risk (score: {compaction:.2f}) — may restrict root growth",
+                message=f"High compaction risk (score: {compaction:.2f}) - may restrict root growth",
                 soil_context={"compaction_risk": compaction, "threshold": 0.6},
             )
         )

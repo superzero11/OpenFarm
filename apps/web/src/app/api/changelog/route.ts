@@ -4,7 +4,7 @@ import path from "node:path";
 
 /**
  * Serve CHANGELOG.md content as JSON.
- * The file lives at the monorepo root — two levels above apps/web.
+ * The file lives at the monorepo root - two levels above apps/web.
  */
 export async function GET() {
     // In Docker (standalone output), the file is copied to public/ at build time.

@@ -1,4 +1,4 @@
-"""Uploads router — presigned URL for direct-to-MinIO photo upload."""
+"""Uploads router - presigned URL for direct-to-MinIO photo upload."""
 
 from __future__ import annotations
 

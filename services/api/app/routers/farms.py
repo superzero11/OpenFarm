@@ -1,4 +1,4 @@
-"""Farms router — CRUD with soft-delete."""
+"""Farms router - CRUD with soft-delete."""
 
 from __future__ import annotations
 

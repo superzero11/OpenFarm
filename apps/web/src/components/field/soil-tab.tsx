@@ -78,7 +78,7 @@ function awcColor(mm: number): string {
 }
 
 function qualityLabel(score: number | null, t: (key: string) => string): string {
-    if (score == null) return "—";
+    if (score == null) return "-";
     if (score >= 0.7) return t("qualityHigh");
     if (score >= 0.4) return t("qualityMedium");
     return t("qualityLow");
@@ -196,7 +196,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
         }
 
         return () => {
-            // Don't remove on unmount — keep markers while tab switches
+            // Don't remove on unmount - keep markers while tab switches
         };
     }, [mapInstance, samplingZones]);
 
@@ -228,7 +228,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             const priorityLabel = props.priority === 1 ? "High" : props.priority === 2 ? "Medium" : "Low";
             const zoneLabel = (props.zone_type as string).replace(/_/g, " ");
             const html = `<div class="openfarm-popup-body">
-                <div class="openfarm-popup-title">🎯 Sampling Zone</div>
+                <div class="openfarm-popup-title">Sampling Zone</div>
                 <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${props.color}"></span>
                     <span style="font-weight:500;text-transform:capitalize">${zoneLabel}</span>
@@ -316,7 +316,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     pollRef.current = null;
                     if (job.status === "completed") {
                         toast.success(t("refreshComplete"));
-                        // Reload data with retry — API may be briefly busy
+                        // Reload data with retry - API may be briefly busy
                         const reload = async (retries = 3) => {
                             for (let i = 0; i < retries; i++) {
                                 try {
@@ -335,7 +335,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     setTimeout(() => setActiveJob(null), 3000);
                 }
             } catch {
-                // poll error — keep trying
+                // poll error - keep trying
             }
         },
         [loadData, t],
@@ -405,7 +405,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
         );
     }
 
-    /* Empty state — no soil profile yet */
+    /* Empty state - no soil profile yet */
     if (!profile) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -1000,7 +1000,7 @@ function DepthBar({
                 </TooltipContent>
             </Tooltip>
             <span className="text-[10px] text-muted-foreground w-[72px] shrink-0 truncate">
-                {layer.texture_class ?? "—"}
+                {layer.texture_class ?? "-"}
             </span>
         </div>
     );

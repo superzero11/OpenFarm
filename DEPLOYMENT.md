@@ -7,7 +7,7 @@ This guide uses **Oracle Cloud Free Tier** (always-free ARM VM with 12 GB RAM), 
 ## Option A: Automated (Terraform, Oracle Cloud)
 
 One `terraform apply` provisions the network, the always-free ARM VM, and
-boots the full stack via cloud-init — only the DNS A record and the Google
+boots the full stack via cloud-init - only the DNS A record and the Google
 OAuth redirect URI stay manual. See **[deploy/terraform/README.md](deploy/terraform/README.md)**.
 
 ## Option B: Manual
@@ -19,8 +19,8 @@ Ubuntu 22.04+ server.
 
 ## Prerequisites
 
-- A domain name (e.g., `openfarm.example.com`) — free from [Freenom](https://freenom.com) or your registrar
-- Google OAuth credentials — [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+- A domain name (e.g., `openfarm.example.com`) - free from [Freenom](https://freenom.com) or your registrar
+- Google OAuth credentials - [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 - SSH client on your local machine
 
 ---
@@ -31,7 +31,7 @@ Ubuntu 22.04+ server.
 2. Go to **Compute → Instances → Create Instance**
 3. Configure:
    - **Image**: Ubuntu 22.04 (or 24.04)
-   - **Shape**: Ampere A1 — **2 OCPUs, 12 GB RAM** (free tier max)
+   - **Shape**: Ampere A1 - **2 OCPUs, 12 GB RAM** (free tier max)
    - **Boot volume**: 100 GB
    - **Networking**: assign a public IP, add your SSH key
 4. Click **Create**
@@ -39,7 +39,7 @@ Ubuntu 22.04+ server.
 
 ### Open Firewall Ports (Oracle Cloud specific)
 
-Oracle Cloud has **two firewalls** — the VCN security list and the OS firewall. You must open both.
+Oracle Cloud has **two firewalls** - the VCN security list and the OS firewall. You must open both.
 
 #### VCN Security List (Oracle Cloud Console):
 1. Go to **Networking → Virtual Cloud Networks → your VCN → Security Lists → Default**
@@ -159,7 +159,7 @@ Internal network (not exposed):
     ├── db:5432        (PostgreSQL + PostGIS)
     ├── redis:6379     (Celery broker + cache)
     ├── minio:9000     (Object storage)
-    └── processor      (Celery worker — NDVI pipeline)
+    └── processor      (Celery worker - NDVI pipeline)
 ```
 
 ---
@@ -225,7 +225,7 @@ sudo crontab -e
 **Restore from backup:**
 
 ```bash
-# From custom format (.dump) — recommended
+# From custom format (.dump) - recommended
 sudo docker compose exec -T db pg_restore -U openfarm -d openfarm --clean < backups/openfarm_20260215_020000.dump
 
 # From SQL format (.sql.gz)
@@ -255,9 +255,9 @@ mc ilm rule add local/openfarm --noncurrent-expire-days 30
 ```
 
 **What versioning protects:**
-- `cogs/{org}/{field}/{date}/ndvi.tif` — NDVI raster layers (re-processable but slow)
-- `photos/{org}/{uuid}.{ext}` — Scouting observation photos (not recoverable)
-- `basemap/` — PMTiles basemap (re-downloadable)
+- `cogs/{org}/{field}/{date}/ndvi.tif` - NDVI raster layers (re-processable but slow)
+- `photos/{org}/{uuid}.{ext}` - Scouting observation photos (not recoverable)
+- `basemap/` - PMTiles basemap (re-downloadable)
 
 ### WAL Archiving (Point-in-Time Recovery)
 
@@ -270,7 +270,7 @@ sudo mkdir -p /opt/openfarm/wal-archive
 sudo chown 999:999 /opt/openfarm/wal-archive  # postgres container UID
 ```
 
-**2. Add PostgreSQL config overrides** — create `deploy/postgresql.conf`:
+**2. Add PostgreSQL config overrides** - create `deploy/postgresql.conf`:
 
 ```ini
 # WAL archiving for PITR
@@ -280,7 +280,7 @@ archive_command = 'cp %p /var/lib/postgresql/wal-archive/%f'
 archive_timeout = 300
 ```
 
-**3. Mount in Docker Compose** — add to `docker-compose.prod.yml` db service:
+**3. Mount in Docker Compose** - add to `docker-compose.prod.yml` db service:
 
 ```yaml
 db:
@@ -308,7 +308,7 @@ sudo docker compose exec db pg_basebackup -U openfarm -D /tmp/basebackup -Ft -z
 # 3. Set recovery_target_time in postgresql.conf:
 #    recovery_target_time = '2026-02-15 14:30:00 UTC'
 #    restore_command = 'cp /var/lib/postgresql/wal-archive/%f %p'
-# 4. Start PostgreSQL — it will replay WAL up to the target time
+# 4. Start PostgreSQL - it will replay WAL up to the target time
 
 sudo docker compose up -d
 ```

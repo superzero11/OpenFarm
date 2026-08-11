@@ -331,7 +331,7 @@ export function Sidebar() {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        {/* Theme toggle + Language switcher — row when expanded, stacked when collapsed */}
+                        {/* Theme toggle + Language switcher - row when expanded, stacked when collapsed */}
                         <div className={`flex ${expanded ? "justify-center gap-1" : "flex-col items-center gap-1"} pt-1`}>
                             <ThemeToggle />
                             <LanguageSwitcher side="right" align="end" />

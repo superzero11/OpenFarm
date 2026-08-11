@@ -1,4 +1,4 @@
-"""Rate limiting configuration — shared limiter instance."""
+"""Rate limiting configuration - shared limiter instance."""
 
 from __future__ import annotations
 

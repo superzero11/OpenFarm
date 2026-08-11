@@ -17,7 +17,7 @@ const PROTOMAPS = process.env.NEXT_PUBLIC_PROTOMAPS_URL || "";
 const API_RAW = process.env.NEXT_PUBLIC_API_URL || "";
 const MINIO_RAW = process.env.NEXT_PUBLIC_MINIO_URL || "";
 
-// CSP needs origins only (no paths) — extract scheme+host+port
+// CSP needs origins only (no paths) - extract scheme+host+port
 function toOrigin(url) {
     try { return new URL(url).origin; } catch { return ""; }
 }

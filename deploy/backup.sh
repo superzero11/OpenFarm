@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
-# OpenFarm — Automated PostgreSQL Backup Script
+# OpenFarm - Automated PostgreSQL Backup Script
 #
 # Usage:
 #   ./deploy/backup.sh              # Manual run
@@ -81,11 +81,11 @@ if [ "${UPLOAD_TO_MINIO}" = "true" ]; then
             "${MINIO_ALIAS}/${MINIO_BUCKET}/${MINIO_BACKUP_PREFIX}/${BACKUP_FILE}"
         log "Upload complete"
     else
-        log "WARNING: mc (MinIO client) not found — skipping upload"
+        log "WARNING: mc (MinIO client) not found - skipping upload"
     fi
 fi
 
-# ── Retention — delete backups older than N days ──────────────
+# ── Retention - delete backups older than N days ──────────────
 
 log "Pruning local backups older than ${RETENTION_DAYS} days..."
 PRUNED=$(find "${BACKUP_DIR}" -name "openfarm_*.dump" -o -name "openfarm_*.sql.gz" \

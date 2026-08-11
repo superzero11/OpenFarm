@@ -1,4 +1,4 @@
-"""Scouting router — CRUD for scouting observations."""
+"""Scouting router - CRUD for scouting observations."""
 
 from __future__ import annotations
 

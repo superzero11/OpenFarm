@@ -1,4 +1,4 @@
-"""NDVI processing task — backward-compatible entry point.
+"""NDVI processing task - backward-compatible entry point.
 
 Delegates to the shared vegetation-index pipeline (``pipeline.py``).
 The Celery task name ``app.tasks.ndvi.process_ndvi`` is preserved so
@@ -40,7 +40,7 @@ logger = structlog.get_logger()
     soft_time_limit=1500,
 )
 def process_ndvi(self, job_id: str) -> dict:
-    """Process NDVI for a field — delegates to the shared pipeline."""
+    """Process NDVI for a field - delegates to the shared pipeline."""
     from app.models.tables import Job, Field, FieldStat
 
     index_def = get_index("ndvi")

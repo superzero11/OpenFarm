@@ -363,7 +363,7 @@ export default function FieldDetailPage() {
         [mapInstance],
     );
 
-    // Map style change — poll isStyleLoaded() to re-add layers reliably
+    // Map style change - poll isStyleLoaded() to re-add layers reliably
     const handleStyleChange = useCallback(
         (styleId: MapStyleId) => {
             if (!mapInstance) return;
@@ -484,14 +484,14 @@ export default function FieldDetailPage() {
                 <LocationSearch onSelect={handleLocationSelect} />
             </div>
 
-            {/* Index Legend — bottom-left, visible when overlay is active */}
+            {/* Index Legend - bottom-left, visible when overlay is active */}
             {indexLayer && (
                 <div className="absolute bottom-6 left-4 z-20 transition-opacity duration-200">
                     <NdviLegend layer={indexLayer} indexType={activeIndexType} />
                 </div>
             )}
 
-            {/* Floating index selector — bottom-center, visible on Monitor tab when indices exist */}
+            {/* Floating index selector - bottom-center, visible on Monitor tab when indices exist */}
             {activeTab === "ndvi" && availableTypes.length > 0 && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
                     <div className="flex gap-1 rounded-lg border border-border/50 bg-background/90 backdrop-blur-sm shadow-lg p-1">
@@ -513,7 +513,7 @@ export default function FieldDetailPage() {
                 </div>
             )}
 
-            {/* Sidebar toggle button — always visible */}
+            {/* Sidebar toggle button - always visible */}
             <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -528,7 +528,7 @@ export default function FieldDetailPage() {
                 )}
             </button>
 
-            {/* Floating tabbed sidebar — right */}
+            {/* Floating tabbed sidebar - right */}
             <div
                 className={`absolute top-4 right-4 bottom-4 z-10 w-[440px] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
                     }`}
@@ -673,20 +673,20 @@ export default function FieldDetailPage() {
                                                     value={
                                                         field.area_ha
                                                             ? `${field.area_ha.toFixed(2)} ha`
-                                                            : "—"
+                                                            : "-"
                                                     }
                                                 />
                                                 <InfoRow
                                                     label={t("cropType")}
-                                                    value={field.crop_type || "—"}
+                                                    value={field.crop_type || "-"}
                                                 />
                                                 <InfoRow
                                                     label={t("season")}
-                                                    value={field.season || "—"}
+                                                    value={field.season || "-"}
                                                 />
                                                 <InfoRow
                                                     label={t("tags")}
-                                                    value={field.tags?.join(", ") || "—"}
+                                                    value={field.tags?.join(", ") || "-"}
                                                 />
                                                 <InfoRow
                                                     label={t("created")}

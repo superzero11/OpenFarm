@@ -1,11 +1,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# OpenFarm — Development Docker Compose
+# OpenFarm - Development Docker Compose
 #
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 #
 # Exposes service ports to localhost for local development and debugging.
-# Not used in production — see docker-compose.prod.yml instead.
+# Not used in production - see docker-compose.prod.yml instead.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:

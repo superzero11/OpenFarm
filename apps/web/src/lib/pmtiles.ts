@@ -4,7 +4,7 @@
  * PMTiles protocol registration for MapLibre GL JS.
  *
  * Per PRD: "MapLibre JS pmtiles protocol plugin reads tiles via HTTP range
- * requests directly from object storage — no tile server needed."
+ * requests directly from object storage - no tile server needed."
  *
  * Usage: Import and call once before creating any MapLibre map instances.
  * If NEXT_PUBLIC_PROTOMAPS_URL is set, maps will use the PMTiles basemap.
@@ -13,6 +13,7 @@
 
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
+import { Map as MapIcon, Mountain, Satellite, Moon, type LucideIcon } from "lucide-react";
 
 let registered = false;
 
@@ -159,7 +160,7 @@ let pmtilesAvailable: boolean | null = null;
  * Asynchronously check if the PMTiles basemap file exists, then upgrade
  * the map style from OSM raster to PMTiles vector tiles.
  *
- * Safe to call even if NEXT_PUBLIC_PROTOMAPS_URL is not set — it no-ops.
+ * Safe to call even if NEXT_PUBLIC_PROTOMAPS_URL is not set - it no-ops.
  */
 export async function tryUpgradeToPMTiles(map: maplibregl.Map): Promise<void> {
     if (!PMTILES_BASEMAP_URL) return;
@@ -180,7 +181,7 @@ export async function tryUpgradeToPMTiles(map: maplibregl.Map): Promise<void> {
     }
 
     if (!pmtilesAvailable) {
-        console.warn("[OpenFarm] PMTiles basemap not found at", PMTILES_BASEMAP_URL, "— using OSM tiles");
+        console.warn("[OpenFarm] PMTiles basemap not found at", PMTILES_BASEMAP_URL, "- using OSM tiles");
         return;
     }
 
@@ -190,7 +191,7 @@ export async function tryUpgradeToPMTiles(map: maplibregl.Map): Promise<void> {
     }
 }
 
-/** OSM raster tile style — used as fallback when PMTiles is unavailable. */
+/** OSM raster tile style - used as fallback when PMTiles is unavailable. */
 export function getOsmFallbackStyle(): maplibregl.StyleSpecification {
     return {
         version: 8,
@@ -225,7 +226,7 @@ export type MapStyleId = "street" | "terrain" | "satellite" | "dark";
 export interface MapStyleOption {
     id: MapStyleId;
     label: string;
-    icon: string; // emoji or short label
+    icon: LucideIcon;
     style: maplibregl.StyleSpecification;
 }
 
@@ -233,7 +234,7 @@ export const MAP_STYLES: MapStyleOption[] = [
     {
         id: "street",
         label: "Street",
-        icon: "🗺️",
+        icon: MapIcon,
         style: {
             version: 8,
             glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
@@ -255,7 +256,7 @@ export const MAP_STYLES: MapStyleOption[] = [
     {
         id: "terrain",
         label: "Terrain",
-        icon: "⛰️",
+        icon: Mountain,
         style: {
             version: 8,
             glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
@@ -277,7 +278,7 @@ export const MAP_STYLES: MapStyleOption[] = [
     {
         id: "satellite",
         label: "Satellite",
-        icon: "🛰️",
+        icon: Satellite,
         style: {
             version: 8,
             glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
@@ -297,7 +298,7 @@ export const MAP_STYLES: MapStyleOption[] = [
     {
         id: "dark",
         label: "Dark",
-        icon: "🌙",
+        icon: Moon,
         style: {
             version: 8,
             glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",

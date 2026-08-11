@@ -1,4 +1,4 @@
-"""Weather router — field weather data, summary, backfill."""
+"""Weather router - field weather data, summary, backfill."""
 
 from __future__ import annotations
 

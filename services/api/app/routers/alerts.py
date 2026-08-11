@@ -1,4 +1,4 @@
-"""Alerts router — list and update alerts."""
+"""Alerts router - list and update alerts."""
 
 from __future__ import annotations
 

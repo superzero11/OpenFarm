@@ -1,4 +1,4 @@
-"""Celery worker configuration — broker=Redis, per PRD Section 7.4."""
+"""Celery worker configuration - broker=Redis, per PRD Section 7.4."""
 
 from celery import Celery
 from celery.schedules import crontab
@@ -17,7 +17,7 @@ celery_app.conf.update(
     task_reject_on_worker_lost=True,
     # Visibility timeout > max job duration
     broker_transport_options={"visibility_timeout": 7200},
-    # Concurrency — match 8 vCPU / 16 GB RAM spec
+    # Concurrency - match 8 vCPU / 16 GB RAM spec
     worker_concurrency=4,
     # Timeouts
     task_time_limit=1800,  # 30 min hard kill

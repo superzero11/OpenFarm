@@ -1,4 +1,4 @@
-"""Historical index backfill — orchestration layer.
+"""Historical index backfill - orchestration layer.
 
 Chunks a multi-month date range into segments, creates one Job per
 (chunk × index) pair, and dispatches them with staggered countdowns
@@ -242,7 +242,7 @@ def schedule_weekly_index_compute(self) -> dict:
                 ).scalar_one_or_none()
 
                 if latest_date is not None and latest_date > stale_threshold:
-                    continue  # fresh — skip
+                    continue  # fresh - skip
 
                 # Determine date range: latest_date+1 → today (or 7 days back if none)
                 date_from = (

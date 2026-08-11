@@ -1,4 +1,4 @@
-"""OpenFarm API — FastAPI application entry point."""
+"""OpenFarm API - FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
 

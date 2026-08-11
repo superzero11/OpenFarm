@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const LOCALE_FLAGS: Record<string, string> = {
-    en: "🇺🇸",
-    es: "🇪🇸",
+const LOCALE_LABELS: Record<string, string> = {
+    en: "EN",
+    es: "ES",
 };
 
 export function LanguageSwitcher({
@@ -51,7 +51,7 @@ export function LanguageSwitcher({
                         onClick={() => switchLocale(loc)}
                         className={cn(locale === loc && "bg-accent font-medium")}
                     >
-                        <span className="mr-2">{LOCALE_FLAGS[loc]}</span>
+                        <span className="mr-2 text-xs font-semibold text-muted-foreground">{LOCALE_LABELS[loc]}</span>
                         {t(loc)}
                     </DropdownMenuItem>
                 ))}

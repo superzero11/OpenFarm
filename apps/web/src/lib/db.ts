@@ -4,7 +4,7 @@ import { logger as rootLogger } from "@/lib/logger";
 const logger = rootLogger.child({ component: "db" });
 
 /**
- * Direct Postgres connection — used ONLY for user upsert in NextAuth callback.
+ * Direct Postgres connection - used ONLY for user upsert in NextAuth callback.
  * Per PRD rule: "Next.js does not talk to Postgres except user upsert on auth bootstrap."
  */
 

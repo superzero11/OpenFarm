@@ -1,4 +1,4 @@
-"""Pydantic schemas — weather data."""
+"""Pydantic schemas - weather data."""
 
 from __future__ import annotations
 

@@ -82,7 +82,7 @@ interface AlertRowProps {
     togglingId?: string | null;
     /** i18n labels for close/reopen buttons. */
     actionLabels?: { close: string; reopen: string };
-    /** Compact mode — reduced padding and smaller text. */
+    /** Compact mode - reduced padding and smaller text. */
     compact?: boolean;
 }
 
@@ -102,7 +102,7 @@ export function AlertRow({
     const severity = SEVERITY_CONFIG[alert.severity] || SEVERITY_CONFIG.low;
     const isClosed = alert.status === "closed";
 
-    /* ── Compact layout (field detail sidebar — narrow) ───── */
+    /* ── Compact layout (field detail sidebar - narrow) ───── */
     if (compact) {
         return (
             <div
@@ -140,7 +140,7 @@ export function AlertRow({
                     <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
                         <CloudRain className="h-3 w-3 shrink-0" />
                         <span>
-                            Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "—"}mm
+                            Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "-"}mm
                             {alert.weather_context.water_deficit_mm != null && (
                                 <> · Deficit: {alert.weather_context.water_deficit_mm}mm</>
                             )}
@@ -241,7 +241,7 @@ export function AlertRow({
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                             <CloudRain className="h-3 w-3" />
-                            Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "—"}mm
+                            Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "-"}mm
                         </span>
                         {alert.weather_context.et0_7d_mm != null && (
                             <span>ET₀ 7d: {alert.weather_context.et0_7d_mm}mm</span>

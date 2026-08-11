@@ -14,7 +14,7 @@ export default function WeatherCards({ summary }: WeatherCardsProps) {
     const cards = [
         {
             label: t("avgTemp"),
-            value: summary.avg_temperature != null ? `${summary.avg_temperature.toFixed(1)}°C` : "—",
+            value: summary.avg_temperature != null ? `${summary.avg_temperature.toFixed(1)}°C` : "-",
             sub:
                 summary.min_temperature != null && summary.max_temperature != null
                     ? `${summary.min_temperature.toFixed(1)}° – ${summary.max_temperature.toFixed(1)}°`
@@ -23,12 +23,12 @@ export default function WeatherCards({ summary }: WeatherCardsProps) {
         },
         {
             label: t("totalPrecip"),
-            value: summary.total_precipitation != null ? `${summary.total_precipitation.toFixed(1)} mm` : "—",
+            value: summary.total_precipitation != null ? `${summary.total_precipitation.toFixed(1)} mm` : "-",
             color: "text-blue-600 dark:text-blue-400",
         },
         {
             label: t("waterDeficit"),
-            value: summary.water_deficit_mm != null ? `${summary.water_deficit_mm.toFixed(1)} mm` : "—",
+            value: summary.water_deficit_mm != null ? `${summary.water_deficit_mm.toFixed(1)} mm` : "-",
             color:
                 summary.water_deficit_mm != null && summary.water_deficit_mm < 0
                     ? "text-red-600 dark:text-red-400"
@@ -36,7 +36,7 @@ export default function WeatherCards({ summary }: WeatherCardsProps) {
         },
         {
             label: t("gddCumulative"),
-            value: summary.gdd_cumulative != null ? `${summary.gdd_cumulative.toFixed(0)}` : "—",
+            value: summary.gdd_cumulative != null ? `${summary.gdd_cumulative.toFixed(0)}` : "-",
             color: "text-amber-600 dark:text-amber-400",
         },
     ];

@@ -17,7 +17,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 [![Discord](https://img.shields.io/discord/1480056202829234379?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/KM9qxpEmsU)
 [![Patreon](https://img.shields.io/badge/Patreon-Support%20Us-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/c/SuperZero11)
 
-**[🌍 Live Demo](https://openfarm.earth)** · [Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
+**[Live Demo](https://openfarm.earth)** · [Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
 
 <p>
   <img src="apps/web/public/screenshots/openfarm-1.png" width="49%" />
@@ -30,17 +30,17 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 
 </div>
 
-**OpenFarm is an open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field — and why.**
+**OpenFarm is an open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field - and why.**
 
 - **Vision:** A world where every farm, from smallholders to enterprises, can access transparent, trustworthy, and affordable digital farming intelligence.
-- **Mission:** Build and maintain an open, reproducible crop intelligence platform that turns satellite, weather, soil, and field data into actionable insights — deployable anywhere (self-hosted or hosted).
+- **Mission:** Build and maintain an open, reproducible crop intelligence platform that turns satellite, weather, soil, and field data into actionable insights - deployable anywhere (self-hosted or hosted).
 
 ## Why OpenFarm
 - Self-hostable stack with clear service boundaries (Next.js ↔ FastAPI ↔ TiTiler ↔ MinIO ↔ PostGIS)
-- Multi-index vegetation monitoring — NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery with automatic 24-month historical backfill
+- Multi-index vegetation monitoring - NDVI, EVI, SAVI (configurable L factor), and NDWI from Sentinel-2 imagery with automatic 24-month historical backfill
 - ML-powered automatic field boundary detection (FTW model) with interactive review workflow
 - Daily weather data with agricultural indices (GDD, water balance, drought index) via Open-Meteo
-- Soil intelligence — automatic soil profile ingestion from SoilGrids (global, 250m) and POLARIS (US, 30m) with crop suitability scoring (68 crops), sampling zone recommendations, carbon sequestration estimation, nutrient risk classification, and soil×weather stress monitoring
+- Soil intelligence - automatic soil profile ingestion from SoilGrids (global, 250m) and POLARIS (US, 30m) with crop suitability scoring (68 crops), sampling zone recommendations, carbon sequestration estimation, nutrient risk classification, and soil×weather stress monitoring
 - Reproducible pipeline with provenance (Element84 STAC → COG → TiTiler tiles)
 - Tenant isolation via `X-Org-Id` + JWT; RBAC (`owner`/`admin`/`member`/`viewer`)
 - MapLibre + PMTiles (no Mapbox token needed), ECharts for time series
@@ -58,14 +58,14 @@ OpenFarm follows a 3-layer strategic architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Layer C — Delivery Surfaces                   (Distribution)  │
+│  Layer C - Delivery Surfaces                   (Distribution)  │
 │  Map UI · Reports · API · Webhooks · MCP · Mobile scouting     │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer B — Intelligence Engine                       (Moat)    │
+│  Layer B - Intelligence Engine                       (Moat)    │
 │  Phenology · Anomaly detection · Stress signals · Yield        │
 │  Risk models · Soil-derived insights · Explainability          │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer A — Observation Infrastructure         (Data Gravity)   │
+│  Layer A - Observation Infrastructure         (Data Gravity)   │
 │  Satellite · Weather · Soil · Field boundaries · Sensors       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -168,21 +168,21 @@ ruff format --check .
 
 ## Feature Overview
 
-### Layer A — Observation
-- **Satellite Intelligence**: NDVI, EVI, SAVI (configurable L), NDWI from Sentinel-2 — STAC search → COG → TiTiler tiles → time-series stats, with automatic 24-month historical backfill and weekly auto-compute
-- **Weather Intelligence**: daily historical + 7-day forecast via Open-Meteo — temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
-- **Soil Intelligence**: automatic soil profile from SoilGrids (global, 250m) and POLARIS (US, 30m) — texture-by-depth, pH, organic carbon, CEC, bulk density, AWC, Rosetta PTF hydraulic properties, risk scoring, crop suitability (68 profiles, 4-pillar model), sampling zones, carbon estimation, nutrient context
-- **Boundary Detection**: ML-powered field boundary detection (FTW model) from Sentinel-2 — draw area, review with confidence scores, accept as fields
+### Layer A - Observation
+- **Satellite Intelligence**: NDVI, EVI, SAVI (configurable L), NDWI from Sentinel-2 - STAC search → COG → TiTiler tiles → time-series stats, with automatic 24-month historical backfill and weekly auto-compute
+- **Weather Intelligence**: daily historical + 7-day forecast via Open-Meteo - temperature, precipitation, ET₀, soil moisture/temperature, VPD, GDD, water balance, drought index
+- **Soil Intelligence**: automatic soil profile from SoilGrids (global, 250m) and POLARIS (US, 30m) - texture-by-depth, pH, organic carbon, CEC, bulk density, AWC, Rosetta PTF hydraulic properties, risk scoring, crop suitability (68 profiles, 4-pillar model), sampling zones, carbon estimation, nutrient context
+- **Boundary Detection**: ML-powered field boundary detection (FTW model) from Sentinel-2 - draw area, review with confidence scores, accept as fields
 - **Farms & Fields**: draw/upload GeoJSON/KML polygons, auto area calculation, soft delete
 
-### Layer B — Intelligence
+### Layer B - Intelligence
 - **Per-Index Alerts**: configurable threshold and drop-percentage rules, enriched with weather context and soil data
 - **Crop Suitability**: 4-pillar weighted scoring (Soil 40%, Water 25%, Climate 20%, Stress 15%) across 68 crop profiles with limiting factors
 - **Soil Intelligence**: nutrient risk zones, carbon sequestration potential, sampling zone recommendations, soil×weather stress indicators
 - **Risk Scoring**: acidification, compaction, leaching, waterlogging, and rooting risk from soil properties
 - **Multi-Signal Context**: alerts combine vegetation anomalies + weather conditions + soil characteristics
 
-### Layer C — Delivery
+### Layer C - Delivery
 - **Interactive Map**: MapLibre + PMTiles (no Mapbox needed), multi-layer toggle, per-index colormaps, scouting and sampling zone markers with interactive popups
 - **Time-Series Charts**: ECharts with percentile bands, NDVI + weather overlay, soil depth visualization
 - **Scouting**: geotagged observations with photo upload and auto-attached weather snapshot
@@ -195,13 +195,13 @@ ruff format --check .
 - GitHub Actions: lint + type-check (`.github/workflows/ci.yml`)
 - Frontend: `npm run lint`, `npm run type-check`
 - Backend: `ruff check`, `ruff format --check`
-- No tests yet — contributions welcome
+- No tests yet - contributions welcome
 
 ## Deployment
 See [DEPLOYMENT.md](DEPLOYMENT.md) for a step-by-step guide to deploy on a free Oracle Cloud VM (or any VPS) with Docker Compose + Caddy auto-SSL.
 
 ## Roadmap
-See [ROADMAP.md](ROADMAP.md) for the full development plan — what's done, what's in progress, and where contributors can help most.
+See [ROADMAP.md](ROADMAP.md) for the full development plan - what's done, what's in progress, and where contributors can help most.
 
 ## Contributing & Security
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR process
@@ -210,4 +210,4 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan — what's done, what
 
 ## License
 
-BSD-3-Clause — see [LICENSE](LICENSE)
+BSD-3-Clause - see [LICENSE](LICENSE)

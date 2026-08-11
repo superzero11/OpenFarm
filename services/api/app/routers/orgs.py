@@ -1,4 +1,4 @@
-"""Orgs router — CRUD, members, invites, audit events."""
+"""Orgs router - CRUD, members, invites, audit events."""
 
 from __future__ import annotations
 
@@ -317,7 +317,7 @@ async def create_invite(
     logger.info("member_invited", org_id=str(org_id), email=body.email, role=body.role)
     await db.flush()
 
-    # Send invite email (best-effort — don't fail the request)
+    # Send invite email (best-effort - don't fail the request)
     try:
         from app.core.email import send_invite_email
 

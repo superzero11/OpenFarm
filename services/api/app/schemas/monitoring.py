@@ -1,4 +1,4 @@
-"""Pydantic schemas — monitoring, alerts, scouting, jobs, share links."""
+"""Pydantic schemas - monitoring, alerts, scouting, jobs, share links."""
 
 from __future__ import annotations
 
@@ -172,7 +172,7 @@ class ShareOut(BaseModel):
 
 
 class ShareReportOut(BaseModel):
-    """Public share link data — no auth required."""
+    """Public share link data - no auth required."""
 
     field: dict[str, Any]
     latest_layer: RasterLayerOut | None = None

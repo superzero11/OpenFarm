@@ -1,4 +1,4 @@
-"""Fields router — CRUD, import, with geometry handling."""
+"""Fields router - CRUD, import, with geometry handling."""
 
 from __future__ import annotations
 

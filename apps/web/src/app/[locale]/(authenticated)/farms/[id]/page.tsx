@@ -329,7 +329,7 @@ export default function FarmDetailPage() {
                                             <p className="text-sm font-medium">{field.name}</p>
                                             <div className="flex items-center gap-1.5 mt-0.5">
                                                 <span className="text-xs text-muted-foreground">
-                                                    {field.area_ha ? `${field.area_ha.toFixed(2)} ha` : "—"}
+                                                    {field.area_ha ? `${field.area_ha.toFixed(2)} ha` : "-"}
                                                 </span>
                                                 {field.crop_type && <Badge variant="secondary">{field.crop_type}</Badge>}
                                                 {field.season && <Badge variant="outline">{field.season}</Badge>}

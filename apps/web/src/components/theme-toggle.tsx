@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Simple toggle — click to switch between light and dark.
+ * Simple toggle - click to switch between light and dark.
  */
 export function ThemeToggle({ className }: { className?: string }) {
     const { setTheme, resolvedTheme } = useTheme();

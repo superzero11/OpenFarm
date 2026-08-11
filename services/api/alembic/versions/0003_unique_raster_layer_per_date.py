@@ -1,6 +1,6 @@
 """Add unique constraint on raster_layers (field_id, date, layer_type).
 
-Deduplicates existing rows first — keeps the newest row per group,
+Deduplicates existing rows first - keeps the newest row per group,
 deletes older duplicates, then cascades to orphaned field_stats.
 
 Revision ID: 0003

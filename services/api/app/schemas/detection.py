@@ -1,4 +1,4 @@
-"""Pydantic schemas — boundary detection."""
+"""Pydantic schemas - boundary detection."""
 
 from __future__ import annotations
 

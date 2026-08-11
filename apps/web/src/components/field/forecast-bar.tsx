@@ -49,7 +49,7 @@ export default function ForecastBar({ forecast }: ForecastBarProps) {
                     {weatherIcon(day.precipitation_sum, day.cloud_cover_mean)}
                     <div className="text-center">
                         <span className="text-xs font-semibold">
-                            {day.temperature_2m_max != null ? `${Math.round(day.temperature_2m_max)}°` : "—"}
+                            {day.temperature_2m_max != null ? `${Math.round(day.temperature_2m_max)}°` : "-"}
                         </span>
                         <span className="text-[10px] text-muted-foreground ml-0.5">
                             {day.temperature_2m_min != null ? `${Math.round(day.temperature_2m_min)}°` : ""}

@@ -1,26 +1,26 @@
 # OpenFarm Strategic Architecture
 
-> **OpenFarm is an open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field — and why.**
+> **OpenFarm is an open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field - and why.**
 
 OpenFarm follows a 3-layer strategic architecture. Each layer has a distinct role: the Observation layer creates **data gravity**, the Intelligence layer is the **moat**, and the Delivery layer drives **distribution**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Layer C — Delivery Surfaces                   (Distribution)  │
+│  Layer C - Delivery Surfaces                   (Distribution)  │
 │  Map UI · Reports · API · Webhooks · MCP · Mobile scouting     │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer B — Intelligence Engine                       (Moat)    │
+│  Layer B - Intelligence Engine                       (Moat)    │
 │  Phenology · Anomaly detection · Stress signals · Yield        │
 │  Risk models · Soil-derived insights · Explainability          │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer A — Observation Infrastructure         (Data Gravity)   │
+│  Layer A - Observation Infrastructure         (Data Gravity)   │
 │  Satellite · Weather · Soil · Field boundaries · Sensors       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Layer A — Observation Infrastructure
+## Layer A - Observation Infrastructure
 
 *"What do we observe about the field?"*
 
@@ -72,11 +72,11 @@ Field = {
 
 ---
 
-## Layer B — Intelligence Engine
+## Layer B - Intelligence Engine
 
 *"What does it mean?"*
 
-The heart of OpenFarm — where raw signals are converted into explainable, agronomically meaningful insights. This is the strategic differentiator.
+The heart of OpenFarm - where raw signals are converted into explainable, agronomically meaningful insights. This is the strategic differentiator.
 
 ### Field Understanding Engine
 - Temporal analytics (trend, deviation, anomaly)
@@ -128,11 +128,11 @@ Insight = {
 
 ---
 
-## Layer C — Delivery Surfaces
+## Layer C - Delivery Surfaces
 
 *"How is it consumed?"*
 
-Ensures OpenFarm is not just a tool — but a platform others can build on.
+Ensures OpenFarm is not just a tool - but a platform others can build on.
 
 ### Visual Interface (UI)
 - Interactive field maps (MapLibre + PMTiles)
@@ -168,10 +168,10 @@ Ensures OpenFarm is not just a tool — but a platform others can build on.
 
 ## What OpenFarm IS
 
-> An open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field — and why.
+> An open, modular field intelligence platform that fuses satellite, weather, soil, and time to explain what is happening in a field - and why.
 
 ## What OpenFarm is NOT
 
-- ❌ Farm ERP
-- ❌ Task/operations manager
-- ❌ Generic ag marketplace
+- Not: Farm ERP
+- Not: Task/operations manager
+- Not: Generic ag marketplace

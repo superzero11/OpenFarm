@@ -1,4 +1,4 @@
-"""Email service — powered by Resend (https://resend.com)."""
+"""Email service - powered by Resend (https://resend.com)."""
 
 from __future__ import annotations
 
@@ -92,7 +92,7 @@ async def send_ownership_transferred_email(
     html = f"""\
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
   <h2 style="margin: 0 0 16px; font-size: 20px; color: #111;">
-    Ownership Transfer — {org_name}
+    Ownership Transfer - {org_name}
   </h2>
   <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">
     {body_text}
@@ -115,7 +115,7 @@ async def send_invite_accepted_email(
     role: str,
     notify_admin: bool = False,
 ) -> dict | None:
-    """Notify when an invite is accepted — sends to both the acceptor and the admin/owner."""
+    """Notify when an invite is accepted - sends to both the acceptor and the admin/owner."""
     if notify_admin:
         subject = f"{accepted_by_name} has joined {org_name}"
         body_text = (
@@ -131,7 +131,7 @@ async def send_invite_accepted_email(
     html = f"""\
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
   <h2 style="margin: 0 0 16px; font-size: 20px; color: #111;">
-    {"New Member" if notify_admin else "Welcome"} — {org_name}
+    {"New Member" if notify_admin else "Welcome"} - {org_name}
   </h2>
   <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">
     {body_text}
@@ -180,7 +180,7 @@ async def send_role_changed_email(
     html = f"""\
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
   <h2 style="margin: 0 0 16px; font-size: 20px; color: #111;">
-    Role Updated — {org_name}
+    Role Updated - {org_name}
   </h2>
   <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">
     <strong>{changed_by_name}</strong> has changed your role in

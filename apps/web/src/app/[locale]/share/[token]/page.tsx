@@ -426,7 +426,7 @@ function FieldMap({ geom, token, hasLayer, activeIndex }: { geom: GeoJSON.Geomet
                 },
             });
 
-            // Index tile overlay (proxied through API — no JWT needed)
+            // Index tile overlay (proxied through API - no JWT needed)
             if (hasLayer) {
                 const idx = activeIndexRef.current;
                 map.addSource("index-tiles", {
@@ -539,7 +539,7 @@ function ReportAlertRow({ alert }: { alert: Alert }) {
                 <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
                     <CloudRain className="h-3 w-3 shrink-0" />
                     <span>
-                        Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "—"}mm
+                        Precip 7d: {alert.weather_context.precipitation_7d_mm ?? "-"}mm
                         {alert.weather_context.water_deficit_mm != null && (
                             <> · Deficit: {alert.weather_context.water_deficit_mm}mm</>
                         )}

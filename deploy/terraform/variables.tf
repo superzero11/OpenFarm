@@ -54,7 +54,7 @@ variable "domain" {
 
   validation {
     condition     = !can(regex("^https?://", var.domain)) && !endswith(var.domain, "/")
-    error_message = "domain must be a bare hostname like openfarm.example.com — no http(s):// prefix, no trailing slash."
+    error_message = "domain must be a bare hostname like openfarm.example.com - no http(s):// prefix, no trailing slash."
   }
 }
 

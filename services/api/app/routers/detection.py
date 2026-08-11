@@ -1,4 +1,4 @@
-"""Detection router — trigger boundary detection, list/accept/discard results."""
+"""Detection router - trigger boundary detection, list/accept/discard results."""
 
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ async def trigger_detection(
             detail=f"Bbox area {area_km2:.1f} km² exceeds limit of {settings.detection_max_area_km2} km²",
         )
 
-    # Create job — field_id is nullable for detection jobs, use a sentinel approach:
+    # Create job - field_id is nullable for detection jobs, use a sentinel approach:
     # detection jobs don't have a single field_id, so we store bbox in params_json.
     # The Job model requires field_id, so we must handle this.
     # For detection jobs, we'll use a "virtual" association via farm_id in params.
@@ -224,7 +224,7 @@ async def accept_boundary(
     ctx: Annotated[OrgContext, Depends(_writer)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Accept a detected boundary — creates a new field."""
+    """Accept a detected boundary - creates a new field."""
     if ctx.org_id != org_id:
         raise HTTPException(status_code=403, detail="Org mismatch")
 

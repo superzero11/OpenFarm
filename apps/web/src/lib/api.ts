@@ -20,7 +20,7 @@ async function getToken(): Promise<string> {
 
     const res = await fetch("/api/auth/token", { method: "POST" });
     if (!res.ok) {
-        throw new Error("Failed to mint API token — are you signed in?");
+        throw new Error("Failed to mint API token - are you signed in?");
     }
     const data = await res.json();
     cachedToken = data.token;
@@ -50,7 +50,7 @@ export class ApiError extends Error {
     }
 }
 
-/** Core fetch wrapper — adds Authorization + X-Org-Id headers. */
+/** Core fetch wrapper - adds Authorization + X-Org-Id headers. */
 async function apiFetch<T>(
     path: string,
     opts: RequestInit & { orgId?: string | null; skipOrg?: boolean } = {},
@@ -666,7 +666,7 @@ export const uploadsApi = {
         const ct = file.type || "image/jpeg";
         const { upload_url, object_key } = await this.presign(file.name, ct);
         // PUT directly to MinIO (presigned URL)
-        // Do NOT send Content-Type header — it's not part of the signed
+        // Do NOT send Content-Type header - it's not part of the signed
         // headers so MinIO would reject the request with 403.
         const res = await fetch(upload_url, {
             method: "PUT",
@@ -837,7 +837,7 @@ export const shareApi = {
         }),
     revoke: (fieldId: string, token: string) =>
         apiFetch(`/fields/${fieldId}/share/${token}`, { method: "DELETE" }),
-    /** Public endpoint — no auth required. Uses plain fetch. */
+    /** Public endpoint - no auth required. Uses plain fetch. */
     async getReport(token: string): Promise<ShareReport> {
         const res = await fetch(`${API_BASE}/share/${token}`);
         if (res.status === 410) throw new Error("expired");

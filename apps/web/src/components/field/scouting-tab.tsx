@@ -124,7 +124,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
         loadObservations();
     }, [loadObservations]);
 
-    // Load field alerts (all — for linked alert display; open subset for dropdown)
+    // Load field alerts (all - for linked alert display; open subset for dropdown)
     useEffect(() => {
         alertsApi
             .listForField(fieldId, 200)
@@ -191,7 +191,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
         }
 
         return () => {
-            // Don't remove on unmount — keep markers while tab switches within same mount
+            // Don't remove on unmount - keep markers while tab switches within same mount
         };
     }, [mapInstance, observations]);
 

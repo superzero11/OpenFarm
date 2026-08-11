@@ -1,4 +1,4 @@
-"""Pydantic schemas — shared envelope and pagination."""
+"""Pydantic schemas - shared envelope and pagination."""
 
 from __future__ import annotations
 

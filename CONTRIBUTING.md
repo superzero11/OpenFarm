@@ -1,6 +1,6 @@
 # Contributing to OpenFarm
 
-Thank you for your interest in contributing to OpenFarm! Whether it's a bug fix, new feature, documentation improvement, or feedback — every contribution matters. This guide covers everything you need to get up and running.
+Thank you for your interest in contributing to OpenFarm! Whether it's a bug fix, new feature, documentation improvement, or feedback - every contribution matters. This guide covers everything you need to get up and running.
 
 ## Table of Contents
 
@@ -62,7 +62,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 | npm | 10+ | Package management |
 | Python | 3.11+ | Backend development |
 | pip | latest | Python package management |
-| Google OAuth credentials | — | [Setup guide](https://console.cloud.google.com/apis/credentials) |
+| Google OAuth credentials | - | [Setup guide](https://console.cloud.google.com/apis/credentials) |
 
 ### Option 1: Full Stack via Docker (recommended for first run)
 
@@ -74,9 +74,9 @@ cp .env.example .env
 openssl rand -base64 32   # → paste as NEXTAUTH_SECRET
 openssl rand -base64 64   # → paste as OPENFARM_JWT_SECRET
 
-# 3. Edit .env — fill in GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+# 3. Edit .env - fill in GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
 
-# 4. Start everything (dev mode — exposes ports to localhost)
+# 4. Start everything (dev mode - exposes ports to localhost)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
@@ -157,19 +157,19 @@ openfarm/
 
 ## Architecture Rules
 
-These are **strict invariants** — please follow them in all contributions:
+These are **strict invariants** - please follow them in all contributions:
 
 1. **Next.js ↔ Postgres isolation:** The Next.js app talks to Postgres **only** for user upsert during the NextAuth auth callback (`src/lib/db.ts`). All other data flows through the FastAPI API via `src/lib/api.ts`.
 
-2. **API calls:** Always use `apiFetch()` from `lib/api.ts` — never call the API directly with `fetch()`.
+2. **API calls:** Always use `apiFetch()` from `lib/api.ts` - never call the API directly with `fetch()`.
 
 3. **Org-scoped resources:** All org-scoped API endpoints require the `X-Org-Id` header, validated by the `get_org_context` dependency.
 
-4. **Soft-delete pattern:** Use `deleted_at` timestamp — filter with `.where(Model.deleted_at.is_(None))`.
+4. **Soft-delete pattern:** Use `deleted_at` timestamp - filter with `.where(Model.deleted_at.is_(None))`.
 
 5. **UUID primary keys:** All tables use UUID PKs with `server_default=uuid_generate_v4()`.
 
-6. **Geometry:** Stored as `MultiPolygon(4326)` — auto-wrap `Polygon` inputs to `MultiPolygon` using the `_geojson_to_multi()` helper.
+6. **Geometry:** Stored as `MultiPolygon(4326)` - auto-wrap `Polygon` inputs to `MultiPolygon` using the `_geojson_to_multi()` helper.
 
 7. **No hardcoded URLs or secrets:** Everything via environment variables.
 
@@ -182,9 +182,9 @@ These are **strict invariants** — please follow them in all contributions:
    git checkout -b feat/your-feature-name
    ```
 
-2. **Make your changes** — keep commits focused and atomic.
+2. **Make your changes** - keep commits focused and atomic.
 
-3. **Test locally** — ensure the full stack runs:
+3. **Test locally** - ensure the full stack runs:
    ```bash
    docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
    ```
@@ -216,6 +216,15 @@ These are **strict invariants** — please follow them in all contributions:
 
 ## Code Style
 
+### Writing style (all contributions)
+
+Applies to documentation, code comments, UI strings, commit messages, and script output:
+
+- No em-dashes. Use hyphens, commas, or restructure the sentence.
+- No emojis or decorative unicode symbols anywhere in the project.
+- No filler phrasing ("seamless", "leverage", "delve", "robust", "empower", and similar). Write plain, precise, technical prose.
+- UI icons come exclusively from [lucide-react](https://lucide.dev/). Never use emoji or unicode symbols as icons.
+
 ### Python (services/api, services/tiler)
 
 | Aspect | Standard |
@@ -227,12 +236,12 @@ These are **strict invariants** — please follow them in all contributions:
 
 - **Async:** FastAPI routes use `async def` with `AsyncSession`; Celery tasks use sync sessions (`database_sync.py`)
 - **Schemas:** Pydantic v2 with `model_config = {"from_attributes": True}` for ORM conversion
-- **Logging:** `structlog` — use structured key-value pairs, not string interpolation:
+- **Logging:** `structlog` - use structured key-value pairs, not string interpolation:
   ```python
-  # ✅ Good
+  # Good
   logger.info("farm_created", farm_id=str(farm.id), org_id=str(ctx.org_id))
 
-  # ❌ Bad
+  # Bad
   logger.info(f"Farm {farm.id} created in org {ctx.org_id}")
   ```
 
@@ -245,7 +254,7 @@ These are **strict invariants** — please follow them in all contributions:
 | Styling | Tailwind CSS + `cn()` utility from `lib/utils.ts` |
 | Components | React Server Components by default; add `"use client"` only when needed |
 
-- **API calls:** Always use `apiFetch()` from `lib/api.ts` — never `fetch()` directly
+- **API calls:** Always use `apiFetch()` from `lib/api.ts` - never `fetch()` directly
 - **i18n:** All user-facing strings must be in `messages/en.json` and `messages/es.json`
 - **Imports:** Use `@/*` path alias (maps to `./src/*`)
 
@@ -254,7 +263,7 @@ These are **strict invariants** — please follow them in all contributions:
 - No `console.log` in production code (use proper logging)
 - No `any` types in TypeScript unless absolutely unavoidable (with a `// eslint-disable` comment explaining why)
 - Prefer named exports over default exports
-- Keep files focused — one component/module per file
+- Keep files focused - one component/module per file
 
 ---
 
@@ -267,7 +276,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 [optional body]
 
-[optional footer — e.g., Closes #123]
+[optional footer - e.g., Closes #123]
 ```
 
 **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `perf`
@@ -325,7 +334,7 @@ perf(api): add index on fields.org_id for tenant queries
 
 - **Small PRs** (< 300 lines) are reviewed faster and merged sooner
 - Split large features into stacked PRs when possible
-- One feature or fix per PR — avoid bundling unrelated changes
+- One feature or fix per PR - avoid bundling unrelated changes
 
 ---
 
@@ -345,7 +354,7 @@ alembic upgrade head
 ```
 
 **Migration rules:**
-- Always review auto-generated migrations — they may miss some changes
+- Always review auto-generated migrations - they may miss some changes
 - Never modify an existing migration that has been merged to `main`
 - Include both `upgrade()` and `downgrade()` functions
 - Test the full upgrade + downgrade cycle locally
@@ -358,7 +367,7 @@ OpenFarm uses `next-intl` with `en` and `es` locales.
 
 - Translation files: `apps/web/messages/en.json` and `apps/web/messages/es.json`
 - Routes use the `[locale]` segment with `localePrefix: "as-needed"`
-- **All user-facing strings must be translated** — no hardcoded English in components
+- **All user-facing strings must be translated** - no hardcoded English in components
 
 When adding new strings:
 
@@ -412,8 +421,8 @@ Please see [SECURITY.md](SECURITY.md) for our responsible disclosure policy.
 ## Questions & Discussions
 
 - Open a [Discussion](../../discussions) for questions, ideas, or general feedback
-- Join the conversation — we're happy to help you get started
+- Join the conversation - we're happy to help you get started
 
 ---
 
-Thank you for contributing to OpenFarm! Every contribution helps bring transparent, affordable crop intelligence to farms everywhere. 🌾
+Thank you for contributing to OpenFarm! Every contribution helps bring transparent, affordable crop intelligence to farms everywhere.

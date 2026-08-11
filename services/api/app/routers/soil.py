@@ -1,4 +1,4 @@
-"""Soil router — field soil profile, summary, refresh, intelligence endpoints."""
+"""Soil router - field soil profile, summary, refresh, intelligence endpoints."""
 
 from __future__ import annotations
 

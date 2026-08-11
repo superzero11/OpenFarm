@@ -1,4 +1,4 @@
-"""Soil data tasks — fetch from SoilGrids (WCS) / POLARIS (S3), compute summaries.
+"""Soil data tasks - fetch from SoilGrids (WCS) / POLARIS (S3), compute summaries.
 
 Triggered on field creation + manual refresh.
 """
@@ -320,7 +320,7 @@ def _convert_polaris_units(raw: dict) -> dict:
                 # log10(cm/day) → cm/day
                 new_vals[q] = 10**v
             elif prop in ("sand", "silt", "clay"):
-                # Already in % — no conversion
+                # Already in % - no conversion
                 new_vals[q] = v
             elif prop == "ph":
                 # Already in natural pH units
@@ -499,7 +499,7 @@ def _run_rosetta_ptf(sand: float, silt: float, clay: float, bd: float) -> dict |
 def _apply_rosetta_to_layers(layers: list[dict], source: str) -> list[dict]:
     """Apply Rosetta PTF to layers that lack K_sat (SoilGrids source).
 
-    For POLARIS, K_sat is already available — skip.
+    For POLARIS, K_sat is already available - skip.
     """
     if source == "polaris":
         return layers
@@ -622,7 +622,7 @@ def _compute_field_summary(layers: list[dict]) -> dict:
     # Drainage class from Ksat
     drainage_class = _classify_drainage(ksat_values)
 
-    # Refined risk scores — all layer-based
+    # Refined risk scores - all layer-based
     acidification = _acidification_risk(layers)
     compaction = _compaction_risk(layers)
     leaching = _leaching_risk(layers)

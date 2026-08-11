@@ -1,19 +1,19 @@
-# OpenFarm — Copilot Instructions
+# OpenFarm - Copilot Instructions
 
 ## Architecture Overview
 
 OpenFarm is an open, modular field intelligence platform built on a **3-layer strategic architecture** (see `ARCHITECTURE.md`):
 
-- **Layer A — Observation Infrastructure** (Data Gravity): satellite imagery, weather, soil profiles, field boundaries, sensors
-- **Layer B — Intelligence Engine** (Moat): anomaly detection, stress signals, risk models, explainability
-- **Layer C — Delivery Surfaces** (Distribution): map UI, reports, API, scouting, integrations
+- **Layer A - Observation Infrastructure** (Data Gravity): satellite imagery, weather, soil profiles, field boundaries, sensors
+- **Layer B - Intelligence Engine** (Moat): anomaly detection, stress signals, risk models, explainability
+- **Layer C - Delivery Surfaces** (Distribution): map UI, reports, API, scouting, integrations
 
 ### Tech Stack
 
-- **`apps/web/`** — Next.js 14 + NextAuth (Google OAuth) + Tailwind + shadcn/ui + MapLibre + ECharts
-- **`services/api/`** — FastAPI + SQLAlchemy 2.0 (async) + Alembic + Pydantic v2
-- **`services/tiler/`** — TiTiler (COG tile server) with shared JWT auth
-- **Infrastructure** — PostgreSQL 16 + PostGIS 3.4, Redis 7 (Celery broker), MinIO (S3-compatible), Docker Compose
+- **`apps/web/`** - Next.js 14 + NextAuth (Google OAuth) + Tailwind + shadcn/ui + MapLibre + ECharts
+- **`services/api/`** - FastAPI + SQLAlchemy 2.0 (async) + Alembic + Pydantic v2
+- **`services/tiler/`** - TiTiler (COG tile server) with shared JWT auth
+- **Infrastructure** - PostgreSQL 16 + PostGIS 3.4, Redis 7 (Celery broker), MinIO (S3-compatible), Docker Compose
 
 **Critical rule:** Next.js talks to Postgres **only** for user upsert during NextAuth auth callback (`src/lib/db.ts`). All other data flows through the FastAPI API via `src/lib/api.ts`.
 
@@ -27,31 +27,40 @@ OpenFarm is an open, modular field intelligence platform built on a **3-layer st
 
 ## API Conventions
 
-- All endpoints prefixed with `/v1` — routers in `services/api/app/routers/`
+- All endpoints prefixed with `/v1` - routers in `services/api/app/routers/`
 - Org-scoped resources require `X-Org-Id` header; validated by `get_org_context` dependency
 - Pagination uses `PaginatedResponse[T]` envelope: `{ items, total, limit, offset }` (see `schemas/common.py`)
 - Soft-delete pattern: `deleted_at` timestamp column, filter with `.where(Model.deleted_at.is_(None))`
 - All org-scoped tables have denormalized `org_id` column for tenant isolation
-- Geometry stored as `MultiPolygon(4326)` — auto-wrap `Polygon` to `MultiPolygon` in `_geojson_to_multi()` helper
+- Geometry stored as `MultiPolygon(4326)` - auto-wrap `Polygon` to `MultiPolygon` in `_geojson_to_multi()` helper
 - Schemas in `schemas/` use `model_config = {"from_attributes": True}` for ORM → Pydantic conversion
 - Audit events created on significant actions (field_created, etc.) per PRD Section 5.1
 
 ## Database & Migrations
 
-- ORM models in `services/api/app/models/tables.py` — all tables use UUID PKs with `server_default=uuid_generate_v4()`
+- ORM models in `services/api/app/models/tables.py` - all tables use UUID PKs with `server_default=uuid_generate_v4()`
 - Async engine (`asyncpg`) for FastAPI in `core/database.py`; sync engine (`psycopg2`) for Celery in `core/database_sync.py`
 - Migrations: `cd services/api && alembic revision --autogenerate -m "desc" && alembic upgrade head`
 - Auto-runs `alembic upgrade head` on API startup
 
 ## Celery / Background Jobs
 
-- Worker config in `services/api/app/worker.py` — broker=Redis, JSON serialization, 30min hard timeout
-- Tasks in `services/api/app/tasks/` — `ndvi.py` (vegetation indices), `soil.py` (soil profile ingestion), `weather.py` (weather data), `backfill.py` (historical index backfill)
+- Worker config in `services/api/app/worker.py` - broker=Redis, JSON serialization, 30min hard timeout
+- Tasks in `services/api/app/tasks/` - `ndvi.py` (vegetation indices), `soil.py` (soil profile ingestion), `weather.py` (weather data), `backfill.py` (historical index backfill)
 - Celery workers use sync SQLAlchemy sessions (`core/database_sync.py`), not async
 - Vegetation pipeline: STAC search → download bands → compute index (NDVI/EVI/SAVI/NDWI) → write COG to MinIO → zonal stats → alert evaluation
 - Soil pipeline: SoilGrids WCS (global) or POLARIS S3 (US) → 10 properties × 6 depths → texture classification → risk scoring → field summary
 - Weather pipeline: Open-Meteo API → 18 variables + 5 derived indices (GDD, ET₀, water balance, drought) → daily upsert
 - Job progress tracked via `jobs.progress_json` JSONB column with per-step status updates
+
+## Writing Style (strict)
+
+Applies to docs, comments, UI strings, commit messages, and script output:
+
+- No em-dashes (use hyphens, commas, or restructure)
+- No emojis or decorative unicode symbols anywhere
+- No AI-filler phrasing ("seamless", "leverage", "delve", "robust", "empower", and similar)
+- UI icons come exclusively from lucide-react; never emoji or unicode symbols as icons
 
 ## Frontend Patterns
 
@@ -66,7 +75,7 @@ OpenFarm is an open, modular field intelligence platform built on a **3-layer st
 ## Development Commands
 
 ```bash
-# Full stack (Docker — dev mode with localhost ports)
+# Full stack (Docker - dev mode with localhost ports)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 # API only (local dev)
@@ -107,13 +116,13 @@ curl http://localhost:3000/api/health # Web
 
 `CHANGELOG.md` is rendered in-app at `/changelog` for end users. The parser (`parseChangelog` in `changelog/page.tsx`) only supports these constructs:
 
-- `## [version] - YYYY-MM-DD` — version header
-- `### Added` / `### Fixed` / `### Changed` / `### Security` / `### Deprecated` / `### Removed` — section badges
-- `- plain text item` — list items rendered as **plain text** (no markdown processing)
+- `## [version] - YYYY-MM-DD` - version header
+- `### Added` / `### Fixed` / `### Changed` / `### Security` / `### Deprecated` / `### Removed` - section badges
+- `- plain text item` - list items rendered as **plain text** (no markdown processing)
 
 **Rules for writing changelog entries:**
 
-1. Items are output as raw text in `<li>` tags — `**bold**`, `` `backticks` ``, and `[links](url)` will display literally, not formatted. Do not use any inline markdown.
+1. Items are output as raw text in `<li>` tags - `**bold**`, `` `backticks` ``, and `[links](url)` will display literally, not formatted. Do not use any inline markdown.
 2. Write for non-technical users: describe what features do, not how they are built.
 3. Do not include internal file paths, migration names, function names, API endpoint paths, or config keys.
 4. Keep items as clean, descriptive sentences. Match the style of existing entries (e.g., v0.1.0).

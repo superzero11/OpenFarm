@@ -1,4 +1,4 @@
-"""Celery task — automatic field boundary detection using FTW model.
+"""Celery task - automatic field boundary detection using FTW model.
 
 Pipeline:
   1. Validate bbox area ≤ 50 km²
@@ -284,7 +284,7 @@ def _run_ftw_inference(
         images = batch["image"]
         images = up_sample(images)
 
-        # Get bounding boxes — handle both torchgeo >=0.8 and <0.7
+        # Get bounding boxes - handle both torchgeo >=0.8 and <0.7
         bboxes = batch.get("bounds") or batch.get("bbox")
 
         with torch.inference_mode():
@@ -527,7 +527,7 @@ def detect_field_boundaries(self, job_id: str) -> dict:
             width = max(int(width * scale), 1)
             height = max(int(height * scale), 1)
 
-        # FTW model requires minimum 128px in each dimension — pad bbox if needed
+        # FTW model requires minimum 128px in each dimension - pad bbox if needed
         min_dim = 128
         if width < min_dim:
             pad_deg = (min_dim - width) * pixel_size / 2

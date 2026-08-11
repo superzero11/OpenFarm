@@ -80,7 +80,7 @@ export default function DrawMap({
 
         map.addControl(new maplibregl.NavigationControl(), "top-left");
 
-        // My Location button — custom control below nav controls
+        // My Location button - custom control below nav controls
         const geolocateCtrl = {
             _container: null as HTMLDivElement | null,
             _marker: null as maplibregl.Marker | null,
@@ -155,7 +155,7 @@ export default function DrawMap({
             ],
         });
 
-        // MapboxDraw works with MapLibre via duck-typing — no UI, just map integration
+        // MapboxDraw works with MapLibre via duck-typing - no UI, just map integration
         map.addControl(draw as any);
 
         map.on("load", () => {
@@ -202,7 +202,7 @@ export default function DrawMap({
         let firstLoad = true;
         map.on("style.load", () => {
             if (firstLoad) { firstLoad = false; return; }
-            // MapboxDraw loses its sources/layers on style change — re-add
+            // MapboxDraw loses its sources/layers on style change - re-add
             map.removeControl(draw as any);
             map.addControl(draw as any);
             // Restore any existing geometry

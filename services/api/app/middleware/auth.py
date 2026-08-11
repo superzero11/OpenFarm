@@ -105,7 +105,7 @@ async def get_org_context(
 
 
 def require_roles(*allowed_roles: str):
-    """Dependency factory — restrict endpoint to specific roles."""
+    """Dependency factory - restrict endpoint to specific roles."""
 
     async def _check(
         ctx: Annotated[OrgContext, Depends(get_org_context)],

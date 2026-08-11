@@ -77,7 +77,7 @@ interface NdviTabProps {
     fieldId: string;
     /** Called when a tile layer should be shown on the map */
     onShowLayer?: (layer: RasterLayer | null, indexType: IndexType) => void;
-    /** Called when the active index changes — parent renders the selector */
+    /** Called when the active index changes - parent renders the selector */
     onActiveIndexChange?: (index: IndexType) => void;
     /** Externally controlled active index (from parent floating selector) */
     activeIndexOverride?: IndexType;
@@ -131,7 +131,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                 monitoringApi.layers(fieldId, activeIndex),
                 monitoringApi.stats(fieldId, activeIndex),
             ]);
-            if (gen !== loadGenRef.current) return; // stale — discard
+            if (gen !== loadGenRef.current) return; // stale - discard
             setLayers(layersRes.items);
             setStats(statsRes.items);
             onDataLoaded?.();
@@ -142,7 +142,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                 setSelectedDate(null);
             }
         } catch {
-            // silent — may simply have no data
+            // silent - may simply have no data
         } finally {
             if (gen === loadGenRef.current) setLoading(false);
         }
@@ -159,7 +159,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                 setBackfillActive(res.has_active_backfill);
                 if (res.has_active_backfill) setBackfillTriggered(true);
             })
-            .catch(() => { }); // silent — endpoint may not exist in older deployments
+            .catch(() => { }); // silent - endpoint may not exist in older deployments
     }, [fieldId]);
 
     // ── Fetch weather data when overlay is toggled on ──
@@ -205,7 +205,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                     setActiveJob(null);
                 }
             } catch {
-                // poll error — keep trying
+                // poll error - keep trying
             }
         },
         [loadData, config.label, jobIndices, onDataLoaded],

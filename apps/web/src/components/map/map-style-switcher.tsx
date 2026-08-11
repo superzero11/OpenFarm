@@ -11,7 +11,7 @@ interface MapStyleSwitcherProps {
 }
 
 /**
- * Floating map style switcher — click-to-toggle dropdown.
+ * Floating map style switcher - click-to-toggle dropdown.
  * Closes on outside click or after selecting a style.
  */
 export default function MapStyleSwitcher({
@@ -68,7 +68,7 @@ export default function MapStyleSwitcher({
                                 }`}
                             title={s.label}
                         >
-                            <span className="text-lg leading-none">{s.icon}</span>
+                            <s.icon className="h-5 w-5" aria-hidden="true" />
                             <span>{s.label}</span>
                         </button>
                     ))}

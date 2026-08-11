@@ -1,4 +1,4 @@
-"""Users router — GET /users/me."""
+"""Users router - GET /users/me."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ async def get_me(
     logger.info("get_me", user_id=str(current_user.id))
     user = await db.get(User, current_user.id)
     if not user:
-        # User exists in JWT but not in DB — shouldn't happen post-bootstrap
+        # User exists in JWT but not in DB - shouldn't happen post-bootstrap
         from fastapi import HTTPException, status
 
         raise HTTPException(

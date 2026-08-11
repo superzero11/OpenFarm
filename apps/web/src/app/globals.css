@@ -95,7 +95,7 @@
     stroke: hsl(var(--foreground));
 }
 
-/* Navigation control built-in icons — adapt to theme */
+/* Navigation control built-in icons - adapt to theme */
 .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
     filter: none;
     opacity: 0.8;

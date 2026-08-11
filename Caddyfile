@@ -5,6 +5,12 @@
 # Caddy auto-provisions Let's Encrypt SSL certificates.
 # ─────────────────────────────────────────────────────────────────────────────
 
+# www → apex redirect (Caddy provisions a cert for www automatically;
+# requires a DNS record for www pointing at this server)
+www.{$DOMAIN:localhost} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
 {$DOMAIN:localhost} {
 	# ── API routes → FastAPI ─────────────────────────────────────────
 	handle /v1/* {

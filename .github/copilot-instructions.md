@@ -38,7 +38,7 @@ OpenFarm is an open, modular field intelligence platform built on a **3-layer st
 
 ## Database & Migrations
 
-- ORM models in `services/api/app/models/tables.py` — all 13 tables use UUID PKs with `server_default=uuid_generate_v4()`
+- ORM models in `services/api/app/models/tables.py` — all tables use UUID PKs with `server_default=uuid_generate_v4()`
 - Async engine (`asyncpg`) for FastAPI in `core/database.py`; sync engine (`psycopg2`) for Celery in `core/database_sync.py`
 - Migrations: `cd services/api && alembic revision --autogenerate -m "desc" && alembic upgrade head`
 - Auto-runs `alembic upgrade head` on API startup
@@ -89,7 +89,7 @@ curl http://localhost:3000/api/health # Web
 |---|---|
 | API entry + routers | `services/api/app/main.py` |
 | Auth dependencies | `services/api/app/middleware/auth.py` |
-| ORM models (all 13 tables) | `services/api/app/models/tables.py` |
+| ORM models (all tables) | `services/api/app/models/tables.py` |
 | Pydantic schemas | `services/api/app/schemas/` |
 | NDVI processing pipeline | `services/api/app/tasks/ndvi.py` |
 | Config (pydantic-settings) | `services/api/app/core/config.py` |

@@ -2,7 +2,7 @@
 
 Deploy OpenFarm on a single VPS using Docker Compose + Caddy (auto-SSL).
 
-This guide uses **Oracle Cloud Free Tier** (always-free ARM VM with 24 GB RAM), but the steps work on any Ubuntu 22.04+ server.
+This guide uses **Oracle Cloud Free Tier** (always-free ARM VM with 12 GB RAM), but the steps work on any Ubuntu 22.04+ server.
 
 ---
 
@@ -20,7 +20,7 @@ This guide uses **Oracle Cloud Free Tier** (always-free ARM VM with 24 GB RAM), 
 2. Go to **Compute → Instances → Create Instance**
 3. Configure:
    - **Image**: Ubuntu 22.04 (or 24.04)
-   - **Shape**: Ampere A1 — **4 OCPUs, 24 GB RAM** (free tier max)
+   - **Shape**: Ampere A1 — **2 OCPUs, 12 GB RAM** (free tier max)
    - **Boot volume**: 100 GB
    - **Networking**: assign a public IP, add your SSH key
 4. Click **Create**

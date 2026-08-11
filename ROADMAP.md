@@ -311,7 +311,7 @@ Each tier builds on the one above it.
 
 **Tier 2 — Composite intelligence (builds on Tier 1):**
 - **Disease/pest risk signals** — risk scoring combining vegetation anomalies + weather + regional pest data _(depends on anomaly detection)_
-- **Soil moisture estimation** — enhanced modeling combining remote sensing with in-situ sensor data
+- **Soil moisture estimation** — enhanced modeling combining remote sensing with in-situ sensor data 
 
 **Tier 3 — Actionable recommendations (builds on Tier 2):**
 - **Yield forecasting** — predict from historical trends, weather, soil, and field data _(depends on phenology + anomaly detection)_

@@ -1,7 +1,9 @@
 services:
   # ── Postgres + PostGIS ──────────────────────────────────────────────
   db:
-    image: postgis/postgis:16-3.4
+    # imresamu/postgis = multi-arch (amd64 + arm64) build of postgis/postgis,
+    # which publishes amd64 only and cannot run on ARM hosts (Ampere/Apple)
+    image: imresamu/postgis:16-3.4
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

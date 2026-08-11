@@ -18,7 +18,7 @@ All development happens on the `dev` branch. `main` only receives merges from `d
 apps/web/         Next.js 14 (App Router) + NextAuth + Tailwind + shadcn/ui + MapLibre + ECharts
 services/api/     FastAPI + SQLAlchemy 2.0 (async) + Alembic + Celery tasks
 services/tiler/   TiTiler COG tile server with JWT auth (shared OPENFARM_JWT_SECRET)
-deploy/           VPS setup + backup scripts
+deploy/           VPS setup + backup scripts; terraform/ = OCI IaC (see its README)
 docker-compose.yml            Postgres/PostGIS 16, Redis 7, MinIO, api, worker, tiler, web
 docker-compose.dev.yml        dev overrides
 docker-compose.prod.yml       prod overrides (Caddy auto-SSL, see Caddyfile + DEPLOYMENT.md)
@@ -102,7 +102,7 @@ CHANGELOG.md is rendered in-app at `/changelog` by a minimal parser (`parseChang
 
 ## Deployment context
 
-Target: Oracle Cloud Always Free (Ampere A1 ARM, 2 OCPU / 12 GB). See DEPLOYMENT.md. Open questions: ARM wheel availability for GDAL/rasterio/torchgeo; rate-limit or disable ML inference for anonymous demo users.
+Target: Oracle Cloud Always Free (Ampere A1 ARM, 2 OCPU / 12 GB). Automated via Terraform in deploy/terraform/ (VCN + A1 instance + cloud-init that runs deploy/setup.sh and boots the stack); manual path in DEPLOYMENT.md. Open questions: ARM wheel availability for GDAL/rasterio/torchgeo; rate-limit or disable ML inference for anonymous demo users.
 
 ## Do not
 

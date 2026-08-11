@@ -1,0 +1,34 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored —
+# it contains your OAuth secret. Never commit it.
+
+# OCI Console → profile avatar → Tenancy: <name> → OCID
+tenancy_ocid = "ocid1.tenancy.oc1..aaaa..."
+
+# Region identifier, e.g. ap-mumbai-1, us-ashburn-1, eu-frankfurt-1
+# (shown in the console's top-right region picker)
+region = "ap-mumbai-1"
+
+# Optional: a compartment OCID; empty string = tenancy root
+compartment_ocid = ""
+
+# 1..3 — change when 'Out of host capacity' errors occur (see README)
+availability_domain_number = 1
+
+# Contents of your public key. Or literally: file("~/.ssh/id_ed25519.pub")
+ssh_public_key = "ssh-ed25519 AAAA... you@machine"
+
+# Strongly recommended: your IP only, e.g. "203.0.113.7/32" (curl ifconfig.me)
+ssh_allowed_cidr = "0.0.0.0/0"
+
+# Bare hostname — you will point its A record at the VM after apply
+domain = "openfarm.example.com"
+
+# Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client
+google_client_id     = "1234567890-abc.apps.googleusercontent.com"
+google_client_secret = "GOCSPX-..."
+
+# Optional: transactional email via Resend
+# resend_api_key = "re_..."
+
+# Branch to deploy (development happens on dev; deploys track main)
+git_branch = "main"

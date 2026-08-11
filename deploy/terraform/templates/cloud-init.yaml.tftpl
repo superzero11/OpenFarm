@@ -1,0 +1,72 @@
+#cloud-config
+# OpenFarm first-boot provisioning. Rendered by Terraform (templatefile).
+# Progress: tail -f /var/log/openfarm-bootstrap.log
+# Completion: cloud-init status --wait   (expect ~15-25 min: apt + Docker + ARM image builds)
+
+package_update: true
+
+write_files:
+  - path: /etc/cron.d/openfarm-backup
+    permissions: "0644"
+    content: |
+      # Daily OpenFarm Postgres backup (see deploy/backup.sh)
+      0 2 * * * root /opt/openfarm/deploy/backup.sh >> /var/log/openfarm-backup.log 2>&1
+
+  - path: /opt/openfarm-bootstrap/bootstrap.sh
+    permissions: "0700"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      INSTALL_DIR=/opt/openfarm
+
+      echo "── OpenFarm bootstrap: clone ─────────────────────────────"
+      if [ ! -d "$INSTALL_DIR" ]; then
+          # setup.sh would clone too, but cloning first means we run the
+          # branch-pinned copy of setup.sh itself (single source of truth).
+          apt-get install -y -qq git
+          git clone --branch '${git_branch}' '${repo_url}' "$INSTALL_DIR"
+      fi
+
+      echo "── OpenFarm bootstrap: setup.sh ──────────────────────────"
+      REPO_BRANCH='${git_branch}' bash "$INSTALL_DIR/deploy/setup.sh"
+
+      echo "── OpenFarm bootstrap: .env overlay ──────────────────────"
+      cd "$INSTALL_DIR"
+
+      # Replace KEY=... if present (commented or not), else append.
+      set_env() {
+          local key="$1" val="$2"
+          if grep -qE "^#? ?$${key}=" .env; then
+              sed -i "s|^#\\? \\?$${key}=.*|$${key}=$${val}|" .env
+          else
+              printf '%s=%s\n' "$${key}" "$${val}" >> .env
+          fi
+      }
+
+      set_env DOMAIN '${domain}'
+      set_env NEXTAUTH_URL 'https://${domain}'
+      set_env APP_URL 'https://${domain}'
+      set_env NEXT_PUBLIC_API_URL 'https://${domain}/v1'
+      set_env NEXT_PUBLIC_TITILER_URL 'https://${domain}/tiles'
+      set_env TITILER_PUBLIC_URL 'https://${domain}/tiles'
+      set_env NEXT_PUBLIC_MINIO_URL 'https://${domain}/storage/openfarm'
+      set_env NEXT_PUBLIC_PROTOMAPS_URL 'https://${domain}/storage/openfarm/basemap'
+      set_env MINIO_PUBLIC_ENDPOINT '${domain}/storage'
+      set_env CORS_ORIGINS 'https://${domain}'
+      set_env GOOGLE_CLIENT_ID '${google_client_id}'
+      set_env GOOGLE_CLIENT_SECRET '${google_client_secret}'
+      %{~ if resend_api_key != "" ~}
+      set_env RESEND_API_KEY '${resend_api_key}'
+      %{~ endif ~}
+
+      chmod 600 .env
+
+      echo "── OpenFarm bootstrap: docker compose up (long) ──────────"
+      docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+      touch "$INSTALL_DIR/.bootstrap-complete"
+      echo "── OpenFarm bootstrap complete ───────────────────────────"
+
+runcmd:
+  - bash /opt/openfarm-bootstrap/bootstrap.sh 2>&1 | tee -a /var/log/openfarm-bootstrap.log

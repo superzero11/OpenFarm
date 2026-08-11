@@ -4,6 +4,17 @@ Deploy OpenFarm on a single VPS using Docker Compose + Caddy (auto-SSL).
 
 This guide uses **Oracle Cloud Free Tier** (always-free ARM VM with 12 GB RAM), but the steps work on any Ubuntu 22.04+ server.
 
+## Option A: Automated (Terraform, Oracle Cloud)
+
+One `terraform apply` provisions the network, the always-free ARM VM, and
+boots the full stack via cloud-init — only the DNS A record and the Google
+OAuth redirect URI stay manual. See **[deploy/terraform/README.md](deploy/terraform/README.md)**.
+
+## Option B: Manual
+
+The steps below walk through the same setup by hand, and apply to any
+Ubuntu 22.04+ server.
+
 ---
 
 ## Prerequisites

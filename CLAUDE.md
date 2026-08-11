@@ -94,7 +94,7 @@ CHANGELOG.md is rendered in-app at `/changelog` by a minimal parser (`parseChang
 4. **Service JWT scope.** The share-proxy service token has no `aud` claim; it verifies against the main API too (only failing accidentally at `uuid.UUID(sub)`). Add per-service audience claims and check them.
 5. **`/healthz` always returns HTTP 200**, even with `status: "unhealthy"`. Return 503 on errors so orchestrators notice.
 6. **Hardcoded `worker_concurrency=4`** in app/worker.py — make env-configurable (target deploy is a 2-OCPU/12GB Oracle Ampere ARM free-tier VM, so 4 is likely too high there).
-7. **Discord invite link in README (discord.gg/spPhvA2u) is dead** — Discord's API returns "Unknown Invite" (verified 2026-08-12). The badge itself renders fine (static, no server ID needed), but the link 404s for anyone clicking it. Replace with a valid permanent invite.
+7. **Discord badge is static** — README links to the permanent invite discord.gg/KM9qxpEmsU (server "OpenFarm Community", ID 1480056202829234379). To switch to the live member-count badge (img.shields.io/discord/1480056202829234379), the server widget must first be enabled (Server Settings → Widget) — it was disabled as of 2026-08-12, and shields.io reads counts via the widget API.
 8. Minor: MAX_CLOUD_COVER should become per-org/per-field configurable.
 
 ## Deployment context

@@ -6,9 +6,9 @@ We currently support security fixes on the `main` branch. If you are running a f
 
 ## Reporting a Vulnerability
 
-- Email: hello@openfarm.earth
+- Use [GitHub private vulnerability reporting](https://github.com/superzero11/OpenFarm/security/advisories/new) (Security → Report a vulnerability).
 - Please include a detailed description, steps to reproduce, and the potential impact.
-- **Do not** open public GitHub issues for security reports.
+- **Do not** open public GitHub issues or Discord posts for security reports.
 
 We aim to acknowledge reports within 2 business days and provide a resolution or mitigation plan within 10 business days.
 

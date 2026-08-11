@@ -17,7 +17,7 @@ Open source self-hostable and reproducible Crop Intelligence Platform
 [![Discord](https://img.shields.io/discord/1480056202829234379?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/KM9qxpEmsU)
 [![Patreon](https://img.shields.io/badge/Patreon-Support%20Us-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/c/SuperZero11)
 
-[Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
+**[🌍 Live Demo](https://openfarm.earth)** · [Report Bug](https://github.com/superzero11/OpenFarm/issues) · [Request Feature](https://github.com/superzero11/OpenFarm/issues)
 
 <p>
   <img src="apps/web/public/screenshots/openfarm-1.png" width="49%" />
@@ -206,7 +206,7 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan — what's done, what
 ## Contributing & Security
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR process
 - See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards
-- See [SECURITY.md](SECURITY.md) to report vulnerabilities (hello@openfarm.earth)
+- See [SECURITY.md](SECURITY.md) to report vulnerabilities (via [GitHub private reporting](https://github.com/superzero11/OpenFarm/security/advisories/new))
 
 ## License
 

@@ -48,3 +48,6 @@ docs/
 # ── MinIO / Storage (local dev volumes) ──────────────────────────────
 minio-data/
 .agents/
+
+# ── TypeScript build cache ──────────────────────────────────────────
+*.tsbuildinfo

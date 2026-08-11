@@ -97,7 +97,12 @@ if [ -f /etc/iptables/rules.v4 ]; then
     done
     iptables -C INPUT -p udp --dport 443 -j ACCEPT 2>/dev/null || \
         iptables -I INPUT -p udp --dport 443 -j ACCEPT
-    netfilter-persistent save
+    if command -v netfilter-persistent >/dev/null 2>&1; then
+        netfilter-persistent save
+    else
+        # some OCI Ubuntu images ship the rules file without the tool
+        iptables-save > /etc/iptables/rules.v4
+    fi
 fi
 
 # ── 6. Configure fail2ban ───────────────────────────────────────────

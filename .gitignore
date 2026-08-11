@@ -51,3 +51,12 @@ minio-data/
 
 # ── TypeScript build cache ──────────────────────────────────────────
 *.tsbuildinfo
+
+# ── Terraform (deploy/terraform) ────────────────────────────────────
+# .terraform.lock.hcl IS committed (pins provider hashes)
+deploy/terraform/.terraform/
+deploy/terraform/*.tfstate
+deploy/terraform/*.tfstate.*
+deploy/terraform/terraform.tfvars
+deploy/terraform/crash.log
+deploy/terraform/crash.*.log

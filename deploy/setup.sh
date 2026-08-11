@@ -14,6 +14,7 @@
 set -euo pipefail
 
 REPO_URL="https://github.com/superzero11/OpenFarm.git"
+REPO_BRANCH="${REPO_BRANCH:-main}"
 INSTALL_DIR="/opt/openfarm"
 
 echo "──────────────────────────────────────────────────────────"
@@ -69,6 +70,19 @@ ufw allow 80/tcp    # HTTP
 ufw allow 443/tcp   # HTTPS
 ufw --force enable
 
+# Oracle Cloud Ubuntu images ship netfilter-persistent rules ending in a
+# blanket REJECT that ufw does not override — insert explicit ACCEPTs.
+if [ -f /etc/iptables/rules.v4 ]; then
+    echo "▸ Opening 80/443 in OCI iptables rules..."
+    for p in 80 443; do
+        iptables -C INPUT -p tcp --dport "$p" -j ACCEPT 2>/dev/null || \
+            iptables -I INPUT -p tcp --dport "$p" -j ACCEPT
+    done
+    iptables -C INPUT -p udp --dport 443 -j ACCEPT 2>/dev/null || \
+        iptables -I INPUT -p udp --dport 443 -j ACCEPT
+    netfilter-persistent save
+fi
+
 # ── 6. Configure fail2ban ───────────────────────────────────────────
 echo "▸ Configuring fail2ban..."
 systemctl enable fail2ban
@@ -76,11 +90,11 @@ systemctl start fail2ban
 
 # ── 7. Clone repository ─────────────────────────────────────────────
 if [ ! -d "$INSTALL_DIR" ]; then
-    echo "▸ Cloning OpenFarm to $INSTALL_DIR..."
-    git clone "$REPO_URL" "$INSTALL_DIR"
+    echo "▸ Cloning OpenFarm ($REPO_BRANCH) to $INSTALL_DIR..."
+    git clone --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR"
 else
     echo "▸ OpenFarm already cloned, pulling latest..."
-    cd "$INSTALL_DIR" && git pull origin main
+    cd "$INSTALL_DIR" && git pull origin "$REPO_BRANCH"
 fi
 
 cd "$INSTALL_DIR"

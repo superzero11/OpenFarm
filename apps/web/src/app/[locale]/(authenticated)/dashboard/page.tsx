@@ -25,6 +25,11 @@ import { cn } from "@/lib/utils";
 /** How many alert rows the panel shows before deferring to the alerts page. */
 const ALERT_PREVIEW = 4;
 
+/** Farm rows shown before deferring to the farms page. Three farms plus
+ *  quick actions is what balances the left column against the four
+ *  alerts on the right, which is the proportion the reference draws. */
+const FARM_PREVIEW = 3;
+
 /** Field count and total area per farm, so a row carries its own numbers. */
 interface FarmStats {
     fieldCount: number;
@@ -161,8 +166,10 @@ export default function DashboardPage() {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                 {/* ── Left column ─────────────────────────────────── */}
                 <div className="flex flex-col gap-4">
-                    {/* Farms */}
-                    <Card>
+                    {/* Farms. flex-1 lets this card take up the slack so the
+                        column ends level with the alerts panel beside it,
+                        whatever the farm and alert counts happen to be. */}
+                    <Card className="flex flex-col lg:flex-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <CardTitle>{t("yourFarms")}</CardTitle>
                             <CreateFarmModal>
@@ -171,7 +178,7 @@ export default function DashboardPage() {
                                 </Button>
                             </CreateFarmModal>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-1">
                             {farms.length === 0 ? (
                                 <div className="rounded-lg border-2 border-dashed p-12 text-center">
                                     <Tractor className="mx-auto h-12 w-12 text-muted-foreground/40" />
@@ -188,7 +195,7 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-2">
-                                    {farms.map((farm) => (
+                                    {farms.slice(0, FARM_PREVIEW).map((farm) => (
                                         <FarmRow
                                             key={farm.id}
                                             farm={farm}
@@ -197,6 +204,15 @@ export default function DashboardPage() {
                                             fieldCountLabel={(count) => t("fieldCount", { count })}
                                         />
                                     ))}
+                                    {(orgDetail?.farm_count ?? 0) > FARM_PREVIEW && (
+                                        <Link
+                                            href="/farms"
+                                            className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:text-primary/80"
+                                        >
+                                            {t("viewAllFarms")}
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Link>
+                                    )}
                                 </div>
                             )}
                         </CardContent>
@@ -277,7 +293,7 @@ export default function DashboardPage() {
                                 {openAlertTotal > ALERT_PREVIEW && (
                                     <Link
                                         href="/alerts"
-                                        className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline"
+                                        className="mt-1 inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:text-primary/80"
                                     >
                                         {t("viewAllAlerts")}
                                         <ChevronRight className="h-4 w-4" />

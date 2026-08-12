@@ -270,7 +270,7 @@ export function AlertRow({
                         {fieldName && farmId && (
                             <Link
                                 href={`/farms/${farmId}/fields/${alert.field_id}`}
-                                className="inline-flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
+                                className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:text-primary/80"
                             >
                                 {fieldName}
                                 <ChevronRight className="h-3 w-3" />

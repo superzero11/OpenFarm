@@ -130,6 +130,8 @@ Icons inherit `currentColor`. An icon never carries meaning alone - always paire
 
 **Stat card** - icon + label row, metric on its own line, optional sublabel. Metric is `text-2xl font-bold tabular-nums`. Never put a sparkline inside without also giving it an axis-free caption.
 
+**Link** - **never underlined**, in any state. A link is `text-primary font-medium`, and hover shifts the colour (`hover:text-primary/80`). Underlines make text reflow under the cursor and collide with the mono values and chips these links sit beside. `hover:underline` and `underline` are as wrong here as a raw hex: the global `a { text-decoration: none }` in `globals.css` is the backstop, not the permission to add one locally. Anything that needs a stronger affordance is a `Button`, not a link.
+
 **Badge** - `rounded-full`, `text-[10px] uppercase font-semibold tracking-wider` for status/severity; `text-xs` for counts. Outline variant for inert states (`Closed`).
 
 **Tabs** - `underline` variant for in-page navigation (field detail panel); `default` pill variant only inside a card for switching a single dataset.

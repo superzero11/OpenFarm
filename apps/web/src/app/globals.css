@@ -220,8 +220,12 @@
      classes, and an `a:hover` rule would outrank every one of them -
      turning primary buttons green on green and underlining list rows.
      Scoping to class-less anchors keeps the affordance where it belongs. */
-  a:not([class]) { color: hsl(var(--primary)); text-underline-offset: 0.2em; }
-  a:not([class]):hover { color: hsl(var(--primary) / 0.82); text-decoration: underline; }
+  /* Links carry their affordance in colour and weight, never in an
+     underline. Hover shifts the colour rather than adding a rule, so
+     text never reflows or thickens under the cursor. */
+  a { text-decoration: none; }
+  a:not([class]) { color: hsl(var(--primary)); font-weight: 500; }
+  a:not([class]):hover { color: hsl(var(--primary) / 0.82); }
 
   ::selection { background: hsl(var(--primary) / 0.28); }
 

@@ -547,7 +547,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                                 variant="link"
                                 size="sm"
                                 onClick={() => setActiveJob(null)}
-                                className="h-auto p-0 text-xs text-danger underline mt-1"
+                                className="mt-1 h-auto p-0 text-xs text-danger hover:text-danger/80"
                             >
                                 Dismiss
                             </Button>

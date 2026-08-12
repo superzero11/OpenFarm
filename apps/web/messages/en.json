@@ -157,7 +157,8 @@
         "noLocation": "No location set",
         "fieldCount": "{count, plural, one {# field} other {# fields}}",
         "noOpenAlerts": "No open alerts",
-        "noOpenAlertsDesc": "Every field is within its thresholds."
+        "noOpenAlertsDesc": "Every field is within its thresholds.",
+        "viewAllFarms": "View all farms"
     },
     "farmsPage": {
         "title": "Farms",

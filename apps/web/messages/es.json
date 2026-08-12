@@ -157,7 +157,8 @@
         "noLocation": "Sin ubicación",
         "fieldCount": "{count, plural, one {# campo} other {# campos}}",
         "noOpenAlerts": "Sin alertas abiertas",
-        "noOpenAlertsDesc": "Todos los campos están dentro de sus umbrales."
+        "noOpenAlertsDesc": "Todos los campos están dentro de sus umbrales.",
+        "viewAllFarms": "Ver todas las fincas"
     },
     "farmsPage": {
         "title": "Fincas",

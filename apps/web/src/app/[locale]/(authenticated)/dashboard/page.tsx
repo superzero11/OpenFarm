@@ -25,10 +25,10 @@ import { cn } from "@/lib/utils";
 /** How many alert rows the panel shows before deferring to the alerts page. */
 const ALERT_PREVIEW = 4;
 
-/** Farm rows shown before deferring to the farms page. Three farms plus
- *  quick actions is what balances the left column against the four
- *  alerts on the right, which is the proportion the reference draws. */
-const FARM_PREVIEW = 3;
+/** Farm rows shown before deferring to the farms page. Four fills the
+ *  column against the four alerts on the right; three left a row's worth
+ *  of dead space inside the card. */
+const FARM_PREVIEW = 4;
 
 /** Field count and total area per farm, so a row carries its own numbers. */
 interface FarmStats {
@@ -255,7 +255,7 @@ export default function DashboardPage() {
 
                 {/* ── Right column: the one thing a farm manager opens
                        the app to see. ─────────────────────────────── */}
-                <Card className="lg:self-start">
+                <Card className="flex flex-col">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
                         <CardTitle>{t("openAlerts")}</CardTitle>
                         {openAlertTotal > 0 && (
@@ -264,7 +264,7 @@ export default function DashboardPage() {
                             </span>
                         )}
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-1">
                         {openAlerts.length === 0 ? (
                             <div className="py-10 text-center">
                                 <CheckCircle2 className="mx-auto h-5 w-5 text-success" />

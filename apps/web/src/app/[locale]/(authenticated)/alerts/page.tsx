@@ -1,21 +1,17 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "@/i18n/navigation";
 import { useOrg } from "@/components/org-context";
-import { alertsApi, farmsApi, fieldsApi } from "@/lib/api";
+import { alertsApi, farmsApi } from "@/lib/api";
 import type { Alert, Farm, Field } from "@/lib/api";
 import { toast } from "sonner";
 import {
     AlertTriangle,
     Bell,
     CheckCircle2,
-    Filter,
     ShieldAlert,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Select,
@@ -29,6 +25,8 @@ import { useTranslations } from "next-intl";
 import { AlertRow } from "@/components/alert-row";
 
 /* ── (severity config and rule labels moved to alert-row.tsx) ─── */
+
+const SEVERITY_TABS = ["all", "high", "medium", "low"] as const;
 
 export default function AlertsPage() {
     const t = useTranslations("alertsPage");
@@ -148,71 +146,79 @@ export default function AlertsPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-[13px] text-muted-foreground">
                     {t("subtitle")}
                 </p>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            {/* Summary. Icon and count both read from the severity tokens,
+                so the summary cannot drift from the rows below it. */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <SummaryCard
                     label={t("totalOpen")}
                     count={openCount}
                     icon={<Bell className="h-5 w-5 text-primary" />}
-                    accent="primary"
                 />
                 <SummaryCard
                     label={t("high")}
                     count={highCount}
                     icon={<ShieldAlert className="h-5 w-5 text-sev-high" />}
-                    accent="sev-high"
+                    countClass="text-sev-high"
                 />
                 <SummaryCard
                     label={t("medium")}
                     count={mediumCount}
                     icon={<AlertTriangle className="h-5 w-5 text-sev-medium" />}
-                    accent="sev-medium"
+                    countClass="text-sev-medium"
                 />
                 <SummaryCard
                     label={t("low")}
                     count={lowCount}
                     icon={<Bell className="h-5 w-5 text-sev-low" />}
-                    accent="sev-low"
+                    countClass="text-sev-low"
                 />
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Filter className="h-4 w-4" />
-                    {t("filters")}
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+                {/* Severity as a segmented control: four mutually exclusive
+                    options are cheaper to read than a closed dropdown. */}
+                <div className="flex flex-wrap gap-0.5 rounded-lg bg-surface-2 p-1">
+                    {SEVERITY_TABS.map((sev) => (
+                        <button
+                            key={sev}
+                            type="button"
+                            onClick={() => setSeverityFilter(sev)}
+                            aria-pressed={severityFilter === sev}
+                            className={cn(
+                                "rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                                severityFilter === sev
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:text-foreground",
+                            )}
+                        >
+                            {sev === "all" ? t("severityAll") : t(sev)}
+                        </button>
+                    ))}
                 </div>
-                <div className="flex gap-3">
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[140px] h-9">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t("allStatuses")}</SelectItem>
-                            <SelectItem value="open">{t("openOnly")}</SelectItem>
-                            <SelectItem value="closed">{t("closedOnly")}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                        <SelectTrigger className="w-[140px] h-9">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t("allSeverities")}</SelectItem>
-                            <SelectItem value="high">{t("high")}</SelectItem>
-                            <SelectItem value="medium">{t("medium")}</SelectItem>
-                            <SelectItem value="low">{t("low")}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="ml-auto text-sm text-muted-foreground tabular-nums">
-                    {filteredAlerts.length} {t("alertsShown")}
-                </div>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">{t("allStatuses")}</SelectItem>
+                        <SelectItem value="open">{t("openOnly")}</SelectItem>
+                        <SelectItem value="closed">{t("closedOnly")}</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                {/* A filtered list with no total is a trap: the user reads
+                    four alerts and thinks that is all of them. */}
+                <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground tabular-nums">
+                    {t("showingCount", { shown: filteredAlerts.length, total: alerts.length })}
+                </span>
             </div>
 
             {/* Alert List */}
@@ -227,7 +233,7 @@ export default function AlertsPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                     {filteredAlerts.map((alert) => {
                         const field = fieldMap[alert.field_id];
                         const farm = field ? farmMap[field.farm_id] : null;
@@ -243,6 +249,7 @@ export default function AlertsPage() {
                                 onToggleStatus={toggleStatus}
                                 togglingId={togglingId}
                                 actionLabels={{ close: t("close"), reopen: t("reopen") }}
+                                closedLabel={t("closed")}
                             />
                         );
                     })}
@@ -258,21 +265,24 @@ function SummaryCard({
     label,
     count,
     icon,
-    accent,
+    countClass,
 }: {
     label: string;
     count: number;
     icon: React.ReactNode;
-    accent: string;
+    /** Severity colour for the metric, matched to the icon. */
+    countClass?: string;
 }) {
     return (
         <Card>
             <CardContent className="p-5">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                     {icon}
-                    <span className="text-sm text-muted-foreground">{label}</span>
+                    <span className="text-sm leading-snug text-muted-foreground">{label}</span>
                 </div>
-                <p className="mt-3 text-2xl font-bold tracking-tight tabular-nums">{count}</p>
+                <p className={cn("mt-3 text-2xl font-bold tracking-tight tabular-nums", countClass)}>
+                    {count}
+                </p>
             </CardContent>
         </Card>
     );

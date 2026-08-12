@@ -17,6 +17,8 @@ import {
     ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ruleLabel } from "@/lib/alert-rules";
+import { useTranslations } from "next-intl";
 
 /* ── Severity config ───────────────────────────────────────── */
 
@@ -25,43 +27,28 @@ const SEVERITY_CONFIG: Record<
     {
         dotClass: string;
         textClass: string;
+        badgeClass: string;
         icon: React.ReactNode;
     }
 > = {
     high: {
         dotClass: "bg-sev-high",
         textClass: "text-sev-high",
+        badgeClass: "border-transparent bg-sev-high text-destructive-foreground",
         icon: <ShieldAlert className="h-4 w-4" />,
     },
     medium: {
         dotClass: "bg-sev-medium",
         textClass: "text-sev-medium",
+        badgeClass: "border-sev-medium/40 bg-sev-medium/15 text-sev-medium",
         icon: <AlertTriangle className="h-4 w-4" />,
     },
     low: {
         dotClass: "bg-sev-low",
         textClass: "text-sev-low",
+        badgeClass: "border-sev-low/40 bg-sev-low/15 text-sev-low",
         icon: <Bell className="h-4 w-4" />,
     },
-};
-
-const RULE_LABELS: Record<string, string> = {
-    ndvi_drop: "NDVI Drop",
-    ndvi_threshold: "Low NDVI",
-    evi_drop: "EVI Drop",
-    evi_threshold: "Low EVI",
-    savi_drop: "SAVI Drop",
-    savi_threshold: "Low SAVI",
-    ndwi_drop: "NDWI Drop",
-    ndwi_threshold: "Low NDWI",
-    soil_ph_critical: "Soil pH Critical",
-    soil_ph_warning: "Soil pH Warning",
-    soil_soc_critical: "SOC Critical",
-    soil_soc_warning: "SOC Warning",
-    soil_sand_erosion: "Erosion Risk",
-    soil_cec_low: "Low CEC",
-    soil_compaction: "Compaction Risk",
-    soil_waterlogging: "Waterlogging Risk",
 };
 
 /* ── Props ─────────────────────────────────────────────────── */
@@ -82,6 +69,8 @@ interface AlertRowProps {
     togglingId?: string | null;
     /** i18n labels for close/reopen buttons. */
     actionLabels?: { close: string; reopen: string };
+    /** i18n label for the inert "closed" state badge. */
+    closedLabel?: string;
     /** Compact mode - reduced padding and smaller text. */
     compact?: boolean;
 }
@@ -97,8 +86,10 @@ export function AlertRow({
     onToggleStatus,
     togglingId,
     actionLabels,
+    closedLabel,
     compact = false,
 }: AlertRowProps) {
+    const tRules = useTranslations("alertRules");
     const severity = SEVERITY_CONFIG[alert.severity] || SEVERITY_CONFIG.low;
     const isClosed = alert.status === "closed";
 
@@ -108,7 +99,7 @@ export function AlertRow({
             <div
                 className={cn(
                     "rounded-lg border bg-card shadow-sm p-2.5 transition-colors",
-                    isClosed ? "opacity-60 bg-muted/30" : "hover:border-primary/20",
+                    isClosed ? "opacity-60 bg-surface-2" : "hover:border-primary/30",
                 )}
             >
                 {/* Top row: icon + badge + rule + date */}
@@ -117,15 +108,18 @@ export function AlertRow({
                         {severity.icon}
                     </span>
                     <Badge
-                        variant={alert.severity === "high" && !isClosed ? "destructive" : "secondary"}
-                        className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+                        variant="outline"
+                        className={cn(
+                            "text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold",
+                            isClosed ? "border-border text-muted-foreground" : severity.badgeClass,
+                        )}
                     >
                         {alert.severity}
                     </Badge>
                     <span className="text-xs font-medium text-muted-foreground truncate">
-                        {RULE_LABELS[alert.rule_name] || alert.rule_name}
+                        {ruleLabel(alert.rule_name, tRules)}
                     </span>
-                    <span className="text-[11px] text-muted-foreground ml-auto shrink-0">
+                    <span className="font-mono text-[11px] text-muted-foreground ml-auto shrink-0">
                         {new Date(alert.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     </span>
                 </div>
@@ -167,7 +161,7 @@ export function AlertRow({
                         <Button
                             variant={isClosed ? "outline" : "secondary"}
                             size="sm"
-                            className="h-6 px-2 text-[10px]"
+                            className="px-2 text-xs"
                             disabled={togglingId === alert.id}
                             onClick={() => onToggleStatus(alert)}
                         >
@@ -191,8 +185,8 @@ export function AlertRow({
             className={cn(
                 "flex items-start gap-3 rounded-lg border bg-card shadow-sm p-3 transition-colors",
                 isClosed
-                    ? "opacity-60 bg-muted/30"
-                    : "hover:border-primary/20",
+                    ? "opacity-60 bg-surface-2"
+                    : "hover:border-primary/30",
             )}
         >
             {/* Severity icon */}
@@ -204,27 +198,26 @@ export function AlertRow({
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                     <Badge
-                        variant={
-                            alert.severity === "high" && !isClosed
-                                ? "destructive"
-                                : "secondary"
-                        }
-                        className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+                        variant="outline"
+                        className={cn(
+                            "text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold",
+                            isClosed ? "border-border text-muted-foreground" : severity.badgeClass,
+                        )}
                     >
                         {alert.severity}
                     </Badge>
                     <span className="text-xs font-medium text-muted-foreground">
-                        {RULE_LABELS[alert.rule_name] || alert.rule_name}
+                        {ruleLabel(alert.rule_name, tRules)}
                     </span>
                     {isClosed && (
                         <Badge
                             variant="outline"
-                            className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground"
+                            className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold border-border text-muted-foreground"
                         >
-                            Closed
+                            {closedLabel ?? "Closed"}
                         </Badge>
                     )}
-                    <span className="text-[11px] text-muted-foreground ml-auto shrink-0">
+                    <span className="font-mono text-[11px] text-muted-foreground ml-auto shrink-0">
                         {new Date(alert.date).toLocaleDateString(undefined, {
                             month: "short",
                             day: "numeric",
@@ -298,20 +291,20 @@ export function AlertRow({
                     <Button
                         variant={isClosed ? "outline" : "secondary"}
                         size="sm"
-                        className="h-7 text-xs"
+                        className="text-xs"
                         disabled={togglingId === alert.id}
                         onClick={() => onToggleStatus(alert)}
                     >
                         {togglingId === alert.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin" />
                         ) : isClosed ? (
                             <>
-                                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                                <RotateCcw className="h-4 w-4 mr-1" />
                                 {actionLabels?.reopen ?? "Reopen"}
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                <CheckCircle2 className="h-4 w-4 mr-1" />
                                 {actionLabels?.close ?? "Close"}
                             </>
                         )}
@@ -319,10 +312,6 @@ export function AlertRow({
                 </div>
             )}
 
-            {/* Chevron hint when no actions (navigable rows) */}
-            {!showActions && (
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-            )}
         </div>
     );
 }

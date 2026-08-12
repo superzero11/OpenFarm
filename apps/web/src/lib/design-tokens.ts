@@ -14,3 +14,12 @@ export function tokenColor(varName: string, alpha?: number): string {
     if (!value) return "hsl(0 0% 50%)";
     return alpha != null ? `hsl(${value} / ${alpha})` : `hsl(${value})`;
 }
+
+/**
+ * Every surface that floats over map imagery uses this scrim: surface-3
+ * at 95%, a hairline border and shadow-panel. Legible over both dark
+ * canopy and bright bare soil, and identical for the toolbar, the
+ * controls, the legend, the provenance bar and the analysis panel.
+ */
+export const MAP_CHROME =
+    "bg-surface-3/95 backdrop-blur border border-border shadow-panel";

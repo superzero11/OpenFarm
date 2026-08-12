@@ -31,24 +31,21 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
-import { tokenColor } from "@/lib/design-tokens";
+import { tokenColor, MAP_CHROME } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BaseMap = dynamic(() => import("@/components/map/base-map"), {
     ssr: false,
     loading: () => (
-        <div className="flex h-full w-full items-center justify-center bg-muted">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <Skeleton className="h-full w-full rounded-none" />
     ),
 });
 
 const DrawMap = dynamic(() => import("@/components/map/draw-map"), {
     ssr: false,
     loading: () => (
-        <div className="flex h-full w-full items-center justify-center bg-muted">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <Skeleton className="h-full w-full rounded-none" />
     ),
 });
 
@@ -588,7 +585,7 @@ export default function DetectBoundariesPage() {
             <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
                 <Link
                     href={`/farms/${farmId}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-background/90 backdrop-blur-sm px-3 py-2 text-sm font-medium text-foreground shadow-md border border-border/50 hover:bg-background transition-colors"
+                    className={cn("inline-flex h-10 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3", MAP_CHROME)}
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Farm
@@ -602,12 +599,12 @@ export default function DetectBoundariesPage() {
 
             {/* Floating sidebar panel - right side */}
             <div className="absolute top-4 right-4 z-10 w-80 max-h-[calc(100vh-2rem)] flex flex-col">
-                <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col max-h-full">
+                <div className={cn("flex max-h-full flex-col overflow-hidden rounded-xl", MAP_CHROME)}>
                     {/* Panel header */}
                     <button
                         type="button"
                         onClick={() => setPanelOpen(!panelOpen)}
-                        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors shrink-0"
+                        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-surface-2 transition-colors shrink-0"
                     >
                         <div className="flex items-center gap-2">
                             <ScanSearch className="h-4 w-4" />
@@ -631,7 +628,7 @@ export default function DetectBoundariesPage() {
                     </button>
 
                     {panelOpen && (
-                        <div className="border-t border-border/50 flex flex-col overflow-hidden">
+                        <div className="border-t border-border flex flex-col overflow-hidden">
                             {/* ─── Draw phase ─── */}
                             {phase === "draw" && (
                                 <div className="p-4 space-y-3">
@@ -736,7 +733,7 @@ export default function DetectBoundariesPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-6 w-6"
+                                                    className="h-9 w-9"
                                                     onClick={() => {
                                                         setSelected(null);
                                                         setEditMode(false);
@@ -870,7 +867,7 @@ export default function DetectBoundariesPage() {
                                                 </div>
                                             ) : (
                                                 <>
-                                                    <div className="p-3 flex gap-2 border-b border-border/50">
+                                                    <div className="p-3 flex gap-2 border-b border-border">
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
@@ -906,7 +903,7 @@ export default function DetectBoundariesPage() {
                                                                 <button
                                                                     key={b.id}
                                                                     type="button"
-                                                                    className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors"
+                                                                    className="w-full text-left px-4 py-3 hover:bg-surface-2 transition-colors"
                                                                     onClick={() => {
                                                                         setSelected(
                                                                             b

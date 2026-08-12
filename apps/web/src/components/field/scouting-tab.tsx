@@ -534,7 +534,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                     <h3 className="text-sm font-semibold">
                         {editingObs ? t("editObservation") : t("addObservation")}
                     </h3>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={resetForm}>
+                    <Button variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={resetForm}>
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
@@ -544,8 +544,8 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                     <div className="space-y-1.5">
                         <Label className="text-xs">{t("locationLabel")}</Label>
                         {pickedPoint ? (
-                            <div className="flex items-center gap-2 rounded-md border px-3 py-2 bg-muted/50">
-                                <MapPin className="h-3.5 w-3.5 text-info shrink-0" />
+                            <div className="flex items-center gap-2 rounded-md border px-3 py-2 bg-surface-2">
+                                <MapPin className="h-4 w-4 text-info shrink-0" />
                                 <span className="text-xs text-foreground tabular-nums">
                                     {pickedPoint[1].toFixed(5)}, {pickedPoint[0].toFixed(5)}
                                 </span>
@@ -561,7 +561,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                             </div>
                         ) : pickingMode ? (
                             <div className="flex items-center gap-2 rounded-md border bg-info-subtle px-3 py-2">
-                                <Crosshair className="h-3.5 w-3.5 text-info animate-pulse shrink-0" />
+                                <Crosshair className="h-4 w-4 text-info animate-pulse shrink-0" />
                                 <span className="text-xs text-info">
                                     {t("pickingPoint")}
                                 </span>
@@ -581,7 +581,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                 className="w-full h-9 text-xs"
                                 onClick={startPointPick}
                             >
-                                <Crosshair className="h-3.5 w-3.5 mr-2" />
+                                <Crosshair className="h-4 w-4 mr-2" />
                                 {t("pickPoint")}
                             </Button>
                         )}
@@ -654,7 +654,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                     <Button
                                         variant="secondary"
                                         size="sm"
-                                        className="h-6 px-2 text-[10px]"
+                                        className="px-2 text-xs"
                                         onClick={() => fileInputRef.current?.click()}
                                     >
                                         {t("changePhoto")}
@@ -662,7 +662,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                     <Button
                                         variant="secondary"
                                         size="sm"
-                                        className="h-6 w-6 p-0"
+                                        className="h-9 w-9 p-0"
                                         onClick={() => {
                                             setPhotoFile(null);
                                             setPhotoPreview(null);
@@ -760,7 +760,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                         className="mt-4 h-8"
                         onClick={() => setFormOpen(true)}
                     >
-                        <Plus className="h-3.5 w-3.5 mr-1.5" />
+                        <Plus className="h-4 w-4 mr-1.5" />
                         {t("addObservation")}
                     </Button>
                 </div>
@@ -779,7 +779,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                 </p>
                 <Button
                     size="sm"
-                    className="h-7 text-xs"
+                    className="text-xs"
                     onClick={() => setFormOpen(true)}
                 >
                     <Plus className="h-3 w-3 mr-1" />
@@ -825,7 +825,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0"
+                                    className="h-9 w-9 p-0"
                                     onClick={() => openEditForm(obs)}
                                     title={t("editObservation")}
                                 >
@@ -834,7 +834,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                    className="h-9 w-9 p-0 text-destructive hover:text-destructive"
                                     onClick={() => handleDelete(obs.id)}
                                     disabled={deletingId === obs.id}
                                     title={t("delete")}
@@ -898,7 +898,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                             return (
                                 <div className="mt-2 rounded-lg border bg-warning-subtle p-2">
                                     <div className="flex items-start gap-1.5">
-                                        <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+                                        <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5">
                                                 <p className="text-[10px] font-semibold text-warning uppercase tracking-wider">
@@ -907,7 +907,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                                 {linked && (
                                                     <Badge
                                                         variant={isClosed ? "outline" : "secondary"}
-                                                        className={`text-[8px] px-1 py-0 h-3.5 ${isClosed ? "text-muted-foreground" : "bg-warning/15 text-warning"}`}
+                                                        className={`text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold ${isClosed ? "text-muted-foreground" : "bg-warning-subtle text-warning"}`}
                                                     >
                                                         {isClosed ? "Closed" : "Open"}
                                                     </Badge>
@@ -931,7 +931,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                     <Badge
                                         key={tag}
                                         variant="secondary"
-                                        className="text-[9px] px-1.5 py-0 h-4"
+                                        className="text-[11px] px-1.5 py-0"
                                     >
                                         {tag}
                                     </Badge>

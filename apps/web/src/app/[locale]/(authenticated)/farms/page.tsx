@@ -101,7 +101,7 @@ export default function FarmsListPage() {
                             <Card className="h-full hover:border-primary/30 hover:shadow-md transition-all">
                                 <CardContent className="p-5">
                                     <div className="flex items-start justify-between">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-subtle group-hover:bg-primary-subtle transition-colors">
                                             <Tractor className="h-5 w-5 text-primary" />
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors mt-1" />

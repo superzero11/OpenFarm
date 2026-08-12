@@ -24,6 +24,7 @@ import {
     Share2,
     PanelRight,
     PanelRightClose,
+    Satellite,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -32,23 +33,20 @@ import { Label } from "@/components/ui/label";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
-import { tokenColor } from "@/lib/design-tokens";
+import { tokenColor, MAP_CHROME } from "@/lib/design-tokens";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DrawMap = dynamic(() => import("@/components/map/draw-map"), {
     ssr: false,
     loading: () => (
-        <div className="flex h-full w-full items-center justify-center bg-muted">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <Skeleton className="h-full w-full rounded-none" />
     ),
 });
 
 const BaseMap = dynamic(() => import("@/components/map/base-map"), {
     ssr: false,
     loading: () => (
-        <div className="flex h-full w-full items-center justify-center bg-muted">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <Skeleton className="h-full w-full rounded-none" />
     ),
 });
 
@@ -68,6 +66,9 @@ const LocationSearch = dynamic(() => import("@/components/map/location-search"),
 const MapStyleSwitcher = dynamic(() => import("@/components/map/map-style-switcher"), {
     ssr: false,
 });
+
+/** Satellite codes as stored by the pipeline, expanded for the reader. */
+const SATELLITE_LABELS: Record<string, string> = { S2: "Sentinel-2 L2A" };
 
 const NdviLegend = dynamic(() => import("@/components/field/ndvi-legend"), {
     ssr: false,
@@ -449,8 +450,13 @@ export default function FieldDetailPage() {
 
     if (loading) {
         return (
-            <div className="flex h-full items-center justify-center bg-muted">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="relative h-full w-full overflow-hidden">
+                <Skeleton className="absolute inset-0 rounded-none" />
+                <div className="absolute top-4 left-4 flex gap-2">
+                    <Skeleton className="h-10 w-32 rounded-lg" />
+                    <Skeleton className="h-10 w-28 rounded-lg" />
+                </div>
+                <Skeleton className="absolute top-4 right-4 bottom-4 w-[var(--panel-w)] rounded-xl" />
             </div>
         );
     }
@@ -476,7 +482,7 @@ export default function FieldDetailPage() {
             <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
                 <Link
                     href={`/farms/${farmId}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-background/90 backdrop-blur-sm px-3 py-2 text-sm font-medium text-foreground shadow-md border border-border/50 hover:bg-background transition-colors"
+                    className={cn("inline-flex h-10 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3", MAP_CHROME)}
                 >
                     <ArrowLeft className="h-4 w-4" />
                     {t("backToFarm")}
@@ -492,34 +498,63 @@ export default function FieldDetailPage() {
                 </div>
             )}
 
-            {/* Floating index selector - bottom-center, visible on Monitor tab when indices exist */}
-            {activeTab === "ndvi" && availableTypes.length > 0 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
-                    <div className="flex gap-1 rounded-lg border border-border/50 bg-background/90 backdrop-blur-sm shadow-lg p-1">
+            {/* Bottom-centre stack: index selector above, provenance below.
+                One container so the two can never overlap, and both stay
+                centred on the visible map rather than on the viewport. */}
+            <div
+                className="absolute bottom-6 z-20 flex max-w-[calc(100%-2rem)] flex-col items-center gap-2"
+                style={{
+                    left: sidebarOpen ? "calc(50% - var(--panel-w) / 2)" : "50%",
+                    transform: "translateX(-50%)",
+                }}
+            >
+                {activeTab === "ndvi" && availableTypes.length > 0 && (
+                    <div className={cn("flex gap-1 rounded-lg p-1", MAP_CHROME)}>
                         {availableTypes.map((idx) => (
                             <Button
                                 key={idx}
                                 variant={idx === activeIndexType ? "default" : "ghost"}
                                 size="sm"
                                 onClick={() => { if (idx === activeIndexType) return; setIndexLayer(null); setActiveIndexType(idx); }}
-                                className={cn(
-                                    "h-7 px-3 text-xs font-medium",
-                                    idx === activeIndexType && "shadow-sm",
-                                )}
+                                className="px-3 text-xs font-medium"
                             >
                                 {INDEX_CONFIG[idx].label}
                             </Button>
                         ))}
                     </div>
-                </div>
-            )}
+                )}
+
+                {/* Satellite, date, cloud cover and colormap in one mono
+                    line: the reproducibility claim, made visible where the
+                    user is actually looking. */}
+                {indexLayer && (
+                    <div
+                        className="max-w-full rounded-lg border border-border px-3.5 py-2"
+                        style={{ background: "hsl(var(--map-scrim) / 0.82)" }}
+                    >
+                        <p className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground [overflow-wrap:anywhere]">
+                            <Satellite className="h-3 w-3 shrink-0" aria-hidden="true" />
+                            {[
+                                SATELLITE_LABELS[indexLayer.satellite] ?? indexLayer.satellite,
+                                indexLayer.date,
+                                indexLayer.params_json?.cloud_cover != null
+                                    ? t("cloudCover", { percent: Math.round(indexLayer.params_json.cloud_cover) })
+                                    : null,
+                                INDEX_CONFIG[activeIndexType].colormap,
+                            ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                        </p>
+                    </div>
+                )}
+            </div>
 
             {/* Sidebar toggle button - always visible */}
             <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="absolute top-4 z-20 rounded-lg bg-background/90 backdrop-blur-sm p-2 shadow-md border border-border/50 hover:bg-background transition-all"
-                style={{ right: sidebarOpen ? "29rem" : "1rem" }}
+                className={cn("absolute top-4 z-20 rounded-lg p-2 transition-all hover:bg-surface-3", MAP_CHROME)}
+                style={{ right: sidebarOpen ? "calc(var(--panel-w) + 2rem)" : "1rem" }}
                 title={sidebarOpen ? "Hide panel (⌘.)" : "Show panel (⌘.)"}
             >
                 {sidebarOpen ? (
@@ -531,39 +566,43 @@ export default function FieldDetailPage() {
 
             {/* Floating tabbed sidebar - right */}
             <div
-                className={`absolute top-4 right-4 bottom-4 z-10 w-[440px] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}
-                    }`}
+                className={`absolute top-4 right-4 bottom-4 z-10 w-[var(--panel-w)] transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]"}`}
             >
-                <div className="rounded-xl bg-background/95 backdrop-blur-sm shadow-lg border border-border/50 overflow-hidden flex flex-col h-full">
+                <div className={cn("flex h-full flex-col overflow-hidden rounded-xl", MAP_CHROME)}>
                     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-                        <TabsList className="flex w-full justify-evenly rounded-none border-b border-border/50 bg-transparent h-auto py-0 shrink-0">
+                        <TabsList variant="underline" className="shrink-0 gap-4 overflow-x-auto px-4">
                             <TabsTrigger
                                 value="info"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 {t("tabInfo")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="ndvi"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 {t("tabNdvi")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="weather"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 {t("tabWeather")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="soil"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 {t("tabSoil")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="alerts"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 <span className="relative">
                                     {t("tabAlerts")}
@@ -574,13 +613,15 @@ export default function FieldDetailPage() {
                             </TabsTrigger>
                             <TabsTrigger
                                 value="scouting"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 {t("tabScouting")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="share"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent text-xs py-2.5 !px-1"
+                                variant="underline"
+                                className="text-[13px]"
                             >
                                 {t("tabShare")}
                             </TabsTrigger>
@@ -711,7 +752,7 @@ export default function FieldDetailPage() {
                                             className="w-full"
                                             onClick={() => setEditing(true)}
                                         >
-                                            <Edit2 className="h-3.5 w-3.5 mr-2" />
+                                            <Edit2 className="h-4 w-4 mr-2" />
                                             {t("edit")}
                                         </Button>
 
@@ -728,7 +769,7 @@ export default function FieldDetailPage() {
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
-                                                    className="h-7 px-3 text-xs shrink-0"
+                                                    className="shrink-0 px-3 text-xs"
                                                     onClick={handleDelete}
                                                 >
                                                     <Trash2 className="h-3 w-3 mr-2" />

@@ -30,9 +30,12 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useTranslations } from "next-intl";
 
 
 export default function FarmDetailPage() {
+    const tCreate = useTranslations("createFarm");
+    const tFarms = useTranslations("farmsPage");
     const params = useParams();
     const router = useRouter();
     const farmId = params.id as string;
@@ -194,7 +197,7 @@ export default function FarmDetailPage() {
                     <CardContent className="pt-6">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="farm-name">Farm Name</Label>
+                                <Label htmlFor="farm-name">{tCreate("farmName")}</Label>
                                 <Input
                                     id="farm-name"
                                     value={editName}
@@ -203,15 +206,15 @@ export default function FarmDetailPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="farm-country">Country</Label>
+                                    <Label htmlFor="farm-country">{tCreate("country")}</Label>
                                     <Input id="farm-country" value={editCountry} onChange={(e) => setEditCountry(e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="farm-region">Region</Label>
+                                    <Label htmlFor="farm-region">{tCreate("region")}</Label>
                                     <Input id="farm-region" value={editRegion} onChange={(e) => setEditRegion(e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="farm-timezone">Timezone</Label>
+                                    <Label htmlFor="farm-timezone">{tCreate("timezone")}</Label>
                                     <Input id="farm-timezone" value={editTimezone} onChange={(e) => setEditTimezone(e.target.value)} />
                                 </div>
                             </div>
@@ -286,9 +289,9 @@ export default function FarmDetailPage() {
                     <Card className="border-2 border-dashed">
                         <CardContent className="p-12 text-center">
                             <Map className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                            <p className="mt-4 text-sm font-medium">No fields yet</p>
+                            <p className="mt-4 text-sm font-medium">{tFarms("noFieldsTitle")}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Draw a field on the map or import a GeoJSON file.
+                                {tFarms("noFieldsDesc")}
                             </p>
                             <div className="mt-4 flex justify-center gap-3">
                                 <Button variant="outline" asChild>
@@ -315,14 +318,14 @@ export default function FarmDetailPage() {
                         {fields.map((field) => (
                             <Card
                                 key={field.id}
-                                className={cn("hover:border-primary/20 transition-colors")}
+                                className={cn("hover:border-primary/30 transition-colors")}
                             >
                                 <CardContent className="flex items-center justify-between p-4">
                                     <Link
                                         href={`/farms/${farmId}/fields/${field.id}`}
                                         className="flex-1 flex items-center gap-3"
                                     >
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/5">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-subtle">
                                             <Map className="h-5 w-5 text-primary" />
                                         </div>
                                         <div>

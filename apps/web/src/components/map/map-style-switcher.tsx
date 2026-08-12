@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
 import { Layers } from "lucide-react";
+import { MAP_CHROME } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
 
 interface MapStyleSwitcherProps {
     currentStyle: MapStyleId;
@@ -42,7 +44,7 @@ export default function MapStyleSwitcher({
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-1.5 rounded-lg bg-background/90 backdrop-blur-sm px-3 py-2 text-sm font-medium text-foreground shadow-md border border-border/50 hover:bg-background transition-colors"
+                className={cn("flex h-10 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3", MAP_CHROME)}
                 title="Map layers"
             >
                 <Layers className="h-4 w-4" />
@@ -53,7 +55,7 @@ export default function MapStyleSwitcher({
 
             {/* Expanded panel */}
             {open && (
-                <div className="absolute top-full left-0 mt-2 flex gap-1.5 rounded-xl bg-background/95 backdrop-blur-sm p-2 shadow-lg border border-border/50">
+                <div className={cn("absolute top-full left-0 mt-2 flex gap-1.5 rounded-xl p-2", MAP_CHROME)}>
                     {MAP_STYLES.map((s) => (
                         <button
                             key={s.id}
@@ -63,8 +65,8 @@ export default function MapStyleSwitcher({
                                 setOpen(false);
                             }}
                             className={`flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${currentStyle === s.id
-                                ? "bg-primary/15 text-primary ring-1 ring-primary/30"
-                                : "text-foreground hover:bg-muted/60"
+                                ? "bg-primary-subtle text-primary ring-1 ring-primary/30"
+                                : "text-foreground hover:bg-surface-2"
                                 }`}
                             title={s.label}
                         >

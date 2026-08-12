@@ -111,9 +111,9 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                     disabled={backfilling}
                 >
                     {backfilling ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
-                        <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                        <RefreshCw className="h-4 w-4 mr-2" />
                     )}
                     {t("fetchWeather")}
                 </Button>
@@ -125,7 +125,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
         <div className="space-y-4">
             {/* Range selector */}
             <div className="flex items-center justify-between">
-                <div className="flex gap-1 rounded-lg border bg-muted/50 p-0.5">
+                <div className="flex gap-1 rounded-lg border bg-surface-2 p-0.5">
                     {rangeOptions.map((opt) => (
                         <button
                             key={opt.value}
@@ -143,15 +143,15 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0"
+                    className="h-9 w-9 p-0"
                     onClick={data.length === 0 ? async () => { await handleBackfill(); setTimeout(loadWeather, 5000); } : loadWeather}
                     disabled={backfilling}
                     title={data.length === 0 ? t("fetchWeather") : t("refresh")}
                 >
                     {backfilling ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                        <RefreshCw className="h-3.5 w-3.5" />
+                        <RefreshCw className="h-4 w-4" />
                     )}
                 </Button>
             </div>

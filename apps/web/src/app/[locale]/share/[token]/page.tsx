@@ -21,6 +21,8 @@ import { useTranslations } from "next-intl";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { tokenColor } from "@/lib/design-tokens";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ruleLabel } from "@/lib/alert-rules";
 
 const NdviChart = dynamic(() => import("@/components/charts/ndvi-chart"), {
     ssr: false,
@@ -53,25 +55,6 @@ const SEVERITY_CONFIG: Record<string, { dotClass: string; textClass: string; ico
         textClass: "text-sev-low",
         icon: <Bell className="h-4 w-4" />,
     },
-};
-
-const RULE_LABELS: Record<string, string> = {
-    ndvi_drop: "NDVI Drop",
-    ndvi_threshold: "Low NDVI",
-    evi_drop: "EVI Drop",
-    evi_threshold: "Low EVI",
-    savi_drop: "SAVI Drop",
-    savi_threshold: "Low SAVI",
-    ndwi_drop: "NDWI Drop",
-    ndwi_threshold: "Low NDWI",
-    soil_ph_critical: "Soil pH Critical",
-    soil_ph_warning: "Soil pH Warning",
-    soil_soc_critical: "SOC Critical",
-    soil_soc_warning: "SOC Warning",
-    soil_sand_erosion: "Erosion Risk",
-    soil_cec_low: "Low CEC",
-    soil_compaction: "Compaction Risk",
-    soil_waterlogging: "Waterlogging Risk",
 };
 
 /* ── Page Component ────────────────────────────────────────── */
@@ -110,9 +93,22 @@ export default function ShareReportPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-                <p className="text-sm text-muted-foreground">{t("loading")}</p>
+            <div className="min-h-screen bg-surface-2">
+                <header className="border-b bg-background">
+                    <div className="mx-auto flex max-w-[45rem] items-center justify-between px-4 py-4">
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-5 w-28 rounded-full" />
+                    </div>
+                </header>
+                <main className="mx-auto flex max-w-[45rem] flex-col gap-6 px-4 py-6">
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-8 w-56" />
+                        <Skeleton className="h-4 w-40" />
+                    </div>
+                    <Skeleton className="h-[148px] w-full rounded-lg" />
+                    <Skeleton className="h-[260px] w-full rounded-lg" />
+                    <Skeleton className="h-[220px] w-full rounded-lg" />
+                </main>
             </div>
         );
     }
@@ -136,20 +132,28 @@ export default function ShareReportPage() {
     const activeStats = report.stats_by_type[activeIndex] ?? report.stats_by_type[activeIndex.toLowerCase()] ?? [];
 
     return (
-        <div className="min-h-screen bg-muted/30">
+        <div className="min-h-screen bg-surface-2">
             {/* Header */}
             <header className="border-b bg-background">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Leaf className="h-7 w-7 text-primary" />
-                        <span className="font-bold text-lg">OpenFarm</span>
+                <div className="mx-auto flex max-w-[45rem] items-center justify-between gap-4 px-4 py-4">
+                    <div className="flex items-center gap-2.5">
+                        <Leaf className="h-6 w-6 text-primary" />
+                        <span className="text-base font-bold tracking-tight">OpenFarm</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{t("poweredBy")}</span>
+                    {/* A recipient with no account needs to know what they
+                        are holding. One badge does it - no disabled
+                        buttons, no greyed-out chrome. */}
+                    <Badge
+                        variant="outline"
+                        className="shrink-0 whitespace-nowrap border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                        {t("readOnlyBadge")}
+                    </Badge>
                 </div>
             </header>
 
             {/* Content */}
-            <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+            <main className="mx-auto flex max-w-[45rem] flex-col gap-6 px-4 py-6">
                 {/* Title */}
                 <div>
                     <h1 className="text-2xl font-bold">
@@ -162,7 +166,7 @@ export default function ShareReportPage() {
                 </div>
 
                 {/* Field Info + Map */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
                     {/* Info card */}
                     <div className="rounded-lg border bg-card shadow-sm p-4 space-y-3">
                         <h2 className="text-sm font-semibold">{t("fieldInfo")}</h2>
@@ -180,7 +184,7 @@ export default function ShareReportPage() {
                                 <dd className="mt-0.5">{report.field.crop_type || t("na")}</dd>
                             </div>
                         </dl>
-                        <p className="text-[10px] text-muted-foreground pt-2 border-t">
+                        <p className="border-t pt-2 text-[11px] text-muted-foreground">
                             {t("generatedOn")} {new Date().toLocaleDateString()}
                         </p>
                     </div>
@@ -287,7 +291,7 @@ export default function ShareReportPage() {
                                     onClick={() => setActiveIndex(idx)}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeIndex === idx
                                         ? "bg-primary text-primary-foreground"
-                                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                        : "bg-surface-2 text-muted-foreground hover:text-foreground"
                                         }`}
                                 >
                                     {c.label}
@@ -349,9 +353,30 @@ export default function ShareReportPage() {
             </main>
 
             {/* Footer */}
-            <footer className="border-t bg-background mt-8">
-                <div className="max-w-4xl mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
-                    {t("poweredBy")} · {new Date().getFullYear()}
+            <footer className="mt-8 border-t bg-background">
+                <div className="mx-auto flex max-w-[45rem] flex-col gap-3 px-4 py-6">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {t("sourcesTitle")}
+                    </p>
+                    <ul className="flex flex-col gap-1">
+                        {[
+                            report.available_index_types.length > 0 && t("sourceSatellite"),
+                            report.weather_summary && t("sourceWeather"),
+                            report.soil_summary && t("sourceSoil"),
+                            report.field.geom && t("sourceBasemap"),
+                        ]
+                            .filter(Boolean)
+                            .map((source) => (
+                                <li key={source as string} className="text-[11px] text-muted-foreground">
+                                    {source}
+                                </li>
+                            ))}
+                    </ul>
+                    <p className="border-t pt-3 text-[11px] text-muted-foreground">
+                        {t("generatedOn")} <span className="font-mono">{new Date().toISOString().slice(0, 10)}</span>
+                        {" · "}
+                        {t("poweredBy")}
+                    </p>
                 </div>
             </footer>
         </div>
@@ -509,24 +534,25 @@ function FieldMap({ geom, token, hasLayer, activeIndex }: { geom: GeoJSON.Geomet
 }
 
 function ReportAlertRow({ alert }: { alert: Alert }) {
+    const tRules = useTranslations("alertRules");
     const sev = SEVERITY_CONFIG[alert.severity] || SEVERITY_CONFIG.low;
     const isClosed = alert.status === "closed";
 
     return (
         <div
-            className={`rounded-lg border p-2.5 transition-colors ${isClosed ? "opacity-60 bg-muted/30" : ""
+            className={`rounded-lg border p-2.5 transition-colors ${isClosed ? "opacity-60 bg-surface-2" : ""
                 }`}
         >
             <div className="flex items-center gap-1.5">
                 <span className={`shrink-0 ${sev.textClass}`}>{sev.icon}</span>
                 <Badge
                     variant={alert.severity === "high" && !isClosed ? "destructive" : "secondary"}
-                    className="text-[9px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+                    className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
                 >
                     {alert.severity}
                 </Badge>
                 <span className="text-xs font-medium text-muted-foreground truncate">
-                    {RULE_LABELS[alert.rule_name] || alert.rule_name}
+                    {ruleLabel(alert.rule_name, tRules)}
                 </span>
                 <span className="text-[11px] text-muted-foreground ml-auto shrink-0">
                     {new Date(alert.date).toLocaleDateString(undefined, {
@@ -548,7 +574,7 @@ function ReportAlertRow({ alert }: { alert: Alert }) {
                 </div>
             )}
             {isClosed && (
-                <Badge variant="outline" className="text-[9px] mt-1">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold mt-1">
                     Closed
                 </Badge>
             )}
@@ -560,7 +586,7 @@ function ReportScoutingRow({ obs }: { obs: ScoutingObservation }) {
     return (
         <div className="rounded-lg border p-2.5">
             <div className="flex items-start gap-2">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <h4 className="text-xs font-semibold truncate">{obs.title}</h4>
@@ -607,7 +633,7 @@ function ReportScoutingRow({ obs }: { obs: ScoutingObservation }) {
                                 <Badge
                                     key={tag}
                                     variant="secondary"
-                                    className="text-[9px] px-1.5 py-0 h-4"
+                                    className="text-[11px] px-1.5 py-0"
                                 >
                                     {tag}
                                 </Badge>

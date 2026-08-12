@@ -43,7 +43,7 @@ export default function ForecastBar({ forecast }: ForecastBarProps) {
                     key={day.date}
                     className="flex flex-col items-center gap-1 rounded-lg border bg-card p-2 min-w-[60px] shadow-sm"
                 >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-[11px] font-medium text-muted-foreground">
                         {formatDay(day.date)}
                     </span>
                     {weatherIcon(day.precipitation_sum, day.cloud_cover_mean)}
@@ -51,18 +51,18 @@ export default function ForecastBar({ forecast }: ForecastBarProps) {
                         <span className="text-xs font-semibold tabular-nums">
                             {day.temperature_2m_max != null ? `${Math.round(day.temperature_2m_max)}°` : "-"}
                         </span>
-                        <span className="text-[10px] text-muted-foreground ml-0.5 tabular-nums">
+                        <span className="text-[11px] text-muted-foreground ml-0.5 tabular-nums">
                             {day.temperature_2m_min != null ? `${Math.round(day.temperature_2m_min)}°` : ""}
                         </span>
                     </div>
                     {day.precipitation_sum != null && day.precipitation_sum > 0 && (
-                        <span className="text-[9px] text-sig-precip font-medium tabular-nums">
+                        <span className="text-[11px] text-sig-precip font-medium tabular-nums">
                             {day.precipitation_sum.toFixed(1)}mm
                         </span>
                     )}
                     {day.wind_speed_10m_max != null && day.wind_speed_10m_max > 5 && (
-                        <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground tabular-nums">
-                            <Wind className="h-2.5 w-2.5" />
+                        <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground tabular-nums">
+                            <Wind className="h-3 w-3" />
                             {Math.round(day.wind_speed_10m_max)}
                         </span>
                     )}

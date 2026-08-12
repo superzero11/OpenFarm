@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 const NdviChart = dynamic(() => import("@/components/charts/ndvi-chart"), {
     ssr: false,
@@ -86,6 +87,7 @@ interface NdviTabProps {
 }
 
 export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, activeIndexOverride, onDataLoaded }: NdviTabProps) {
+    const tMon = useTranslations("monitoring");
     // ── Index selector ───────────────────────────────
     const [activeIndex, setActiveIndex] = useState<IndexType>("NDVI");
     const config = INDEX_CONFIG[activeIndex];
@@ -376,7 +378,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                     ) : (
                         <History className="h-4 w-4" />
                     )}
-                    <span className="hidden sm:inline">Backfill History</span>
+                    <span className="hidden sm:inline">{tMon("backfill.buttonLabel")}</span>
                 </Button>
             </div>
 
@@ -494,7 +496,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
 
             {/* ── Section: Active Job Progress ─────────── */}
             {activeJob && (activeJob.status === "pending" || activeJob.status === "running") && (
-                <Card className="border-primary/30 bg-primary/5">
+                <Card className="border-primary-border bg-primary-subtle">
                     <CardHeader className="pb-2 pt-3 px-3">
                         <CardTitle className="flex items-center gap-2 text-sm font-medium text-primary">
                             <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -536,7 +538,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                     <CardContent className="flex items-start gap-2 p-3">
                         <AlertTriangle className="h-4 w-4 text-danger mt-0.5" />
                         <div>
-                            <p className="text-sm font-medium text-danger">Job failed</p>
+                            <p className="text-sm font-medium text-danger">{tMon("jobFailed")}</p>
                             <p className="text-xs text-danger/80">{activeJob.error || "Unknown error"}</p>
                             <Button
                                 variant="link"
@@ -559,7 +561,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                         <Button
                             variant={showWeatherOverlay ? "secondary" : "ghost"}
                             size="sm"
-                            className="h-6 px-2 text-[10px] gap-1"
+                            className="gap-1 px-2 text-xs"
                             onClick={() => setShowWeatherOverlay(!showWeatherOverlay)}
                             title={showWeatherOverlay ? "Hide weather overlay" : "Show weather overlay"}
                         >
@@ -596,13 +598,13 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setLayerVisible(!layerVisible)}
-                                className="h-6 w-6 p-0"
+                                className="h-9 w-9 p-0"
                                 title={layerVisible ? `Hide ${config.label} overlay` : `Show ${config.label} overlay`}
                             >
                                 {layerVisible ? (
-                                    <Eye className="h-3.5 w-3.5" />
+                                    <Eye className="h-4 w-4" />
                                 ) : (
-                                    <EyeOff className="h-3.5 w-3.5" />
+                                    <EyeOff className="h-4 w-4" />
                                 )}
                             </Button>
                         </div>
@@ -623,7 +625,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                                         className={cn(
                                             "w-full justify-between h-auto py-1.5 px-2 text-xs",
                                             isSelected
-                                                ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15"
+                                                ? "bg-primary-subtle border-primary-border text-primary hover:bg-primary-subtle"
                                                 : "text-muted-foreground",
                                         )}
                                     >

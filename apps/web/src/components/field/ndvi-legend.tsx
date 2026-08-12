@@ -4,6 +4,7 @@ import React from "react";
 import type { RasterLayer, IndexType } from "@/lib/api";
 import { INDEX_CONFIG } from "@/lib/api";
 import { useTranslations } from "next-intl";
+import { MAP_CHROME } from "@/lib/design-tokens";
 
 /* ── Component ────────────────────────────────────────────────── */
 
@@ -31,17 +32,17 @@ export default function NdviLegend({ layer, indexType = "NDVI", compact = false 
     const maxPct = hasRange ? valueToPercent(layer.max!) : null;
 
     return (
-        <div className={`rounded-lg bg-background/90 backdrop-blur-sm shadow-md border border-border/50 ${compact ? "px-2 py-1.5 w-[140px]" : "px-3 py-2.5 w-[200px]"
+        <div className={`${MAP_CHROME} rounded-lg ${compact ? "px-2 py-1.5 w-[140px]" : "px-3 py-2.5 w-[200px]"
             }`}>
             {/* Title */}
-            <p className={`font-semibold tracking-wide ${compact ? "text-[9px] mb-1" : "text-[11px] mb-2"
+            <p className={`font-semibold tracking-wide ${compact ? "text-[11px] mb-1" : "text-[11px] mb-2"
                 }`}>
                 {config.label}
             </p>
 
             {/* Gradient bar + markers */}
             <div className="relative">
-                <div className={`w-full rounded-sm border border-border/30 overflow-hidden ${compact ? "h-2" : "h-3"
+                <div className={`w-full rounded-sm border border-border overflow-hidden ${compact ? "h-2" : "h-3"
                     }`}>
                     <div
                         className="h-full w-full"
@@ -82,13 +83,13 @@ export default function NdviLegend({ layer, indexType = "NDVI", compact = false 
 
             {/* Fixed scale labels */}
             <div className="flex justify-between mt-1">
-                <span className={`text-muted-foreground font-mono ${compact ? "text-[8px]" : "text-[10px]"}`}>{config.rescaleMin}</span>
-                <span className={`text-muted-foreground font-mono ${compact ? "text-[8px]" : "text-[10px]"}`}>{config.rescaleMax}</span>
+                <span className="text-muted-foreground font-mono text-[11px]">{config.rescaleMin}</span>
+                <span className="text-muted-foreground font-mono text-[11px]">{config.rescaleMax}</span>
             </div>
 
             {/* Field actual range */}
             {hasRange && (
-                <p className={`text-muted-foreground leading-tight ${compact ? "text-[8px] mt-1" : "text-[10px] mt-1.5"
+                <p className={`text-muted-foreground leading-tight ${compact ? "text-[11px] mt-1" : "text-[11px] mt-1.5"
                     }`}>
                     {t("fieldRange")}: <span className="font-mono font-medium text-foreground/80">{layer.min!.toFixed(2)}</span>
                     {" – "}

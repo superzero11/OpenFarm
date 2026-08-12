@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import maplibregl from "maplibre-gl";
-import { tokenColor } from "@/lib/design-tokens";
+import { tokenColor, MAP_CHROME } from "@/lib/design-tokens";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
@@ -247,11 +247,11 @@ export default function DrawMap({
         <div className={`relative h-full w-full ${className}`}>
             <div ref={containerRef} className="w-full h-full" />
             {!ready && (
-                <div className="absolute inset-0 flex items-center justify-center bg-muted/80">
+                <div className="absolute inset-0 flex items-center justify-center bg-surface-2">
                     <p className="text-sm text-muted-foreground">Loading map...</p>
                 </div>
             )}
-            <div className="absolute bottom-4 left-4 rounded-lg bg-background/90 px-3 py-2 text-xs text-muted-foreground shadow">
+            <div className={`${MAP_CHROME} absolute bottom-4 left-4 rounded-lg px-3 py-2 text-xs text-muted-foreground`}>
                 Click map to draw polygon • Double-click to finish • Press Delete to remove
             </div>
         </div>

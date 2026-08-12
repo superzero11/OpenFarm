@@ -230,7 +230,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             const priorityLabel = props.priority === 1 ? "High" : props.priority === 2 ? "Medium" : "Low";
             const zoneLabel = (props.zone_type as string).replace(/_/g, " ");
             const html = `<div class="openfarm-popup-body">
-                <div class="openfarm-popup-title">Sampling Zone</div>
+                <div class="openfarm-popup-title">${t("samplingZone")}</div>
                 <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${props.color}"></span>
                     <span style="font-weight:500;text-transform:capitalize">${zoneLabel}</span>
@@ -254,7 +254,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             map.off("mouseenter", SAMPLING_LAYER, onEnter);
             map.off("mouseleave", SAMPLING_LAYER, onLeave);
         };
-    }, [mapInstance]);
+    }, [mapInstance, t]);
 
     /* ── Fly to sampling zone on sidebar click ────────────── */
 
@@ -419,9 +419,9 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
 
                 {/* Job progress */}
                 {jobActive && (
-                    <div className="mt-4 w-full max-w-[260px] rounded-lg border border-primary/30 bg-primary/5 p-3">
+                    <div className="mt-4 w-full max-w-[260px] rounded-lg border border-primary-border bg-primary-subtle p-3">
                         <div className="flex items-center gap-2 mb-2">
-                            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
                             <span className="text-xs font-medium text-primary">{t("processingTitle")}</span>
                         </div>
                         {getJobProgress() && (
@@ -470,9 +470,9 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         disabled={refreshing}
                     >
                         {refreshing ? (
-                            <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
-                            <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                            <RefreshCw className="h-4 w-4 mr-2" />
                         )}
                         {t("refresh")}
                     </Button>
@@ -489,7 +489,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
         <div className="space-y-4">
             {/* Disclaimer banner */}
             <div className="flex items-start gap-2 rounded-lg border bg-info-subtle p-2.5 text-xs text-info">
-                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <Info className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{t("disclaimer")}</span>
             </div>
 
@@ -608,7 +608,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             {weatherStress && (
                 <section className="space-y-2">
                     <h4 className="text-xs font-semibold flex items-center gap-1.5">
-                        <Droplets className="h-3.5 w-3.5" />
+                        <Droplets className="h-4 w-4" />
                         {t("weatherStress")}
                     </h4>
                     <div className="rounded-lg border bg-card p-3">
@@ -660,7 +660,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             {cropSuitability && !cropSuitability.weather_available && (
                 <section className="space-y-2">
                     <h4 className="text-xs font-semibold flex items-center gap-1.5">
-                        <Sprout className="h-3.5 w-3.5" />
+                        <Sprout className="h-4 w-4" />
                         {t("cropSuitability")}
                     </h4>
                     <div className="rounded-lg border bg-warning-subtle p-3">
@@ -673,7 +673,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             {cropSuitability && cropSuitability.weather_available && cropSuitability.crops.length > 0 && (
                 <section className="space-y-2">
                     <h4 className="text-xs font-semibold flex items-center gap-1.5">
-                        <Sprout className="h-3.5 w-3.5" />
+                        <Sprout className="h-4 w-4" />
                         {t("cropSuitability")}
                     </h4>
                     {cropSuitability.field_crop_suitability && (
@@ -724,7 +724,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             {samplingZones && samplingZones.features.length > 0 && (
                 <section className="space-y-2">
                     <h4 className="text-xs font-semibold flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5" />
+                        <MapPin className="h-4 w-4" />
                         {t("samplingZones")}
                     </h4>
                     <div className="rounded-lg border bg-white dark:bg-card p-3 space-y-2">
@@ -736,7 +736,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                             return (
                                 <div
                                     key={i}
-                                    className="flex items-start gap-2 text-[11px] cursor-pointer rounded-md px-1 py-0.5 hover:bg-muted/60 transition-colors"
+                                    className="flex items-start gap-2 text-[11px] cursor-pointer rounded-md px-1 py-0.5 hover:bg-surface-2 transition-colors"
                                     onClick={() => flyToZone(f)}
                                     role="button"
                                     tabIndex={0}
@@ -763,7 +763,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             {nutrientContext && (
                 <section className="space-y-2">
                     <h4 className="text-xs font-semibold flex items-center gap-1.5">
-                        <AlertTriangle className="h-3.5 w-3.5" />
+                        <AlertTriangle className="h-4 w-4" />
                         {t("nutrientContext")}
                     </h4>
                     <div className="rounded-lg border bg-card p-3">
@@ -797,7 +797,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             {carbonEstimate && (
                 <section className="space-y-2">
                     <h4 className="text-xs font-semibold flex items-center gap-1.5">
-                        <Leaf className="h-3.5 w-3.5" />
+                        <Leaf className="h-4 w-4" />
                         {t("carbonSequestration")}
                     </h4>
                     <div className="rounded-lg border bg-card p-3">
@@ -860,9 +860,9 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
 
             {/* Active job progress (during re-fetch with existing data) */}
             {jobActive && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <div className="rounded-lg border border-primary-border bg-primary-subtle p-3">
                     <div className="flex items-center gap-2 mb-2">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         <span className="text-xs font-medium text-primary">{t("processingTitle")}</span>
                     </div>
                     {getJobProgress() && (
@@ -910,7 +910,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-xs"
+                        className="px-2 text-xs"
                         onClick={handleRefresh}
                         disabled={refreshing || !!jobActive}
                     >
@@ -970,7 +970,7 @@ function DepthBar({
                 </span>
             </div>
             {layer.texture_class && (
-                <p className="font-medium pt-0.5 border-t border-border/50 mt-1 pt-1">{layer.texture_class}</p>
+                <p className="font-medium pt-0.5 border-t border-border mt-1 pt-1">{layer.texture_class}</p>
             )}
         </div>
     );

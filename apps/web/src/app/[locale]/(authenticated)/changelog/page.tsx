@@ -132,9 +132,9 @@ export default function ChangelogPage() {
                 <div className="space-y-4">
                     {entries.map((entry) => (
                         <Card key={entry.version}>
-                            <CardHeader className="pb-3">
+                            <CardHeader>
                                 <div className="flex items-center gap-3">
-                                    <CardTitle className="text-lg">
+                                    <CardTitle>
                                         {entry.version === "Unreleased"
                                             ? t("unreleased")
                                             : `v${entry.version}`}

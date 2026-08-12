@@ -109,7 +109,7 @@ export default function AlertsTab({ fieldId, onOpenCountChange }: AlertsTabProps
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowClosed(!showClosed)}
-                        className="h-6 px-2 text-[10px]"
+                        className="px-2 text-xs"
                     >
                         {showClosed ? (
                             <><EyeOff className="h-3 w-3 mr-1" />{t("hideClosed")}</>

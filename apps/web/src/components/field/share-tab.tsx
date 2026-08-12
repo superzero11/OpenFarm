@@ -151,9 +151,9 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                         disabled={creating}
                     >
                         {creating ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                            <Plus className="h-3.5 w-3.5" />
+                            <Plus className="h-4 w-4" />
                         )}
                         {t("generateLink")}
                     </Button>
@@ -207,9 +207,9 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                                         onClick={() => handleCopy(link.token)}
                                     >
                                         {copiedToken === link.token ? (
-                                            <Check className="h-3.5 w-3.5 text-success" />
+                                            <Check className="h-4 w-4 text-success" />
                                         ) : (
-                                            <Copy className="h-3.5 w-3.5" />
+                                            <Copy className="h-4 w-4" />
                                         )}
                                         {copiedToken === link.token ? t("copied") : t("copyLink")}
                                     </Button>
@@ -224,7 +224,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            <ExternalLink className="h-4 w-4" />
                                             {t("open")}
                                         </a>
                                     </Button>
@@ -234,7 +234,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                                         className="flex-1 h-8 gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                                         onClick={() => handleRevoke(link.token)}
                                     >
-                                        <Trash2 className="h-3.5 w-3.5" />
+                                        <Trash2 className="h-4 w-4" />
                                         {t("revoke")}
                                     </Button>
                                 </div>

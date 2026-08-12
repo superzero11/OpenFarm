@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -72,6 +72,16 @@ export function Sidebar() {
     const tNav = useTranslations("nav");
     const tSidebar = useTranslations("sidebar");
     const tCommon = useTranslations("common");
+
+    // Map screens drop the sidebar to the 64px rail: 192px more imagery.
+    // Only on entry, so the user can still expand it back and stay expanded
+    // while moving between fields.
+    const isMapScreen = /^\/farms\/[^/]+\/(fields\/|detect)/.test(pathname);
+    const wasMapScreen = useRef(false);
+    useEffect(() => {
+        if (isMapScreen && !wasMapScreen.current) setExpanded(false);
+        wasMapScreen.current = isMapScreen;
+    }, [isMapScreen]);
 
     // Fetch open alert count for badge
     const [openAlertCount, setOpenAlertCount] = useState(0);
@@ -160,7 +170,7 @@ export function Sidebar() {
                         {expanded && (
                             <div className="flex items-center gap-2">
                                 <Leaf className="h-7 w-7 shrink-0 text-primary" />
-                                <span className="text-lg font-bold whitespace-nowrap">
+                                <span className="text-lg font-bold tracking-tight whitespace-nowrap">
                                     OpenFarm
                                 </span>
                             </div>
@@ -192,7 +202,7 @@ export function Sidebar() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 {expanded ? (
-                                    <Button variant="outline" className="w-full justify-between">
+                                    <Button variant="outline" className="w-full justify-between rounded-md">
                                         <span className="truncate">{currentOrg?.name || tSidebar("selectOrg")}</span>
                                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
@@ -210,7 +220,7 @@ export function Sidebar() {
                                         key={org.id}
                                         onClick={() => switchOrg(org.id)}
                                         className={cn(
-                                            org.id === currentOrg?.id && "bg-primary/10 text-primary font-medium"
+                                            org.id === currentOrg?.id && "bg-primary-subtle text-primary font-medium"
                                         )}
                                     >
                                         <span className="flex h-6 w-6 items-center justify-center rounded bg-muted text-xs font-bold mr-2 shrink-0">
@@ -237,11 +247,11 @@ export function Sidebar() {
                             const btn = (
                                 <Button
                                     key={item.href}
-                                    variant={active ? "secondary" : "ghost"}
+                                    variant="ghost"
                                     className={cn(
-                                        "gap-3 overflow-hidden relative",
-                                        expanded ? "w-full justify-start" : "h-10 w-10 justify-center p-0",
-                                        active && "bg-primary/10 text-primary"
+                                        "gap-3 overflow-hidden relative h-auto",
+                                        expanded ? "w-full justify-start px-3 py-2" : "h-10 w-10 justify-center p-0",
+                                        active && "bg-primary-subtle text-primary",
                                     )}
                                     asChild
                                 >
@@ -249,7 +259,7 @@ export function Sidebar() {
                                         <span className="relative shrink-0">
                                             <item.icon className="h-5 w-5" />
                                             {showBadge && !expanded && (
-                                                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1">
+                                                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground px-1">
                                                     {openAlertCount > 99 ? "99+" : openAlertCount}
                                                 </span>
                                             )}
@@ -260,7 +270,7 @@ export function Sidebar() {
                                                     {tNav(item.labelKey)}
                                                 </span>
                                                 {showBadge && (
-                                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1.5">
+                                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground px-1.5">
                                                         {openAlertCount > 99 ? "99+" : openAlertCount}
                                                     </span>
                                                 )}
@@ -289,7 +299,7 @@ export function Sidebar() {
                             <DropdownMenuTrigger asChild>
                                 {expanded ? (
                                     <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-muted transition-colors">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-sm font-medium text-primary">
                                             {user?.name?.charAt(0)?.toUpperCase() || "?"}
                                         </div>
                                         <div className="flex-1 min-w-0 overflow-hidden">
@@ -299,7 +309,7 @@ export function Sidebar() {
                                         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                                     </button>
                                 ) : (
-                                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary mx-auto hover:ring-2 hover:ring-primary/20 transition-all">
+                                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-subtle text-sm font-medium text-primary mx-auto hover:ring-2 hover:ring-primary/20 transition-all">
                                         {user?.name?.charAt(0)?.toUpperCase() || "?"}
                                     </button>
                                 )}
@@ -312,7 +322,7 @@ export function Sidebar() {
                             >
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-sm font-medium text-primary">
                                             {user?.name?.charAt(0)?.toUpperCase() || "?"}
                                         </div>
                                         <div>
@@ -423,13 +433,13 @@ function MobileSidebar({
         <div className="flex h-full flex-col">
             <div className="flex items-center gap-2 px-4 py-5">
                 <Leaf className="h-7 w-7 text-primary" />
-                <span className="text-lg font-bold">OpenFarm</span>
+                <span className="text-lg font-bold tracking-tight">OpenFarm</span>
             </div>
             <Separator />
             <div className="px-3 py-3">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
+                        <Button variant="outline" className="w-full justify-between rounded-md">
                             <span className="truncate">{currentOrg?.name || tSidebar("selectOrg")}</span>
                             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -440,7 +450,7 @@ function MobileSidebar({
                                 key={org.id}
                                 onClick={() => switchOrg(org.id)}
                                 className={cn(
-                                    org.id === currentOrg?.id && "bg-primary/10 text-primary font-medium"
+                                    org.id === currentOrg?.id && "bg-primary-subtle text-primary font-medium"
                                 )}
                             >
                                 {org.name}
@@ -462,10 +472,10 @@ function MobileSidebar({
                     return (
                         <Button
                             key={item.href}
-                            variant={active ? "secondary" : "ghost"}
+                            variant="ghost"
                             className={cn(
-                                "w-full justify-start gap-3",
-                                active && "bg-primary/10 text-primary"
+                                "h-auto w-full justify-start gap-3 px-3 py-2",
+                                active && "bg-primary-subtle text-primary",
                             )}
                             asChild
                         >
@@ -473,7 +483,7 @@ function MobileSidebar({
                                 <item.icon className="h-5 w-5" />
                                 <span className="flex-1">{tNav(item.labelKey)}</span>
                                 {showBadge && (
-                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1.5">
+                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground px-1.5">
                                         {openAlertCount > 99 ? "99+" : openAlertCount}
                                     </span>
                                 )}
@@ -487,7 +497,7 @@ function MobileSidebar({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-muted transition-colors">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-sm font-medium text-primary">
                                 {user?.name?.charAt(0)?.toUpperCase() || "?"}
                             </div>
                             <div className="flex-1 min-w-0">

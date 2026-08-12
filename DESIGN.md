@@ -33,7 +33,11 @@ If you reach for `text-red-500`, `bg-blue-50`, `text-[13px]`, or `h-3.5 w-3.5`, 
 - Wrong: `text-red-600 dark:text-red-400` - Right: `text-danger`
 - Wrong: `bg-amber-50 dark:bg-amber-950/30` - Right: `bg-warning-subtle`
 - Wrong: `bg-green-500` for a risk meter - Right: `bg-success`
+- Wrong: `bg-primary/10` for an icon well or active nav - Right: `bg-primary-subtle` (a different colour in dark mode, not a tint of the same one)
+- Wrong: `bg-muted/50` for an inset well - Right: `bg-surface-2`
 - Wrong: inventing a hue for a new metric - Right: pick from the eight `sig-*` signal colours
+
+A token that exists in `globals.css` but is not exposed in `tailwind.config.js` is invisible: the class silently does not exist and Tailwind emits nothing. When you add a token, add it to both.
 
 ### Domain signal colours are permanent bindings
 One quantity, one hue, across map, chart, legend, badge and table.
@@ -79,8 +83,14 @@ The CSS gradient in the legend and the TiTiler `colormap` **must** be the same r
 Rules
 - **Only five text sizes on a screen.** If you need a sixth, the hierarchy is wrong.
 - Any number that updates gets `tabular-nums`. Any measured value gets `font-mono`.
-- Sentence case for everything except micro pills. No title case, no ALL-CAPS headings.
+- Sentence case for everything except micro pills. No title case, no ALL-CAPS headings. This applies to message files too: `"Open alerts"`, never `"Open Alerts"`.
 - Never go below 11px. 10px is reserved for uppercase micro pills only.
+
+**One exception: the marketing surface.** `components/landing-page.tsx` and
+`components/marketing/` follow screen 06 of `OpenFarm Screens.dc.html`, which
+uses its own display scale (52 / 32 / 22 / 17px) and half steps (13.5 / 12.5 /
+11.5 / 10.5px). That is deliberate and matches the reference file. Nothing
+behind the login may use those sizes.
 
 ---
 
@@ -126,7 +136,11 @@ Icons inherit `currentColor`. An icon never carries meaning alone - always paire
 
 **List row** - `rounded-lg border p-3` (dense) or `p-4`, `hover:border-primary/30`, trailing `ChevronRight` when navigable, trailing action button when not. Never both.
 
-**Map analysis panel** - `w-[22rem]`, `bg-surface-3/95 backdrop-blur`, `rounded-xl`, `shadow-panel`, sections separated by `border-t`, section head `text-[15px] font-semibold`. Panel scrolls; map never does.
+**Anything floating over imagery** - toolbar, style switcher, search, zoom stack, legend, provenance bar and the analysis panel all share one scrim: `MAP_CHROME` from `lib/design-tokens.ts` (`bg-surface-3/95 backdrop-blur border border-border shadow-panel`). Import it, never re-type it - the whole point is that a control cannot drift onto a different background from the panel beside it.
+
+**Map analysis panel** - `w-[var(--panel-w)]` (22rem), `MAP_CHROME`, `rounded-xl`, sections separated by `border-t`, section head `text-[15px] font-semibold`. Panel scrolls; map never does. The legend and the provenance bar are `rounded-lg`, not `rounded-xl` - only the panel gets the larger radius.
+
+**Provenance bar** - every map carrying a raster states where it came from: satellite, date, cloud cover and colormap on one mono 11px line over `hsl(var(--map-scrim) / 0.82)`. A rendered pixel with no visible source is a bug.
 
 **Empty state** - dashed `border-2 border-dashed rounded-lg p-12 text-center`, muted 48px icon, one-line what, one-line why, one primary action.
 

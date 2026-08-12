@@ -17,6 +17,12 @@ module.exports = {
                 primary: {
                     DEFAULT: "hsl(var(--primary) / <alpha-value>)",
                     foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
+                    // Tint background for active nav, icon wells and selected rows.
+                    // DESIGN.md names bg-primary-subtle - without this key the class
+                    // silently does not exist and callers fall back to bg-primary/10,
+                    // which is a different colour in dark mode.
+                    subtle: "hsl(var(--primary-subtle) / <alpha-value>)",
+                    border: "hsl(var(--primary-border) / <alpha-value>)",
                 },
                 secondary: {
                     DEFAULT: "hsl(var(--secondary) / <alpha-value>)",

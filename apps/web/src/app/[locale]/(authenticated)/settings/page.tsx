@@ -28,7 +28,6 @@ import {
     Crown,
     Mail,
     X,
-    Clock,
     Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,12 +62,36 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
 
 const ROLE_OPTIONS = ["owner", "admin", "member", "viewer"];
-const ROLE_COLORS: Record<string, string> = {
-    owner: "bg-primary/10 text-primary",
-    admin: "bg-primary/10 text-primary",
-    member: "bg-muted text-muted-foreground",
-    viewer: "bg-muted text-muted-foreground",
+
+const ROLE_BADGE: Record<string, string> = {
+    owner: "border-primary-border bg-primary-subtle text-primary",
+    admin: "border-primary-border bg-primary-subtle text-primary",
+    member: "border-border text-muted-foreground",
+    viewer: "border-border text-muted-foreground",
+    pending: "border-border text-muted-foreground",
 };
+
+const ROLE_LABEL_KEYS: Record<string, string> = {
+    owner: "roleOwner",
+    admin: "roleAdmin",
+    member: "roleMember",
+    viewer: "roleViewer",
+};
+
+/** Uppercase micro pill. Never truncates: it is a fixed label, not user input. */
+function RoleBadge({ role, label }: { role: string; label: string }) {
+    return (
+        <Badge
+            variant="outline"
+            className={cn(
+                "shrink-0 whitespace-nowrap px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                ROLE_BADGE[role] ?? ROLE_BADGE.viewer,
+            )}
+        >
+            {label}
+        </Badge>
+    );
+}
 
 const EVENT_ICONS: Record<string, typeof Activity> = {
     login: LogIn,
@@ -507,37 +530,39 @@ export default function SettingsPage() {
                                 )}
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-0">
+                        <CardContent className="flex flex-col gap-2">
                             {/* Member list */}
-                            {members.map((member, index) => {
+                            {members.map((member) => {
                                 const isCurrentUser = member.user_id === user?.id;
                                 const isOwner = member.role === "owner";
                                 return (
                                     <React.Fragment key={member.id}>
-                                        {index > 0 && <Separator />}
-                                        <div className="flex items-center justify-between py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
+                                        <div className="flex items-center gap-3 rounded-lg border p-3">
+                                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                                <div className={cn(
+                                                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold",
+                                                    isOwner ? "bg-primary-subtle text-primary" : "bg-muted text-muted-foreground",
+                                                )}>
                                                     {member.name?.charAt(0)?.toUpperCase() || "?"}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-medium">
+                                                <div className="min-w-0">
+                                                    {/* Names and emails truncate: they are unbounded
+                                                        user input. Badges and labels below never do. */}
+                                                    <p className="truncate text-[13px] font-medium">
                                                         {member.name}
                                                         {isCurrentUser && (
-                                                            <span className="ml-1.5 text-xs text-muted-foreground font-normal">({t("you")})</span>
+                                                            <span className="ml-1.5 text-[11px] text-muted-foreground font-normal">({t("you")})</span>
                                                         )}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                                                    <p className="truncate text-[11px] text-muted-foreground">{member.email}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="secondary" className={cn("capitalize", ROLE_COLORS[member.role] || ROLE_COLORS.viewer)}>
-                                                    {member.role}
-                                                </Badge>
+                                            <div className="flex shrink-0 items-center gap-2">
+                                                <RoleBadge role={member.role} label={t(ROLE_LABEL_KEYS[member.role] || "roleViewer")} />
                                                 {canManage && !isCurrentUser && !isOwner && (
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9">
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -555,7 +580,7 @@ export default function SettingsPage() {
                                                                             onClick={() => handleRoleChange(member.user_id, r)}
                                                                             className="capitalize"
                                                                         >
-                                                                            {r === member.role && <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
+                                                                            {r === member.role && <Check className="mr-2 h-4 w-4" aria-hidden="true" />}
                                                                             {r}
                                                                         </DropdownMenuItem>
                                                                     ))}
@@ -578,51 +603,41 @@ export default function SettingsPage() {
                                 );
                             })}
 
-                            {/* Pending invites */}
-                            {canManage && pendingInvites.length > 0 && (
-                                <>
-                                    <Separator className="my-2" />
-                                    <div className="pt-3">
-                                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                                            <Clock className="h-3.5 w-3.5" />
-                                            {t("pendingInvites", { count: pendingInvites.length })}
-                                        </h3>
-                                        {pendingInvites.map((invite, index) => (
-                                            <React.Fragment key={invite.id}>
-                                                {index > 0 && <Separator />}
-                                                <div className="flex items-center justify-between py-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 text-sm font-medium text-muted-foreground border border-dashed">
-                                                            <Mail className="h-4 w-4" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-medium text-muted-foreground">{invite.email}</p>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {invite.invited_by_name
-                                                                    ? t("invitedBy", { name: invite.invited_by_name })
-                                                                    : t("invitedAs", { role: invite.role })}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant="secondary" className="capitalize">
-                                                            {invite.role}
-                                                        </Badge>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-destructive hover:text-destructive"
-                                                            onClick={() => handleCancelInvite(invite.id, invite.email)}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </React.Fragment>
-                                        ))}
+                            {/* Pending invites are the same row at 60% opacity.
+                                A separate "pending" section would split one
+                                mental model, the member list, into two. */}
+                            {canManage && pendingInvites.map((invite) => (
+                                <div
+                                    key={invite.id}
+                                    className="flex items-center gap-3 rounded-lg border p-3 opacity-60"
+                                >
+                                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                            <Mail className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="truncate text-[13px] font-medium">{invite.email}</p>
+                                            <p className="truncate text-[11px] text-muted-foreground">
+                                                {invite.invited_by_name
+                                                    ? t("invitedBy", { name: invite.invited_by_name })
+                                                    : t("invitedAs", { role: invite.role })}
+                                            </p>
+                                        </div>
                                     </div>
-                                </>
-                            )}
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        <RoleBadge role="pending" label={t("pendingLabel")} />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 text-destructive hover:text-destructive"
+                                            title={t("cancelInvite")}
+                                            onClick={() => handleCancelInvite(invite.id, invite.email)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
 
@@ -723,20 +738,13 @@ export default function SettingsPage() {
 
                 {/* ─── Integrations Tab (placeholder) ─── */}
                 <TabsContent value="integrations">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Link2 className="h-5 w-5" />
-                                {t("tabIntegrations")}
-                            </CardTitle>
-                            <CardDescription>Coming soon.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground py-4 text-center">
-                                No integrations available yet.
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <div className="rounded-lg border-2 border-dashed p-12 text-center">
+                        <Link2 className="mx-auto h-12 w-12 text-muted-foreground/40" />
+                        <p className="mt-4 text-sm font-medium">{t("integrationsEmptyTitle")}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {t("integrationsEmptyDesc")}
+                        </p>
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>

@@ -62,6 +62,10 @@ Applies to docs, comments, UI strings, commit messages, and script output:
 - No AI-filler phrasing ("seamless", "leverage", "delve", "robust", "empower", and similar)
 - UI icons come exclusively from lucide-react; never emoji or unicode symbols as icons
 
+## Design system (UI work)
+
+Read `AGENTS.md` at the repo root before touching any UI. Never write a raw colour, font size, spacing value, or icon size that is not in the token layer of `apps/web/src/app/globals.css`. Severity uses `sev-*`, measured quantities use their permanent `sig-*` colour, charts use `--viz-1..8`. Visual reference: `docs/design/OpenFarm Design System.dc.html`.
+
 ## Frontend Patterns
 
 - **i18n**: `next-intl` with `en`/`es` locales; messages in `apps/web/messages/`. Routes use `[locale]` segment with `localePrefix: "as-needed"`

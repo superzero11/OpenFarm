@@ -38,7 +38,10 @@ Thumbs.db
 *.code-workspace
 
 # ── Internal Docs ────────────────────────────────────────────────────
-docs/
+# R&D docs stay local; the design system reference and TaskList are tracked
+docs/*
+!docs/design/
+!docs/TaskList.md
 
 # ── Logs / Temp ──────────────────────────────────────────────────────
 *.log

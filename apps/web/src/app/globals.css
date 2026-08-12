@@ -1,62 +1,230 @@
+/* ============================================================================
+   OpenFarm Design System — token layer
+   Drop-in replacement for apps/web/src/app/globals.css (token blocks only).
+   Architecture is unchanged: HSL triplets consumed as hsl(var(--x)) by Tailwind.
+   Every existing shadcn token keeps its name, so nothing breaks on migration.
+   ========================================================================= */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 142.1 76.2% 36.3%;
-        --primary-foreground: 355.7 100% 97.3%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 142.1 76.2% 36.3%;
-        --radius: 0.5rem;
-    }
+  :root {
+    /* ── Surfaces & text (light) ───────────────────────────────────── */
+    --background: 0 0% 100%;
+    --foreground: 150 15% 5%;
 
-    .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 142.1 70.6% 45.3%;
-        --primary-foreground: 144.9 80.4% 10%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 142.4 71.8% 29.2%;
-    }
+    --surface-1: 0 0% 100%;   /* cards, panels                        */
+    --surface-2: 150 12% 97%; /* page wash, table stripes, inset wells */
+    --surface-3: 0 0% 100%;   /* popovers, menus, floating map panels  */
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 15% 5%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 15% 5%;
+
+    --muted: 150 12% 96%;
+    --muted-foreground: 145 5% 42%;
+    --accent: 150 12% 96%;
+    --accent-foreground: 150 15% 9%;
+    --secondary: 150 12% 96%;
+    --secondary-foreground: 150 15% 9%;
+
+    --border: 150 10% 90%;
+    --border-strong: 150 9% 78%;
+    --input: 150 10% 90%;
+    --ring: 142 76% 36%;
+
+    /* ── Brand ─────────────────────────────────────────────────────── */
+    --primary: 142 76% 36%;
+    --primary-foreground: 150 80% 98%;
+    --primary-subtle: 142 60% 95%;   /* tint backgrounds, active nav    */
+    --primary-border: 142 50% 82%;
+
+    /* ── Semantic status ───────────────────────────────────────────── */
+    --success: 142 72% 32%;
+    --success-subtle: 142 60% 95%;
+    --warning: 32 95% 44%;
+    --warning-subtle: 38 92% 95%;
+    --caution: 45 93% 40%;
+    --caution-subtle: 48 96% 94%;
+    --danger: 0 72% 51%;
+    --danger-subtle: 0 86% 97%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 199 89% 42%;
+    --info-subtle: 199 90% 95%;
+  }
+
+  .dark {
+    /* ── Surfaces & text (dark — the primary theme) ────────────────── */
+    --background: 150 15% 5%;
+    --foreground: 150 18% 96%;
+
+    --surface-1: 156 13% 8%;
+    --surface-2: 150 12% 10%;
+    --surface-3: 150 11% 12%;
+
+    --card: 156 13% 8%;
+    --card-foreground: 150 18% 96%;
+    --popover: 150 11% 12%;
+    --popover-foreground: 150 18% 96%;
+
+    --muted: 150 10% 13%;
+    --muted-foreground: 150 6% 63%;
+    --accent: 150 11% 14%;
+    --accent-foreground: 150 18% 96%;
+    --secondary: 150 10% 14%;
+    --secondary-foreground: 150 18% 96%;
+
+    --border: 150 10% 15%;
+    --border-strong: 150 9% 24%;
+    --input: 150 10% 18%;
+    --ring: 142 71% 45%;
+
+    --primary: 142 71% 45%;
+    --primary-foreground: 145 80% 10%;
+    --primary-subtle: 142 45% 12%;
+    --primary-border: 142 40% 24%;
+
+    --success: 142 71% 45%;
+    --success-subtle: 142 45% 12%;
+    --warning: 38 92% 50%;
+    --warning-subtle: 33 60% 12%;
+    --caution: 48 96% 53%;
+    --caution-subtle: 45 60% 12%;
+    --danger: 0 84% 60%;
+    --danger-subtle: 0 50% 13%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 199 92% 60%;
+    --info-subtle: 200 55% 13%;
+  }
+
+  /* ── Theme-independent tokens ──────────────────────────────────── */
+  :root {
+    /* Alert severity — the ONLY source for severity colour.
+       Never re-derive severity from raw Tailwind reds/ambers. */
+    --sev-high: var(--danger);
+    --sev-medium: var(--warning);
+    --sev-low: var(--caution);
+
+    /* Domain signal colours — one hue per measured quantity, forever. */
+    --sig-vegetation: 142 71% 45%;  /* NDVI / EVI / SAVI, biomass       */
+    --sig-water: 217 91% 60%;       /* NDWI, irrigation, water balance  */
+    --sig-precip: 199 92% 60%;      /* rainfall                         */
+    --sig-temp: 27 96% 61%;         /* air & soil temperature, GDD      */
+    --sig-et0: 43 96% 56%;          /* evapotranspiration               */
+    --sig-vpd: 187 85% 53%;         /* vapour pressure deficit          */
+    --sig-carbon: 160 64% 52%;      /* SOC, sequestration               */
+    --sig-yield: 258 90% 74%;       /* yield & forecast models          */
+
+    /* Soil texture — fixed legend, matches the soil tab triangle. */
+    --soil-sand: 43 96% 56%;
+    --soil-silt: 199 95% 74%;
+    --soil-clay: 0 91% 71%;
+
+    /* Categorical chart series. Use in order; never invent a 9th. */
+    --viz-1: 142 71% 45%;
+    --viz-2: 199 92% 60%;
+    --viz-3: 38 92% 50%;
+    --viz-4: 258 90% 74%;
+    --viz-5: 187 85% 53%;
+    --viz-6: 351 95% 71%;
+    --viz-7: 82 78% 55%;
+    --viz-8: 27 96% 61%;
+
+    /* Raster ramps — must match the TiTiler colormap exactly.
+       vegetation = rdylgn (NDVI, EVI, SAVI) · water = rdbu (NDWI) */
+    --ramp-vegetation: linear-gradient(to right,
+      #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%,
+      #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%);
+    --ramp-water: linear-gradient(to right,
+      #67001f 0%, #b2182b 10%, #d6604d 20%, #f4a582 30%, #fddbc7 40%,
+      #f7f7f7 50%, #d1e5f0 60%, #92c5de 70%, #4393c3 80%, #2166ac 90%, #053061 100%);
+
+    /* Map overlay chrome */
+    --map-field-stroke: 142 71% 45%;
+    --map-draw-vertex: 0 0% 100%;
+    --map-draw-line: 43 96% 56%;
+    --map-scrim: 150 15% 5%;
+
+    /* ── Typography ──────────────────────────────────────────────── */
+    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system,
+      "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo,
+      Consolas, monospace;
+
+    --text-display: 2.25rem;  /* 36 / 1.08 / 700 / -0.03em — marketing only */
+    --text-h1: 1.5rem;        /* 24 / 1.2  / 700 / -0.02em — page title     */
+    --text-h2: 1.125rem;      /* 18 / 1.3  / 600 / -0.01em — card title     */
+    --text-h3: 0.9375rem;     /* 15 / 1.4  / 600           — panel section  */
+    --text-body: 0.875rem;    /* 14 / 1.5  / 400           — default        */
+    --text-sm: 0.8125rem;     /* 13 / 1.45 / 400           — dense body     */
+    --text-label: 0.75rem;    /* 12 / 1.4  / 500           — labels, meta   */
+    --text-caption: 0.6875rem;/* 11 / 1.35 / 400           — legends, units */
+    --text-micro: 0.625rem;   /* 10 / 1.3  / 600 / .06em   — pills, tags    */
+    --text-metric: 1.5rem;    /* 24 / 1.1  / 700 tabular   — stat numbers   */
+
+    /* ── Space (4px base) ────────────────────────────────────────── */
+    --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+    --space-4: 1rem;     --space-5: 1.25rem;  --space-6: 1.5rem;
+    --space-8: 2rem;     --space-10: 2.5rem;  --space-12: 3rem;
+
+    /* ── Radius ──────────────────────────────────────────────────── */
+    --radius: 0.5rem;         /* lg — cards, panels, buttons */
+    --radius-sm: 0.25rem;     /* chips, swatches             */
+    --radius-md: 0.375rem;    /* inputs, menu items          */
+    --radius-xl: 0.75rem;     /* floating map panels         */
+
+    /* ── Elevation ───────────────────────────────────────────────── */
+    --shadow-sm: 0 1px 2px 0 hsl(150 20% 2% / 0.28);
+    --shadow-md: 0 4px 6px -1px hsl(150 20% 2% / 0.32), 0 2px 4px -2px hsl(150 20% 2% / 0.32);
+    --shadow-lg: 0 10px 22px -4px hsl(150 20% 2% / 0.42), 0 4px 8px -4px hsl(150 20% 2% / 0.34);
+    --shadow-panel: 0 16px 40px -12px hsl(150 30% 1% / 0.62);
+
+    /* ── Motion ──────────────────────────────────────────────────── */
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --dur-fast: 120ms;   /* hover, focus, colour                       */
+    --dur-base: 180ms;   /* menus, tooltips, toggles                   */
+    --dur-slow: 300ms;   /* sidebar collapse, panel slide, drawer      */
+
+    /* ── Layout constants ────────────────────────────────────────── */
+    --sidebar-w: 16rem;          /* 256 expanded */
+    --sidebar-w-collapsed: 4rem; /* 64 rail      */
+    --topbar-h: 4.25rem;         /* 68           */
+    --panel-w: 22rem;            /* 352 map analysis panel */
+    --content-max: 72rem;        /* 1152 page content cap  */
+  }
 }
 
 @layer base {
-    * {
-        @apply border-border;
-    }
+  * { @apply border-border; }
 
-    body {
-        @apply bg-background text-foreground;
-    }
+  html { font-family: var(--font-sans); }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv05" 1, "ss01" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* All numerals that can change: lock the width so rows don't jitter. */
+  .tabular, [data-metric], td[data-numeric] { font-variant-numeric: tabular-nums; }
+
+  /* Measured values, coordinates, dates, index readouts. */
+  .value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+  a { color: hsl(var(--primary)); text-underline-offset: 0.2em; }
+  a:hover { color: hsl(var(--primary) / 0.82); text-decoration: underline; }
+
+  ::selection { background: hsl(var(--primary) / 0.28); }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
 }
 
 /* ─── Map controls: unified styling ─── */

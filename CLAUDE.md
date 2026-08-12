@@ -88,6 +88,7 @@ CHANGELOG.md is rendered in-app at `/changelog` by a minimal parser (`parseChang
 - Python: ruff (lint + format), type hints throughout, async SQLAlchemy in routers, sync sessions only inside Celery tasks (core/database_sync.py).
 - TypeScript: strict; typed API client in apps/web/src/lib/api.ts - add new endpoint wrappers + interfaces there, don't fetch ad hoc.
 - UI primitives from apps/web/src/components/ui/ (shadcn); charts in components/charts/; field tabs in components/field/.
+- **UI work: read AGENTS.md at the repo root first.** It is the design system rulebook (tokens, colour bindings, typography, spacing, icons, component and chart rules). Never write a raw colour, font size, spacing value, or icon size that is not in the token layer of apps/web/src/app/globals.css. Visual reference: docs/design/OpenFarm Design System.dc.html (do not copy inline hex from it).
 - Structured logging: structlog (Python), pino-style logger in apps/web/src/lib/logger.ts. No print/console.log.
 - Writing style (strict, applies to docs, comments, UI strings, commit messages, script output): no em-dashes (use hyphens, commas, or restructure), no emojis or decorative unicode symbols, no AI-filler phrasing ("seamless", "leverage", "delve", "robust", "empower", and similar). Plain, precise, technical prose.
 - Icons in the UI come exclusively from lucide-react. Never emoji, never inline unicode symbols as icons.

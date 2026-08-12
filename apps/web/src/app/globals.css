@@ -151,10 +151,9 @@
     --map-scrim: 150 15% 5%;
 
     /* ── Typography ──────────────────────────────────────────────── */
-    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system,
-      "Segoe UI", Helvetica, Arial, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo,
-      Consolas, monospace;
+    /* --font-sans / --font-mono are provided by next/font (IBM Plex) on
+       the html element in [locale]/layout.tsx - do not define them here,
+       a :root definition would win the cascade and break font loading. */
 
     --text-display: 2.25rem;  /* 36 / 1.08 / 700 / -0.03em — marketing only */
     --text-h1: 1.5rem;        /* 24 / 1.2  / 700 / -0.02em — page title     */

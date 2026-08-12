@@ -570,7 +570,10 @@ export default function FieldDetailPage() {
             >
                 <div className={cn("flex h-full flex-col overflow-hidden rounded-xl", MAP_CHROME)}>
                     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-                        <TabsList variant="underline" className="shrink-0 gap-4 overflow-x-auto px-4">
+                        {/* Seven tabs do not fit 22rem on one line. The
+                            reference wraps rather than scrolls, so no tab
+                            is hidden behind an invisible scroll affordance. */}
+                        <TabsList variant="underline" className="shrink-0 flex-wrap gap-x-4 px-4">
                             <TabsTrigger
                                 value="info"
                                 variant="underline"

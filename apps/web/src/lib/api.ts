@@ -278,6 +278,14 @@ export interface NdviJob {
     finished_at: string | null;
 }
 
+/** Open alert counts across the workspace, independent of paging. */
+export interface AlertSummary {
+    open_total: number;
+    high: number;
+    medium: number;
+    low: number;
+}
+
 export interface Alert {
     id: string;
     field_id: string;
@@ -525,13 +533,16 @@ export const jobsApi = {
 // ── Alerts ───────────────────────────────────────────────────────────
 
 export const alertsApi = {
-    list: (opts: { status?: string; limit?: number; offset?: number } = {}) => {
+    list: (opts: { status?: string; severity?: string; limit?: number; offset?: number } = {}) => {
         const params = new URLSearchParams();
         if (opts.status) params.set("status", opts.status);
+        if (opts.severity) params.set("severity", opts.severity);
         params.set("limit", String(opts.limit ?? 50));
         params.set("offset", String(opts.offset ?? 0));
         return apiFetch<Paginated<Alert>>(`/alerts?${params}`);
     },
+    /** Open counts by severity across the workspace, for the summary cards. */
+    summary: () => apiFetch<AlertSummary>("/alerts/summary"),
     listForField: (fieldId: string, limit = 50, indexType?: string) => {
         const params = new URLSearchParams({ field_id: fieldId, limit: String(limit) });
         if (indexType) params.set("index_type", indexType);

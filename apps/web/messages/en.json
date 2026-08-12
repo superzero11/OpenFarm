@@ -394,7 +394,11 @@
         "alertReopened": "Alert reopened",
         "failedUpdate": "Failed to update alert",
         "severityAll": "All",
-        "showingCount": "{shown} of {total} shown"
+        "showingCount": "{shown} of {total} shown",
+        "showingRange": "{from}-{to} of {total}",
+        "previousPage": "Previous",
+        "nextPage": "Next",
+        "pageOf": "Page {page} of {pages}"
     },
     "ndviLegend": {
         "title": "NDVI",

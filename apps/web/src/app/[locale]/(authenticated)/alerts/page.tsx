@@ -3,14 +3,17 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useOrg } from "@/components/org-context";
 import { alertsApi, farmsApi } from "@/lib/api";
-import type { Alert, Farm, Field } from "@/lib/api";
+import type { Alert, AlertSummary, Farm, Field } from "@/lib/api";
 import { toast } from "sonner";
 import {
     AlertTriangle,
     Bell,
     CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
     ShieldAlert,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -28,17 +31,25 @@ import { AlertRow } from "@/components/alert-row";
 
 const SEVERITY_TABS = ["all", "high", "medium", "low"] as const;
 
+/** Rows per page. The API caps a single request at 200. */
+const PAGE_SIZE = 25;
+
 export default function AlertsPage() {
     const t = useTranslations("alertsPage");
     const { currentOrg, loading: orgLoading } = useOrg();
 
     const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [total, setTotal] = useState(0);
+    const [summary, setSummary] = useState<AlertSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [togglingId, setTogglingId] = useState<string | null>(null);
 
-    // Filters
+    // Filters. Both are applied server-side now: severity used to be a
+    // client-side filter over a capped fetch, which is why the page could
+    // only ever see the first 200 alerts.
     const [statusFilter, setStatusFilter] = useState<string>("open");
     const [severityFilter, setSeverityFilter] = useState<string>("all");
+    const [page, setPage] = useState(0);
 
     // Field/Farm lookup maps
     const [fieldMap, setFieldMap] = useState<Record<string, Field>>({});
@@ -49,15 +60,28 @@ export default function AlertsPage() {
         try {
             const res = await alertsApi.list({
                 status: statusFilter === "all" ? undefined : statusFilter,
-                limit: 200,
+                severity: severityFilter === "all" ? undefined : severityFilter,
+                limit: PAGE_SIZE,
+                offset: page * PAGE_SIZE,
             });
             setAlerts(res.items);
+            setTotal(res.total);
         } catch (err) {
             console.error("Failed to load alerts:", err);
         } finally {
             setLoading(false);
         }
-    }, [statusFilter]);
+    }, [statusFilter, severityFilter, page]);
+
+    /** Counts come from the server so they describe the workspace, not
+     *  whatever page of rows the client is holding. */
+    const loadSummary = useCallback(async () => {
+        try {
+            setSummary(await alertsApi.summary());
+        } catch {
+            setSummary(null);
+        }
+    }, []);
 
     // Load farms and fields for lookup
     const loadLookups = useCallback(async () => {
@@ -93,6 +117,17 @@ export default function AlertsPage() {
         loadAlerts();
     }, [currentOrg, loadAlerts]);
 
+    useEffect(() => {
+        if (!currentOrg) return;
+        loadSummary();
+    }, [currentOrg, loadSummary]);
+
+    // A filter change invalidates the current offset: page 8 of "all"
+    // is not page 8 of "high".
+    useEffect(() => {
+        setPage(0);
+    }, [statusFilter, severityFilter]);
+
     const toggleStatus = async (alert: Alert) => {
         const newStatus = alert.status === "open" ? "closed" : "open";
         setTogglingId(alert.id);
@@ -102,6 +137,10 @@ export default function AlertsPage() {
             toast.success(
                 newStatus === "closed" ? t("alertClosed") : t("alertReopened"),
             );
+            // The row may no longer belong on this page, and the open
+            // counts have certainly changed.
+            loadSummary();
+            if (statusFilter !== "all") loadAlerts();
         } catch (err: any) {
             toast.error(err.detail || t("failedUpdate"));
         } finally {
@@ -109,16 +148,9 @@ export default function AlertsPage() {
         }
     };
 
-    // Apply severity filter
-    const filteredAlerts = severityFilter === "all"
-        ? alerts
-        : alerts.filter((a) => a.severity === severityFilter);
-
-    // Group by severity for the summary
-    const openCount = alerts.filter((a) => a.status === "open").length;
-    const highCount = alerts.filter((a) => a.severity === "high" && a.status === "open").length;
-    const mediumCount = alerts.filter((a) => a.severity === "medium" && a.status === "open").length;
-    const lowCount = alerts.filter((a) => a.severity === "low" && a.status === "open").length;
+    const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const rangeFrom = total === 0 ? 0 : page * PAGE_SIZE + 1;
+    const rangeTo = Math.min(total, (page + 1) * PAGE_SIZE);
 
     if (orgLoading || loading) {
         return (
@@ -156,24 +188,24 @@ export default function AlertsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <SummaryCard
                     label={t("totalOpen")}
-                    count={openCount}
+                    count={summary?.open_total ?? 0}
                     icon={<Bell className="h-5 w-5 text-primary" />}
                 />
                 <SummaryCard
                     label={t("high")}
-                    count={highCount}
+                    count={summary?.high ?? 0}
                     icon={<ShieldAlert className="h-5 w-5 text-sev-high" />}
                     countClass="text-sev-high"
                 />
                 <SummaryCard
                     label={t("medium")}
-                    count={mediumCount}
+                    count={summary?.medium ?? 0}
                     icon={<AlertTriangle className="h-5 w-5 text-sev-medium" />}
                     countClass="text-sev-medium"
                 />
                 <SummaryCard
                     label={t("low")}
-                    count={lowCount}
+                    count={summary?.low ?? 0}
                     icon={<Bell className="h-5 w-5 text-sev-low" />}
                     countClass="text-sev-low"
                 />
@@ -183,7 +215,14 @@ export default function AlertsPage() {
             <div className="flex flex-wrap items-center gap-3 mb-5">
                 {/* Severity as a segmented control: four mutually exclusive
                     options are cheaper to read than a closed dropdown. */}
-                <div className="flex flex-wrap gap-0.5 rounded-lg bg-surface-2 p-1">
+                {/* bg-muted, not bg-surface-2: the page wash is already
+                    surface-2, so the track was the exact same colour as the
+                    page behind it and the group read as loose text. */}
+                <div
+                    role="group"
+                    aria-label={t("filters")}
+                    className="inline-flex flex-wrap items-center gap-0.5 rounded-lg bg-muted p-1"
+                >
                     {SEVERITY_TABS.map((sev) => (
                         <button
                             key={sev}
@@ -191,10 +230,10 @@ export default function AlertsPage() {
                             onClick={() => setSeverityFilter(sev)}
                             aria-pressed={severityFilter === sev}
                             className={cn(
-                                "rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
+                                "rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                                 severityFilter === sev
-                                    ? "bg-primary text-primary-foreground"
+                                    ? "bg-primary text-primary-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground",
                             )}
                         >
@@ -217,12 +256,12 @@ export default function AlertsPage() {
                 {/* A filtered list with no total is a trap: the user reads
                     four alerts and thinks that is all of them. */}
                 <span className="ml-auto whitespace-nowrap text-xs text-muted-foreground tabular-nums">
-                    {t("showingCount", { shown: filteredAlerts.length, total: alerts.length })}
+                    {t("showingRange", { from: rangeFrom, to: rangeTo, total })}
                 </span>
             </div>
 
             {/* Alert List */}
-            {filteredAlerts.length === 0 ? (
+            {alerts.length === 0 ? (
                 <Card className="border-2 border-dashed">
                     <CardContent className="p-12 text-center">
                         <CheckCircle2 className="mx-auto h-12 w-12 text-primary/30" />
@@ -234,7 +273,7 @@ export default function AlertsPage() {
                 </Card>
             ) : (
                 <div className="flex flex-col gap-2">
-                    {filteredAlerts.map((alert) => {
+                    {alerts.map((alert) => {
                         const field = fieldMap[alert.field_id];
                         const farm = field ? farmMap[field.farm_id] : null;
 
@@ -253,6 +292,36 @@ export default function AlertsPage() {
                             />
                         );
                     })}
+                </div>
+            )}
+
+            {/* Page controls. Shown whenever there is more than one page,
+                so the list never silently ends at a boundary. */}
+            {pageCount > 1 && (
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                        {t("pageOf", { page: page + 1, pages: pageCount })}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page === 0 || loading}
+                            onClick={() => setPage((p) => Math.max(0, p - 1))}
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            {t("previousPage")}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page + 1 >= pageCount || loading}
+                            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                        >
+                            {t("nextPage")}
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
                 </div>
             )}
         </div>

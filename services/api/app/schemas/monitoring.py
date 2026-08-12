@@ -97,6 +97,20 @@ class JobOut(BaseModel):
 # ── Alerts ───────────────────────────────────────────────────────────
 
 
+class AlertSummaryOut(BaseModel):
+    """Open alert counts across the whole workspace.
+
+    Deliberately independent of the caller's paging and filters: the
+    summary cards are an overview, so they must not change meaning when
+    the user pages through the list or narrows it by severity.
+    """
+
+    open_total: int = 0
+    high: int = 0
+    medium: int = 0
+    low: int = 0
+
+
 class AlertOut(BaseModel):
     id: uuid.UUID
     field_id: uuid.UUID

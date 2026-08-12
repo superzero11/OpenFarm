@@ -20,6 +20,7 @@ import {
 import { useTranslations } from "next-intl";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { tokenColor } from "@/lib/design-tokens";
 
 const NdviChart = dynamic(() => import("@/components/charts/ndvi-chart"), {
     ssr: false,
@@ -38,18 +39,18 @@ const NdviLegend = dynamic(() => import("@/components/field/ndvi-legend"), {
 
 const SEVERITY_CONFIG: Record<string, { dotClass: string; textClass: string; icon: React.ReactNode }> = {
     high: {
-        dotClass: "bg-red-500",
-        textClass: "text-red-600 dark:text-red-400",
+        dotClass: "bg-sev-high",
+        textClass: "text-sev-high",
         icon: <ShieldAlert className="h-4 w-4" />,
     },
     medium: {
-        dotClass: "bg-amber-500",
-        textClass: "text-amber-600 dark:text-amber-400",
+        dotClass: "bg-sev-medium",
+        textClass: "text-sev-medium",
         icon: <AlertTriangle className="h-4 w-4" />,
     },
     low: {
-        dotClass: "bg-yellow-500",
-        textClass: "text-yellow-600 dark:text-yellow-400",
+        dotClass: "bg-sev-low",
+        textClass: "text-sev-low",
         icon: <Bell className="h-4 w-4" />,
     },
 };
@@ -202,7 +203,7 @@ export default function ShareReportPage() {
                 {report.weather_summary && (
                     <div className="rounded-lg border bg-card shadow-sm p-4 space-y-3">
                         <div className="flex items-center gap-2">
-                            <CloudRain className="h-4 w-4 text-blue-500" />
+                            <CloudRain className="h-4 w-4 text-sig-precip" />
                             <h2 className="text-sm font-semibold">{t("weatherSummary")}</h2>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -216,7 +217,7 @@ export default function ShareReportPage() {
                             </div>
                             <div>
                                 <dt className="text-xs text-muted-foreground">{t("waterBalance")}</dt>
-                                <dd className={`text-sm font-medium mt-0.5 ${(report.weather_summary.water_balance_mm ?? 0) < 0 ? "text-red-600" : "text-green-600"}`}>
+                                <dd className={`text-sm font-medium mt-0.5 tabular-nums ${(report.weather_summary.water_balance_mm ?? 0) < 0 ? "text-danger" : "text-success"}`}>
                                     {report.weather_summary.water_balance_mm > 0 ? "+" : ""}{report.weather_summary.water_balance_mm} mm
                                 </dd>
                             </div>
@@ -411,7 +412,7 @@ function FieldMap({ geom, token, hasLayer, activeIndex }: { geom: GeoJSON.Geomet
                 type: "fill",
                 source: "field",
                 paint: {
-                    "fill-color": "#16a34a",
+                    "fill-color": tokenColor("--map-field-stroke"),
                     "fill-opacity": 0.2,
                 },
             });
@@ -421,7 +422,7 @@ function FieldMap({ geom, token, hasLayer, activeIndex }: { geom: GeoJSON.Geomet
                 type: "line",
                 source: "field",
                 paint: {
-                    "line-color": "#16a34a",
+                    "line-color": tokenColor("--map-field-stroke"),
                     "line-width": 2,
                 },
             });

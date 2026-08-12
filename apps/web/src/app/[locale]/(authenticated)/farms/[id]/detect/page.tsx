@@ -31,6 +31,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
+import { tokenColor } from "@/lib/design-tokens";
+import { cn } from "@/lib/utils";
 
 const BaseMap = dynamic(() => import("@/components/map/base-map"), {
     ssr: false,
@@ -89,10 +91,10 @@ const HIGHLIGHT_LAYER = "detected-boundaries-highlight";
 type Phase = "draw" | "detecting" | "review";
 
 function confidenceColor(c: number | null): string {
-    if (c === null) return "#6b7280";
-    if (c >= 0.8) return "#22c55e";
-    if (c >= 0.5) return "#eab308";
-    return "#ef4444";
+    if (c === null) return tokenColor("--muted-foreground");
+    if (c >= 0.8) return tokenColor("--success");
+    if (c >= 0.5) return tokenColor("--warning");
+    return tokenColor("--danger");
 }
 
 export default function DetectBoundariesPage() {
@@ -190,13 +192,13 @@ export default function DetectBoundariesPage() {
                 id: BBOX_FILL,
                 type: "fill",
                 source: BBOX_SOURCE,
-                paint: { "fill-color": "#3b82f6", "fill-opacity": 0.15 },
+                paint: { "fill-color": tokenColor("--info"), "fill-opacity": 0.15 },
             });
             map.addLayer({
                 id: BBOX_LINE,
                 type: "line",
                 source: BBOX_SOURCE,
-                paint: { "line-color": "#3b82f6", "line-width": 2, "line-dasharray": [2, 2] },
+                paint: { "line-color": tokenColor("--info"), "line-width": 2, "line-dasharray": [2, 2] },
             });
         }
     }, []);
@@ -237,10 +239,10 @@ export default function DetectBoundariesPage() {
                         "fill-color": [
                             "case",
                             [">=", ["get", "confidence"], 0.8],
-                            "#22c55e",
+                            tokenColor("--success"),
                             [">=", ["get", "confidence"], 0.5],
-                            "#eab308",
-                            "#ef4444",
+                            tokenColor("--warning"),
+                            tokenColor("--danger"),
                         ],
                         "fill-opacity": 0.3,
                     },
@@ -254,10 +256,10 @@ export default function DetectBoundariesPage() {
                         "line-color": [
                             "case",
                             [">=", ["get", "confidence"], 0.8],
-                            "#16a34a",
+                            tokenColor("--success"),
                             [">=", ["get", "confidence"], 0.5],
-                            "#ca8a04",
-                            "#dc2626",
+                            tokenColor("--warning"),
+                            tokenColor("--danger"),
                         ],
                         "line-width": 2,
                     },
@@ -267,7 +269,7 @@ export default function DetectBoundariesPage() {
                     id: HIGHLIGHT_LAYER,
                     type: "line",
                     source: SOURCE_ID,
-                    paint: { "line-color": "#3b82f6", "line-width": 3 },
+                    paint: { "line-color": tokenColor("--info"), "line-width": 3 },
                     filter: ["==", ["get", "id"], ""],
                 });
 
@@ -615,7 +617,7 @@ export default function DetectBoundariesPage() {
                             {phase === "review" && pendingCount > 0 && (
                                 <Badge
                                     variant="secondary"
-                                    className="text-xs"
+                                    className="text-xs tabular-nums"
                                 >
                                     {pendingCount}
                                 </Badge>
@@ -642,17 +644,18 @@ export default function DetectBoundariesPage() {
                                         <div className="flex items-center gap-2 text-sm">
                                             {bboxArea >= MIN_AREA_KM2 &&
                                                 bboxArea <= MAX_AREA_KM2 ? (
-                                                <Check className="h-4 w-4 text-green-600" />
+                                                <Check className="h-4 w-4 text-success" />
                                             ) : (
-                                                <X className="h-4 w-4 text-red-600" />
+                                                <X className="h-4 w-4 text-danger" />
                                             )}
                                             <span
-                                                className={
+                                                className={cn(
+                                                    "tabular-nums",
                                                     bboxArea > MAX_AREA_KM2 ||
                                                         bboxArea < MIN_AREA_KM2
-                                                        ? "text-red-600"
-                                                        : "text-muted-foreground"
-                                                }
+                                                        ? "text-danger"
+                                                        : "text-muted-foreground",
+                                                )}
                                             >
                                                 {t("bboxArea", {
                                                     area: bboxArea.toFixed(1),
@@ -700,9 +703,9 @@ export default function DetectBoundariesPage() {
                                                 <div
                                                     key={step}
                                                     className={`flex items-center gap-2 text-xs ${isDone
-                                                        ? "text-green-600"
+                                                        ? "text-success"
                                                         : isActive
-                                                            ? "text-blue-600 font-medium"
+                                                            ? "text-info font-medium"
                                                             : "text-muted-foreground"
                                                         }`}
                                                 >

@@ -15,9 +15,9 @@ interface ForecastBarProps {
 }
 
 function weatherIcon(precip: number | null, cloud: number | null) {
-    if (precip != null && precip > 1) return <CloudRain className="h-4 w-4 text-blue-500" />;
-    if (cloud != null && cloud > 60) return <Cloud className="h-4 w-4 text-gray-400" />;
-    return <Sun className="h-4 w-4 text-amber-500" />;
+    if (precip != null && precip > 1) return <CloudRain className="h-4 w-4 text-sig-precip" />;
+    if (cloud != null && cloud > 60) return <Cloud className="h-4 w-4 text-muted-foreground" />;
+    return <Sun className="h-4 w-4 text-sig-temp" />;
 }
 
 function formatDay(dateStr: string): string {
@@ -48,20 +48,20 @@ export default function ForecastBar({ forecast }: ForecastBarProps) {
                     </span>
                     {weatherIcon(day.precipitation_sum, day.cloud_cover_mean)}
                     <div className="text-center">
-                        <span className="text-xs font-semibold">
+                        <span className="text-xs font-semibold tabular-nums">
                             {day.temperature_2m_max != null ? `${Math.round(day.temperature_2m_max)}°` : "-"}
                         </span>
-                        <span className="text-[10px] text-muted-foreground ml-0.5">
+                        <span className="text-[10px] text-muted-foreground ml-0.5 tabular-nums">
                             {day.temperature_2m_min != null ? `${Math.round(day.temperature_2m_min)}°` : ""}
                         </span>
                     </div>
                     {day.precipitation_sum != null && day.precipitation_sum > 0 && (
-                        <span className="text-[9px] text-blue-500 font-medium">
+                        <span className="text-[9px] text-sig-precip font-medium tabular-nums">
                             {day.precipitation_sum.toFixed(1)}mm
                         </span>
                     )}
                     {day.wind_speed_10m_max != null && day.wind_speed_10m_max > 5 && (
-                        <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                        <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground tabular-nums">
                             <Wind className="h-2.5 w-2.5" />
                             {Math.round(day.wind_speed_10m_max)}
                         </span>

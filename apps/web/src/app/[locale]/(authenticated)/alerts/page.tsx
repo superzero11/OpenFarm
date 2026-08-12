@@ -164,20 +164,20 @@ export default function AlertsPage() {
                 <SummaryCard
                     label={t("high")}
                     count={highCount}
-                    icon={<ShieldAlert className="h-5 w-5 text-red-500" />}
-                    accent="red"
+                    icon={<ShieldAlert className="h-5 w-5 text-sev-high" />}
+                    accent="sev-high"
                 />
                 <SummaryCard
                     label={t("medium")}
                     count={mediumCount}
-                    icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}
-                    accent="amber"
+                    icon={<AlertTriangle className="h-5 w-5 text-sev-medium" />}
+                    accent="sev-medium"
                 />
                 <SummaryCard
                     label={t("low")}
                     count={lowCount}
-                    icon={<Bell className="h-5 w-5 text-yellow-500" />}
-                    accent="yellow"
+                    icon={<Bell className="h-5 w-5 text-sev-low" />}
+                    accent="sev-low"
                 />
             </div>
 
@@ -210,7 +210,7 @@ export default function AlertsPage() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="ml-auto text-sm text-muted-foreground">
+                <div className="ml-auto text-sm text-muted-foreground tabular-nums">
                     {filteredAlerts.length} {t("alertsShown")}
                 </div>
             </div>
@@ -272,7 +272,7 @@ function SummaryCard({
                     {icon}
                     <span className="text-sm text-muted-foreground">{label}</span>
                 </div>
-                <p className="mt-3 text-2xl font-bold tracking-tight">{count}</p>
+                <p className="mt-3 text-2xl font-bold tracking-tight tabular-nums">{count}</p>
             </CardContent>
         </Card>
     );

@@ -14,17 +14,15 @@ const DEPTH_LAYERS = [
 ] as const;
 
 function getMoistureColor(value: number): string {
-    if (value >= 0.35) return "bg-green-500";
-    if (value >= 0.25) return "bg-yellow-500";
-    if (value >= 0.15) return "bg-orange-500";
-    return "bg-red-500";
+    if (value >= 0.35) return "bg-success";
+    if (value >= 0.15) return "bg-warning";
+    return "bg-danger";
 }
 
 function getMoistureTextColor(value: number): string {
-    if (value >= 0.35) return "text-green-600 dark:text-green-400";
-    if (value >= 0.25) return "text-yellow-600 dark:text-yellow-400";
-    if (value >= 0.15) return "text-orange-600 dark:text-orange-400";
-    return "text-red-600 dark:text-red-400";
+    if (value >= 0.35) return "text-success";
+    if (value >= 0.15) return "text-warning";
+    return "text-danger";
 }
 
 interface SoilMoistureGaugeProps {
@@ -54,7 +52,7 @@ export default function SoilMoistureGauge({ data }: SoilMoistureGaugeProps) {
                         </div>
                         <span
                             className={cn(
-                                "text-[10px] font-semibold w-10 shrink-0",
+                                "text-[10px] font-semibold w-10 shrink-0 tabular-nums",
                                 getMoistureTextColor(value),
                             )}
                         >

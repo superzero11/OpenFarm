@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
+import { tokenColor } from "@/lib/design-tokens";
 
 const DrawMap = dynamic(() => import("@/components/map/draw-map"), {
     ssr: false,
@@ -318,13 +319,13 @@ export default function FieldDetailPage() {
             id: "field-fill",
             type: "fill",
             source: "field-polygon",
-            paint: { "fill-color": "#22c55e", "fill-opacity": 0.2 },
+            paint: { "fill-color": tokenColor("--map-field-stroke"), "fill-opacity": 0.2 },
         });
         map.addLayer({
             id: "field-outline",
             type: "line",
             source: "field-polygon",
-            paint: { "line-color": "#16a34a", "line-width": 2 },
+            paint: { "line-color": tokenColor("--map-field-stroke"), "line-width": 2 },
         });
 
         // Re-add index overlay if active

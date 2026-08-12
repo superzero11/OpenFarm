@@ -477,14 +477,14 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
 
             {/* ── Backfill in-progress banner ──────────── */}
             {stats.length < 10 && (backfillActive || backfillTriggered || stats.length === 0) && !loading && !activeJob && (
-                <Card className="border-blue-500/30 bg-blue-500/5">
+                <Card className="bg-info-subtle">
                     <CardContent className="flex items-start gap-2 p-3">
-                        <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                        <Info className="h-4 w-4 text-info mt-0.5 shrink-0" />
                         <div>
-                            <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                            <p className="text-sm font-medium text-info">
                                 Historical data is being processed
                             </p>
-                            <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
+                            <p className="text-xs text-info/80">
                                 Satellite imagery for the past 24 months is being analyzed. Data will appear automatically as it&apos;s ready.
                             </p>
                         </div>
@@ -532,17 +532,17 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
 
             {/* ── Job failed banner ────────────────────── */}
             {activeJob && activeJob.status === "failed" && (
-                <Card className="border-destructive/50 bg-destructive/10">
+                <Card className="bg-danger-subtle">
                     <CardContent className="flex items-start gap-2 p-3">
-                        <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
+                        <AlertTriangle className="h-4 w-4 text-danger mt-0.5" />
                         <div>
-                            <p className="text-sm font-medium text-destructive">Job failed</p>
-                            <p className="text-xs text-destructive/80">{activeJob.error || "Unknown error"}</p>
+                            <p className="text-sm font-medium text-danger">Job failed</p>
+                            <p className="text-xs text-danger/80">{activeJob.error || "Unknown error"}</p>
                             <Button
                                 variant="link"
                                 size="sm"
                                 onClick={() => setActiveJob(null)}
-                                className="h-auto p-0 text-xs text-destructive underline mt-1"
+                                className="h-auto p-0 text-xs text-danger underline mt-1"
                             >
                                 Dismiss
                             </Button>
@@ -588,7 +588,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-xs font-semibold">
                                 {config.label} Layers
-                                <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
+                                <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0 tabular-nums">
                                     {layers.length}
                                 </Badge>
                             </CardTitle>
@@ -640,7 +640,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                                             <Badge
                                                 variant={stat.mean < config.threshold ? "destructive" : "default"}
                                                 className={cn(
-                                                    "font-mono text-[10px] px-1.5",
+                                                    "font-mono tabular-nums text-[10px] px-1.5",
                                                     stat.mean >= config.threshold && "bg-primary hover:bg-primary/90",
                                                 )}
                                             >

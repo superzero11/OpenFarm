@@ -211,7 +211,7 @@ export default function NdviChart({
                     : []),
             ],
         };
-    }, [stats, selectedDate, config, seriesName, weatherSorted]);
+    }, [stats, selectedDate, config, seriesName, weatherSorted, indexType]);
 
     const onEvents = useMemo(
         () => ({

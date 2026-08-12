@@ -166,7 +166,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                     <Link2 className="h-4 w-4 text-muted-foreground" />
                     {t("activeLinks")}
                     {links.length > 0 && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 tabular-nums">
                             {links.length}
                         </Badge>
                     )}
@@ -207,7 +207,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
                                         onClick={() => handleCopy(link.token)}
                                     >
                                         {copiedToken === link.token ? (
-                                            <Check className="h-3.5 w-3.5 text-green-600" />
+                                            <Check className="h-3.5 w-3.5 text-success" />
                                         ) : (
                                             <Copy className="h-3.5 w-3.5" />
                                         )}

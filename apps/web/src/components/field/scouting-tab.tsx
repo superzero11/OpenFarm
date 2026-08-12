@@ -47,6 +47,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { tokenColor } from "@/lib/design-tokens";
 import { useTranslations } from "next-intl";
 
 /* ── Constants ─────────────────────────────────────────────── */
@@ -56,9 +57,6 @@ const SCOUTING_LAYER = "scouting-circles";
 const SCOUTING_LAYER_STROKE = "scouting-circles-stroke";
 const PICK_SOURCE = "scouting-pick-point";
 const PICK_LAYER = "scouting-pick-marker";
-
-const MARKER_COLOR = "#f59e0b"; // amber-500
-const PICK_COLOR = "#3b82f6"; // blue-500
 
 /* ── Props ─────────────────────────────────────────────────── */
 
@@ -168,7 +166,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                         "circle-radius": 10,
                         "circle-color": "transparent",
                         "circle-stroke-width": 2.5,
-                        "circle-stroke-color": "#ffffff",
+                        "circle-stroke-color": tokenColor("--map-draw-vertex"),
                     },
                 });
                 map.addLayer({
@@ -177,7 +175,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                     source: SCOUTING_SOURCE,
                     paint: {
                         "circle-radius": 7,
-                        "circle-color": MARKER_COLOR,
+                        "circle-color": tokenColor("--warning"),
                         "circle-opacity": 0.9,
                     },
                 });
@@ -239,7 +237,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                     const tagsHtml = obs.tags?.length ? obs.tags.map((tg) => `<span class="openfarm-popup-tag">${tg}</span>`).join("") : "";
                     const noteHtml = obs.note ? `<div class="openfarm-popup-note">${obs.note.length > 100 ? obs.note.slice(0, 100) + "\u2026" : obs.note}</div>` : "";
                     const html = `<div class="openfarm-popup-body">
-                        <div class="openfarm-popup-title">\ud83d\udccd ${obs.title}</div>
+                        <div class="openfarm-popup-title">${obs.title}</div>
                         <div class="openfarm-popup-meta">${date}</div>
                         ${noteHtml}
                         ${tagsHtml ? `<div class="openfarm-popup-tags">${tagsHtml}</div>` : ""}
@@ -331,10 +329,10 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                     source: PICK_SOURCE,
                     paint: {
                         "circle-radius": 8,
-                        "circle-color": PICK_COLOR,
+                        "circle-color": tokenColor("--info"),
                         "circle-opacity": 0.9,
                         "circle-stroke-width": 3,
-                        "circle-stroke-color": "#ffffff",
+                        "circle-stroke-color": tokenColor("--map-draw-vertex"),
                     },
                 });
             } else {
@@ -547,11 +545,11 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                         <Label className="text-xs">{t("locationLabel")}</Label>
                         {pickedPoint ? (
                             <div className="flex items-center gap-2 rounded-md border px-3 py-2 bg-muted/50">
-                                <MapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                                <span className="text-xs text-foreground">
+                                <MapPin className="h-3.5 w-3.5 text-info shrink-0" />
+                                <span className="text-xs text-foreground tabular-nums">
                                     {pickedPoint[1].toFixed(5)}, {pickedPoint[0].toFixed(5)}
                                 </span>
-                                <span className="text-[10px] text-green-600 font-medium ml-auto">{t("pointSet")}</span>
+                                <span className="text-[10px] text-success font-medium ml-auto">{t("pointSet")}</span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -562,9 +560,9 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                 </Button>
                             </div>
                         ) : pickingMode ? (
-                            <div className="flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 dark:bg-blue-950/20 px-3 py-2">
-                                <Crosshair className="h-3.5 w-3.5 text-blue-500 animate-pulse shrink-0" />
-                                <span className="text-xs text-blue-700 dark:text-blue-300">
+                            <div className="flex items-center gap-2 rounded-md border bg-info-subtle px-3 py-2">
+                                <Crosshair className="h-3.5 w-3.5 text-info animate-pulse shrink-0" />
+                                <span className="text-xs text-info">
                                     {t("pickingPoint")}
                                 </span>
                                 <Button
@@ -898,24 +896,24 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                             const linked = fieldAlerts.find((a) => a.id === obs.alert_id);
                             const isClosed = linked?.status === "closed";
                             return (
-                                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-2">
+                                <div className="mt-2 rounded-lg border bg-warning-subtle p-2">
                                     <div className="flex items-start gap-1.5">
-                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                        <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5">
-                                                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                                                <p className="text-[10px] font-semibold text-warning uppercase tracking-wider">
                                                     {t("linkedAlert")}
                                                 </p>
                                                 {linked && (
                                                     <Badge
                                                         variant={isClosed ? "outline" : "secondary"}
-                                                        className={`text-[8px] px-1 py-0 h-3.5 ${isClosed ? "text-muted-foreground" : "bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-200"}`}
+                                                        className={`text-[8px] px-1 py-0 h-3.5 ${isClosed ? "text-muted-foreground" : "bg-warning/15 text-warning"}`}
                                                     >
                                                         {isClosed ? "Closed" : "Open"}
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-amber-800 dark:text-amber-200 mt-0.5 leading-relaxed">
+                                            <p className="text-xs text-warning mt-0.5 leading-relaxed">
                                                 {linked
                                                     ? `[${linked.severity}] ${linked.message}`
                                                     : t("linkedAlert")}
@@ -946,7 +944,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
 
             {/* Photo lightbox */}
             <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
-                <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black/95 border-none [&>button]:text-white [&>button]:hover:bg-white/20">
+                <DialogContent className="max-w-3xl p-0 overflow-hidden bg-[hsl(var(--map-scrim)/0.95)] border-none [&>button]:text-[hsl(var(--map-draw-vertex))] [&>button]:hover:bg-[hsl(var(--map-draw-vertex)/0.2)]">
                     <DialogTitle className="sr-only">{lightboxTitle}</DialogTitle>
                     {lightboxUrl && (
                         /* eslint-disable-next-line @next/next/no-img-element */

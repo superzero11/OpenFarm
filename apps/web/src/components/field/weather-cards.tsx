@@ -19,25 +19,25 @@ export default function WeatherCards({ summary }: WeatherCardsProps) {
                 summary.min_temperature != null && summary.max_temperature != null
                     ? `${summary.min_temperature.toFixed(1)}° – ${summary.max_temperature.toFixed(1)}°`
                     : undefined,
-            color: "text-orange-600 dark:text-orange-400",
+            color: "text-sig-temp",
         },
         {
             label: t("totalPrecip"),
             value: summary.total_precipitation != null ? `${summary.total_precipitation.toFixed(1)} mm` : "-",
-            color: "text-blue-600 dark:text-blue-400",
+            color: "text-sig-precip",
         },
         {
             label: t("waterDeficit"),
             value: summary.water_deficit_mm != null ? `${summary.water_deficit_mm.toFixed(1)} mm` : "-",
             color:
                 summary.water_deficit_mm != null && summary.water_deficit_mm < 0
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-emerald-600 dark:text-emerald-400",
+                    ? "text-danger"
+                    : "text-success",
         },
         {
             label: t("gddCumulative"),
             value: summary.gdd_cumulative != null ? `${summary.gdd_cumulative.toFixed(0)}` : "-",
-            color: "text-amber-600 dark:text-amber-400",
+            color: "text-sig-temp",
         },
     ];
 
@@ -51,11 +51,11 @@ export default function WeatherCards({ summary }: WeatherCardsProps) {
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                         {c.label}
                     </p>
-                    <p className={`text-lg font-bold leading-tight mt-0.5 ${c.color}`}>
+                    <p className={`text-lg font-bold leading-tight mt-0.5 tabular-nums ${c.color}`}>
                         {c.value}
                     </p>
                     {c.sub && (
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{c.sub}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">{c.sub}</p>
                     )}
                 </div>
             ))}

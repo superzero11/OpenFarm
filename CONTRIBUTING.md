@@ -258,6 +258,18 @@ Applies to documentation, code comments, UI strings, commit messages, and script
 - **i18n:** All user-facing strings must be in `messages/en.json` and `messages/es.json`
 - **Imports:** Use `@/*` path alias (maps to `./src/*`)
 
+### Design system (any UI change)
+
+Read [DESIGN.md](DESIGN.md) before writing or changing UI. It is the rulebook for tokens, colour bindings, typography, spacing, icons, components and charts. The short version:
+
+- **No raw values.** Every colour, font size, spacing value, radius, shadow and icon size comes from the token layer in `apps/web/src/app/globals.css`. If a value you need is not a token, the answer is a token, not a hex.
+- **Colour carries meaning.** Alert severity uses `sev-high` / `sev-medium` / `sev-low`. A measured quantity keeps its permanent `sig-*` colour wherever it appears (NDVI is always `sig-vegetation`, rainfall is always `sig-precip`). Anonymous chart series use `viz-1` through `viz-8` in order.
+- **Raster ramps are data.** The `--ramp-vegetation` and `--ramp-water` stops must match the TiTiler colormap exactly. Never restyle them to fit a theme.
+- **Charts compose the shared base.** Use the fragments in `components/charts/chart-base.ts` rather than restating grid, axis or tooltip options.
+- **Icons are lucide-react only.** Never emoji, never inline unicode symbols as icons.
+
+Visual reference: `docs/design/OpenFarm Design System.dc.html` and `docs/design/OpenFarm Screens.dc.html`. Open them in a browser. They use inline styles so they render without a build step - read them for layout and hierarchy, never copy the inline hex out of them.
+
 ### General
 
 - No `console.log` in production code (use proper logging)
@@ -319,7 +331,8 @@ perf(api): add index on fields.org_id for tenant queries
 - [ ] PR has a clear title following conventional commit format
 - [ ] Description explains **what** changed and **why**
 - [ ] Lint, type-check, and build pass
-- [ ] Screenshots included for UI changes
+- [ ] Screenshots included for UI changes, in both light and dark
+- [ ] UI changes follow [DESIGN.md](DESIGN.md): no raw colours, sizes or spacing outside the token layer
 - [ ] `messages/en.json` and `messages/es.json` updated if adding user-facing strings
 - [ ] Database migration added if schema changed (`alembic revision --autogenerate`)
 - [ ] Related issue referenced with `Closes #123` or `Fixes #123`

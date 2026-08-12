@@ -1,6 +1,6 @@
-# OpenFarm - UI rules for coding agents
+# OpenFarm design system
 
-Read this before writing or changing any UI in `apps/web`.
+The rulebook for every surface in `apps/web`. Read it before writing or changing any UI, whether you are a contributor or a coding agent.
 Source of truth for values: **`openfarm-tokens.css`** (token blocks live in `apps/web/src/app/globals.css`). Visual reference: **`docs/design/OpenFarm Design System.dc.html`** (open in a browser; the reference pages are standalone). The reference pages use inline styles so they render without a build step - never copy inline hex out of them; production code uses Tailwind classes reading the tokens.
 
 ---

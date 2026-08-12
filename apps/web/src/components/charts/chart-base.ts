@@ -2,7 +2,7 @@
 
 /**
  * Shared ECharts option fragments implementing the design system's chart
- * rules (AGENTS.md section 6). Every chart component composes these
+ * rules (DESIGN.md section 6). Every chart component composes these
  * instead of restating grid, axis, tooltip or colour choices.
  *
  * Colours resolve from the token layer at render time via tokenColor -

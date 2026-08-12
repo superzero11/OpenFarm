@@ -22,9 +22,33 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignInModal } from "@/components/sign-in-modal";
 import { FieldOutline, FieldRaster, IMAGERY, IMAGERY_FLAT } from "@/components/marketing/scene";
+import { BUILT_WITH } from "@/components/marketing/brand-marks";
 
 const REPO = "https://github.com/superzero11/OpenFarm";
 const DISCORD = "https://discord.gg/KM9qxpEmsU";
+
+/* Where the numbers come from. Attribution by name is what these
+   providers ask for, and is why they carry no logo here. */
+const DATA_SOURCES = [
+    { name: "Copernicus Sentinel-2 (ESA)", url: "https://dataspace.copernicus.eu" },
+    { name: "Element 84 Earth Search", url: "https://element84.com/earth-search/" },
+    { name: "Open-Meteo", url: "https://open-meteo.com" },
+    { name: "ISRIC SoilGrids", url: "https://soilgrids.org" },
+    { name: "POLARIS", url: "https://registry.opendata.aws/polaris/" },
+    { name: "Fields of The World", url: "https://fieldsofthe.world" },
+];
+
+/* Load-bearing projects whose marks we cannot ship. */
+const ALSO_BUILT_WITH = [
+    { name: "PostGIS", url: "https://postgis.net" },
+    { name: "TiTiler", url: "https://developmentseed.org/titiler/" },
+    { name: "rasterio", url: "https://rasterio.readthedocs.io" },
+    { name: "TorchGeo", url: "https://torchgeo.readthedocs.io" },
+    { name: "Protomaps", url: "https://protomaps.com" },
+    { name: "Auth.js", url: "https://authjs.dev" },
+    { name: "next-intl", url: "https://next-intl.dev" },
+    { name: "Alembic", url: "https://alembic.sqlalchemy.org" },
+];
 
 /* Map chrome: scrims and graticules over imagery, all from --map-scrim. */
 const SCRIM_WIDE =
@@ -159,12 +183,13 @@ export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boo
         { href: "#self-host", label: t("navSelfHost") },
     ];
 
+    /* Facts that stay true as the roadmap adds indices, crops and sensors.
+       Nothing here counts something we are actively growing. */
     const STATS = [
-        { value: "4", label: t("stat1Label") },
-        { value: "68", label: t("stat2Label") },
-        { value: "24 mo", label: t("stat3Label") },
-        { value: "10 m", label: t("stat4Label") },
-        { value: "0", label: t("stat5Label") },
+        { value: "10 m", label: t("statResolution") },
+        { value: "24 mo", label: t("statHistory") },
+        { value: "0", label: t("statKeys") },
+        { value: "BSD-3", label: t("statLicense") },
     ];
 
     /* Ranges are the rescale bounds from INDEX_CONFIG, so the ramp on the
@@ -725,6 +750,91 @@ export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boo
                                 {t("roadmapCta")}
                             </a>
                         </Button>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Acknowledgements ───────────────────────────────── */}
+            <section className="border-t">
+                <div className="mx-auto w-full max-w-6xl px-6 py-20">
+                    <SectionHeader tag={t("thanksTag")} title={t("thanksTitle")} desc={t("thanksDesc")} />
+
+                    <div className="mt-8 grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-6">
+                        {BUILT_WITH.map((b) => (
+                            <a
+                                key={b.name}
+                                href={b.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-col items-center gap-2.5 rounded-lg border bg-card px-2 py-4 text-muted-foreground transition-colors hover:border-strong hover:text-foreground"
+                            >
+                                <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" fill="currentColor" aria-hidden="true">
+                                    <path d={b.path} />
+                                </svg>
+                                <span className="text-center text-[11px] leading-tight">{b.name}</span>
+                            </a>
+                        ))}
+                    </div>
+
+                    <div className="mt-2.5 grid gap-2.5 lg:grid-cols-3">
+                        <div className="rounded-lg border bg-card p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
+                                {t("thanksDataLabel")}
+                            </p>
+                            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                                {DATA_SOURCES.map((d, i) => (
+                                    <span key={d.name}>
+                                        {i > 0 && " · "}
+                                        <a
+                                            href={d.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="transition-colors hover:text-foreground"
+                                        >
+                                            {d.name}
+                                        </a>
+                                    </span>
+                                ))}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border bg-card p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
+                                {t("thanksAlsoLabel")}
+                            </p>
+                            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                                {ALSO_BUILT_WITH.map((d, i) => (
+                                    <span key={d.name}>
+                                        {i > 0 && " · "}
+                                        <a
+                                            href={d.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="transition-colors hover:text-foreground"
+                                        >
+                                            {d.name}
+                                        </a>
+                                    </span>
+                                ))}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border bg-card p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
+                                {t("thanksHostingLabel")}
+                            </p>
+                            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                                <a
+                                    href="https://www.oracle.com/cloud/free/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="transition-colors hover:text-foreground"
+                                >
+                                    Oracle Cloud Infrastructure
+                                </a>{" "}
+                                {t("thanksHostingDesc")}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>

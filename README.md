@@ -205,8 +205,34 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan - what's done, what's
 
 ## Contributing & Security
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style, and PR process
+- See [DESIGN.md](DESIGN.md) for the design system - read it before any UI change. Tokens, colour bindings, typography, spacing, icons, components and charts. No raw colours or sizes outside the token layer
 - See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards
 - See [SECURITY.md](SECURITY.md) to report vulnerabilities (via [GitHub private reporting](https://github.com/superzero11/OpenFarm/security/advisories/new))
+
+## Acknowledgements
+
+OpenFarm is a thin layer over decades of open source and open data. These projects do the hard parts, and every one of them is free for anyone to use.
+
+**Data and imagery**
+- [Copernicus Sentinel-2](https://dataspace.copernicus.eu) (ESA) - 10 m multispectral imagery
+- [Element 84 Earth Search](https://element84.com/earth-search/) - public STAC catalogue
+- [Open-Meteo](https://open-meteo.com) - daily weather history and forecast
+- [ISRIC SoilGrids](https://soilgrids.org) - global soil properties at 250 m
+- [POLARIS](https://registry.opendata.aws/polaris/) - US soil properties at 30 m
+- [Fields of The World](https://fieldsofthe.world) - field boundary detection model
+- [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors and [Protomaps](https://protomaps.com) - basemap data and tiles
+
+**Backend**
+[Python](https://www.python.org), [FastAPI](https://fastapi.tiangolo.com), [SQLAlchemy](https://www.sqlalchemy.org), [Alembic](https://alembic.sqlalchemy.org), [Celery](https://docs.celeryq.dev), [PostgreSQL](https://www.postgresql.org), [PostGIS](https://postgis.net), [Redis](https://redis.io), [MinIO](https://min.io), [GDAL](https://gdal.org), [rasterio](https://rasterio.readthedocs.io), [TiTiler](https://developmentseed.org/titiler/), [PyTorch](https://pytorch.org), [TorchGeo](https://torchgeo.readthedocs.io), and the wider [OSGeo](https://www.osgeo.org) ecosystem.
+
+**Frontend**
+[Next.js](https://nextjs.org), [React](https://react.dev), [TypeScript](https://www.typescriptlang.org), [Tailwind CSS](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com), [Lucide](https://lucide.dev), [MapLibre GL](https://maplibre.org), [Apache ECharts](https://echarts.apache.org), [Auth.js](https://authjs.dev), [next-intl](https://next-intl.dev).
+
+**Infrastructure**
+[Docker](https://www.docker.com), [Caddy](https://caddyserver.com), [Terraform](https://www.terraform.io), [Ubuntu](https://ubuntu.com), [GitHub Actions](https://github.com/features/actions).
+
+**Hosting**
+[Oracle Cloud Infrastructure](https://www.oracle.com/cloud/free/) runs the live demo at [openfarm.earth](https://openfarm.earth) on an Always Free Ampere instance - the same 2 OCPU and 12 GB anyone can claim, which is also the deployment target Terraform provisions in [deploy/terraform](deploy/terraform).
 
 ## License
 

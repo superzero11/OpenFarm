@@ -64,7 +64,7 @@ Applies to docs, comments, UI strings, commit messages, and script output:
 
 ## Design system (UI work)
 
-Read `AGENTS.md` at the repo root before touching any UI. Never write a raw colour, font size, spacing value, or icon size that is not in the token layer of `apps/web/src/app/globals.css`. Severity uses `sev-*`, measured quantities use their permanent `sig-*` colour, charts use `--viz-1..8`. Visual reference: `docs/design/OpenFarm Design System.dc.html`.
+Read `DESIGN.md` at the repo root before touching any UI. Never write a raw colour, font size, spacing value, or icon size that is not in the token layer of `apps/web/src/app/globals.css`. Severity uses `sev-*`, measured quantities use their permanent `sig-*` colour, charts use `--viz-1..8`. Visual reference: `docs/design/OpenFarm Design System.dc.html`.
 
 ## Frontend Patterns
 

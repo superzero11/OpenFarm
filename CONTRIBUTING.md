@@ -403,6 +403,14 @@ Before submitting a PR, verify:
 - [ ] No console errors in browser DevTools
 - [ ] No unhandled exceptions in API logs
 
+### Configuration changes
+
+Adding or renaming an environment variable touches four places: `.env.example`, the compose service that passes it, the Dockerfile if the web app reads it at build time, and the code that consumes it. `scripts/check-env-parity.py` verifies the chain and runs in the pre-commit hook and CI. It fails when a documented variable reaches no container, when compose interpolates something the example never documents, when a `NEXT_PUBLIC_*` variable the web app reads is not a build arg (Next.js inlines those at build time, so a missing one silently bakes the fallback into the image), and when a documented API setting never reaches the api or processor that reads it.
+
+```bash
+python3 scripts/check-env-parity.py
+```
+
 ### Automated Checks (CI)
 
 The CI pipeline runs on every PR:

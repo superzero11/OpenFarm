@@ -26,4 +26,11 @@ if [ -n "$CHANGED_API" ]; then
   cd ../..
 fi
 
+# ── Config: every documented variable reaches its consumer ──────────
+CHANGED_ENV=$(git diff --cached --name-only -- '.env.example' 'docker-compose*.yml' 'apps/web/Dockerfile' 'services/api/app/core/config.py' 'apps/web/src/')
+if [ -n "$CHANGED_ENV" ]; then
+  echo "▸ Config: env parity"
+  python3 scripts/check-env-parity.py || { echo "FAIL: env parity check failed"; exit 1; }
+fi
+
 echo "OK: All checks passed"

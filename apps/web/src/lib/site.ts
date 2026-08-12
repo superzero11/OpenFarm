@@ -4,10 +4,15 @@
  * Metadata, canonicals, hreflang, sitemap, robots, structured data and
  * llms.txt all read from here, so a self-hosted instance describes
  * itself correctly by setting NEXT_PUBLIC_SITE_URL and nothing else.
+ *
+ * The fallback is localhost on purpose. Defaulting to openfarm.earth
+ * would make every unconfigured deployment publish canonicals pointing
+ * at our domain, telling search engines their pages are duplicates of
+ * ours. Wrong-but-local is a safer failure than wrong-and-someone-else.
  */
 
 /** No trailing slash: everything below concatenates paths onto this. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://openfarm.earth").replace(
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(
     /\/+$/,
     "",
 );

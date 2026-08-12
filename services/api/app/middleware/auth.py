@@ -85,13 +85,19 @@ async def get_org_context(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid X-Org-Id format"
         )
 
-    # Check membership
-    from app.models.tables import OrgMember
+    # Check membership. The join to Org is what stops a soft-deleted
+    # workspace from staying fully reachable: membership rows survive the
+    # delete, so checking OrgMember alone would still let every
+    # org-scoped endpoint through.
+    from app.models.tables import Org, OrgMember
 
     result = await db.execute(
-        select(OrgMember.role).where(
+        select(OrgMember.role)
+        .join(Org, Org.id == OrgMember.org_id)
+        .where(
             OrgMember.org_id == org_uuid,
             OrgMember.user_id == user.id,
+            Org.deleted_at.is_(None),
         )
     )
     row = result.scalar_one_or_none()

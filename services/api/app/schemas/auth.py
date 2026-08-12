@@ -56,6 +56,16 @@ class OrgOut(BaseModel):
 class OrgDetailOut(OrgOut):
     member_count: int = 0
     farm_count: int = 0
+    field_count: int = 0
+
+
+class OrgDeletionImpactOut(BaseModel):
+    """What a workspace deletion would take with it, for the confirm step."""
+
+    farm_count: int = 0
+    field_count: int = 0
+    history_months: int = 0
+    scouting_count: int = 0
 
 
 # ── Org Members ──────────────────────────────────────────────────────

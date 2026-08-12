@@ -11,7 +11,9 @@
         "signInWithGoogle": "Iniciar sesión con Google",
         "termsNotice": "Al iniciar sesión, aceptas nuestros términos de servicio.",
         "toggleTheme": "Cambiar tema",
-        "close": "Cerrar"
+        "close": "Cerrar",
+        "failedLoadOrgs": "No se pudieron cargar los espacios de trabajo. Actualiza la página.",
+        "delete": "Eliminar"
     },
     "nav": {
         "dashboard": "Panel",
@@ -167,7 +169,18 @@
         "noLocation": "Sin ubicación",
         "created": "Creado el {date}",
         "noFieldsTitle": "Aún no hay campos",
-        "noFieldsDesc": "Dibuja un campo en el mapa o importa un archivo GeoJSON."
+        "noFieldsDesc": "Dibuja un campo en el mapa o importa un archivo GeoJSON.",
+        "farmNotFound": "Finca no encontrada",
+        "farmUpdated": "Finca actualizada",
+        "farmDeleted": "Finca eliminada",
+        "fieldDeleted": "Campo eliminado",
+        "deleteFarm": "Eliminar finca",
+        "deleteFarmConfirm": "¿Eliminar esta finca? También se eliminarán todos sus campos. Esto no se puede deshacer.",
+        "deleteField": "Eliminar campo",
+        "deleteFieldConfirm": "¿Eliminar el campo \"{name}\"? Esto no se puede deshacer.",
+        "failedUpdate": "No se pudo actualizar",
+        "failedDelete": "No se pudo eliminar",
+        "failedDeleteField": "No se pudo eliminar el campo"
     },
     "settings": {
         "title": "Configuración",
@@ -246,7 +259,17 @@
         "roleViewer": "Lector",
         "pendingLabel": "Pendiente",
         "integrationsEmptyTitle": "Aún no hay integraciones",
-        "integrationsEmptyDesc": "Las conexiones a servicios externos aparecerán aquí."
+        "integrationsEmptyDesc": "Las conexiones a servicios externos aparecerán aquí.",
+        "dangerZone": "Eliminar espacio de trabajo",
+        "deleteImpact": "Elimina {farmCount, plural, =0 {ninguna finca} one {# finca} other {# fincas}}, {fieldCount, plural, =0 {ningún campo} one {# campo} other {# campos}}, {historyMonths, plural, =0 {ningún historial de índices} one {# mes de historial de índices} other {# meses de historial de índices}} y {scoutingCount, plural, =0 {ninguna nota de exploración} one {# nota de exploración} other {# notas de exploración}}. Esto no se puede deshacer.",
+        "deleteWorkspace": "Eliminar espacio de trabajo",
+        "deleteConfirm": "¿Eliminar {name}?",
+        "deleteLastWorkspace": "Este es tu único espacio de trabajo. Crea otro antes de eliminar este.",
+        "workspaceDeleted": "Espacio de trabajo eliminado",
+        "failedDeleteWorkspace": "No se pudo eliminar el espacio de trabajo",
+        "deleting": "Eliminando",
+        "deleteLoading": "Calculando lo que se eliminaría",
+        "invitePlaceholder": "colega@empresa.com"
     },
     "createFarm": {
         "backToFarms": "Volver a fincas",
@@ -393,7 +416,14 @@
             "computeNdvi": "Calculando NDVI",
             "computeEvi": "Calculando EVI",
             "computeSavi": "Calculando SAVI",
-            "computeNdwi": "Calculando NDWI"
+            "computeNdwi": "Calculando NDWI",
+            "sceneSearch": "Buscando escenas satelitales",
+            "downloadBands": "Descargando bandas",
+            "writeCog": "Escribiendo COG",
+            "computeStats": "Calculando estadísticas",
+            "runAlerts": "Comprobando reglas de alerta",
+            "complete": "Completado",
+            "computeIndex": "Calculando {index}"
         },
         "alertMessage": {
             "ndviDrop": "NDVI cayó {pct}% por debajo del promedio móvil",
@@ -411,9 +441,20 @@
             "processing": "Se están procesando datos históricos",
             "processingDesc": "Se están analizando imágenes satelitales de los últimos 24 meses. Los datos aparecerán automáticamente.",
             "started": "Análisis histórico iniciado. Los datos aparecerán en las próximas horas.",
-            "failed": "Error al iniciar el relleno de datos"
+            "failed": "Error al iniciar el relleno de datos",
+            "inProgressTitle": "La recuperación ya está en curso"
         },
-        "jobFailed": "Trabajo fallido"
+        "jobFailed": "Trabajo fallido",
+        "jobFailedWith": "El trabajo de {names} falló: {error}",
+        "unknownError": "Error desconocido",
+        "failedStartJob": "No se pudo iniciar el trabajo",
+        "maxRange": "Rango máximo de 180 días.",
+        "starting": "Iniciando",
+        "startProcessing": "Iniciar procesamiento",
+        "showWeatherOverlay": "Mostrar capa meteorológica",
+        "hideWeatherOverlay": "Ocultar capa meteorológica",
+        "showOverlay": "Mostrar capa de {index}",
+        "hideOverlay": "Ocultar capa de {index}"
     },
     "scoutingTab": {
         "title": "Observaciones de campo",
@@ -457,7 +498,9 @@
         "observations": "{count, plural, one {# observación} other {# observaciones}}",
         "precip7d": "Precip 7d",
         "soilMoisture": "Suelo",
-        "wind": "Viento"
+        "wind": "Viento",
+        "fileTooLarge": "Archivo demasiado grande (máx. 10 MB)",
+        "photoPreview": "Vista previa de la foto"
     },
     "shareTab": {
         "createShareLink": "Crear enlace compartido",
@@ -481,7 +524,8 @@
         "failedCreate": "Error al crear enlace compartido",
         "failedRevoke": "Error al revocar enlace compartido",
         "expiresOn": "Expira",
-        "neverExpires": "Nunca expira"
+        "neverExpires": "Nunca expira",
+        "failedCopy": "No se pudo copiar"
     },
     "shareReport": {
         "fieldHealthReport": "Reporte de salud del campo",
@@ -739,7 +783,11 @@
         "saturationCapacity": "Saturación",
         "seqPotential": "Potencial de secuestro",
         "climateZone": "Zona climática",
-        "samplingZone": "Zona de muestreo"
+        "samplingZone": "Zona de muestreo",
+        "priority": "Prioridad",
+        "priorityHigh": "Alta",
+        "priorityMedium": "Media",
+        "priorityLow": "Baja"
     },
     "seo": {
         "title": "OpenFarm: plataforma de inteligencia de cultivos de código abierto",
@@ -805,5 +853,15 @@
         "soil_cec_low": "CIC baja",
         "soil_compaction": "Riesgo de compactación",
         "soil_waterlogging": "Riesgo de encharcamiento"
+    },
+    "mapControls": {
+        "searchLocation": "Buscar ubicación",
+        "searchPlaceholder": "Buscar ubicación...",
+        "mapLayers": "Capas del mapa",
+        "loadingMap": "Cargando mapa...",
+        "styleStreet": "Calles",
+        "styleTerrain": "Terreno",
+        "styleSatellite": "Satélite",
+        "styleDark": "Oscuro"
     }
 }

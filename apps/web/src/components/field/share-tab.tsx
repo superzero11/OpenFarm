@@ -101,7 +101,7 @@ export default function ShareTab({ fieldId }: ShareTabProps) {
             toast.success(t("linkCopied"));
             setTimeout(() => setCopiedToken(null), 2000);
         } catch {
-            toast.error("Failed to copy");
+            toast.error(t("failedCopy"));
         }
     };
 

@@ -11,7 +11,9 @@
         "signInWithGoogle": "Sign in with Google",
         "termsNotice": "By signing in, you agree to our terms of service.",
         "toggleTheme": "Toggle theme",
-        "close": "Close"
+        "close": "Close",
+        "failedLoadOrgs": "Failed to load workspaces. Please refresh the page.",
+        "delete": "Delete"
     },
     "nav": {
         "dashboard": "Dashboard",
@@ -167,7 +169,18 @@
         "noLocation": "No location set",
         "created": "Created {date}",
         "noFieldsTitle": "No fields yet",
-        "noFieldsDesc": "Draw a field on the map or import a GeoJSON file."
+        "noFieldsDesc": "Draw a field on the map or import a GeoJSON file.",
+        "farmNotFound": "Farm not found",
+        "farmUpdated": "Farm updated",
+        "farmDeleted": "Farm deleted",
+        "fieldDeleted": "Field deleted",
+        "deleteFarm": "Delete farm",
+        "deleteFarmConfirm": "Delete this farm? All its fields will also be deleted. This cannot be undone.",
+        "deleteField": "Delete field",
+        "deleteFieldConfirm": "Delete field \"{name}\"? This cannot be undone.",
+        "failedUpdate": "Failed to update",
+        "failedDelete": "Failed to delete",
+        "failedDeleteField": "Failed to delete field"
     },
     "settings": {
         "title": "Settings",
@@ -246,7 +259,17 @@
         "roleViewer": "Viewer",
         "pendingLabel": "Pending",
         "integrationsEmptyTitle": "No integrations yet",
-        "integrationsEmptyDesc": "Connections to external services will appear here."
+        "integrationsEmptyDesc": "Connections to external services will appear here.",
+        "dangerZone": "Delete workspace",
+        "deleteImpact": "Removes {farmCount, plural, =0 {no farms} one {# farm} other {# farms}}, {fieldCount, plural, =0 {no fields} one {# field} other {# fields}}, {historyMonths, plural, =0 {no index history} one {# month of index history} other {# months of index history}} and {scoutingCount, plural, =0 {no scouting notes} one {# scouting note} other {# scouting notes}}. This cannot be undone.",
+        "deleteWorkspace": "Delete workspace",
+        "deleteConfirm": "Delete {name}?",
+        "deleteLastWorkspace": "This is your only workspace. Create another one before deleting this one.",
+        "workspaceDeleted": "Workspace deleted",
+        "failedDeleteWorkspace": "Failed to delete workspace",
+        "deleting": "Deleting",
+        "deleteLoading": "Counting what this would remove",
+        "invitePlaceholder": "colleague@company.com"
     },
     "createFarm": {
         "backToFarms": "Back to farms",
@@ -393,7 +416,14 @@
             "computeNdvi": "Computing NDVI",
             "computeEvi": "Computing EVI",
             "computeSavi": "Computing SAVI",
-            "computeNdwi": "Computing NDWI"
+            "computeNdwi": "Computing NDWI",
+            "sceneSearch": "Searching satellite scenes",
+            "downloadBands": "Downloading bands",
+            "writeCog": "Writing COG",
+            "computeStats": "Computing statistics",
+            "runAlerts": "Checking alert rules",
+            "complete": "Complete",
+            "computeIndex": "Computing {index}"
         },
         "alertMessage": {
             "ndviDrop": "NDVI dropped {pct}% below rolling average",
@@ -411,9 +441,20 @@
             "processing": "Historical data is being processed",
             "processingDesc": "Satellite imagery for the past 24 months is being analyzed. Data will appear automatically as it's ready.",
             "started": "Historical analysis started. Data will appear over the next few hours.",
-            "failed": "Failed to start backfill"
+            "failed": "Failed to start backfill",
+            "inProgressTitle": "Backfill is already in progress"
         },
-        "jobFailed": "Job failed"
+        "jobFailed": "Job failed",
+        "jobFailedWith": "{names} job failed: {error}",
+        "unknownError": "Unknown error",
+        "failedStartJob": "Failed to start job",
+        "maxRange": "Maximum 180-day range.",
+        "starting": "Starting",
+        "startProcessing": "Start processing",
+        "showWeatherOverlay": "Show weather overlay",
+        "hideWeatherOverlay": "Hide weather overlay",
+        "showOverlay": "Show {index} overlay",
+        "hideOverlay": "Hide {index} overlay"
     },
     "scoutingTab": {
         "title": "Scouting observations",
@@ -457,7 +498,9 @@
         "observations": "{count, plural, one {# observation} other {# observations}}",
         "precip7d": "Precip 7d",
         "soilMoisture": "Soil",
-        "wind": "Wind"
+        "wind": "Wind",
+        "fileTooLarge": "File too large (max 10 MB)",
+        "photoPreview": "Photo preview"
     },
     "shareTab": {
         "createShareLink": "Create share link",
@@ -481,7 +524,8 @@
         "failedCreate": "Failed to create share link",
         "failedRevoke": "Failed to revoke share link",
         "expiresOn": "Expires",
-        "neverExpires": "Never expires"
+        "neverExpires": "Never expires",
+        "failedCopy": "Failed to copy"
     },
     "shareReport": {
         "fieldHealthReport": "Field health report",
@@ -739,7 +783,11 @@
         "saturationCapacity": "Saturation",
         "seqPotential": "Seq. potential",
         "climateZone": "Climate zone",
-        "samplingZone": "Sampling zone"
+        "samplingZone": "Sampling zone",
+        "priority": "Priority",
+        "priorityHigh": "High",
+        "priorityMedium": "Medium",
+        "priorityLow": "Low"
     },
     "seo": {
         "title": "OpenFarm: Open Source Crop Intelligence Platform",
@@ -805,5 +853,15 @@
         "soil_cec_low": "Low CEC",
         "soil_compaction": "Compaction risk",
         "soil_waterlogging": "Waterlogging risk"
+    },
+    "mapControls": {
+        "searchLocation": "Search location",
+        "searchPlaceholder": "Search location...",
+        "mapLayers": "Map layers",
+        "loadingMap": "Loading map...",
+        "styleStreet": "Street",
+        "styleTerrain": "Terrain",
+        "styleSatellite": "Satellite",
+        "styleDark": "Dark"
     }
 }

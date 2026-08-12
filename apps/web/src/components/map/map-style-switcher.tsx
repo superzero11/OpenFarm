@@ -2,9 +2,17 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MAP_STYLES, type MapStyleId } from "@/lib/pmtiles";
+
+const STYLE_LABEL_KEYS = new Set([
+    "styleStreet",
+    "styleTerrain",
+    "styleSatellite",
+    "styleDark",
+]);
 import { Layers } from "lucide-react";
 import { MAP_CHROME } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface MapStyleSwitcherProps {
     currentStyle: MapStyleId;
@@ -21,6 +29,14 @@ export default function MapStyleSwitcher({
     onStyleChange,
     className = "",
 }: MapStyleSwitcherProps) {
+    const t = useTranslations("mapControls");
+
+    /** Style ids are stable; the label in pmtiles.ts is only a fallback. */
+    const styleLabel = (style?: { id: MapStyleId; label: string }) => {
+        if (!style) return t("mapLayers");
+        const key = `style${style.id.charAt(0).toUpperCase()}${style.id.slice(1)}`;
+        return STYLE_LABEL_KEYS.has(key) ? t(key) : style.label;
+    };
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -45,11 +61,11 @@ export default function MapStyleSwitcher({
                 type="button"
                 onClick={() => setOpen(!open)}
                 className={cn("flex h-10 items-center gap-1.5 rounded-lg px-3.5 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3", MAP_CHROME)}
-                title="Map layers"
+                title={t("mapLayers")}
             >
                 <Layers className="h-4 w-4" />
                 <span className="hidden sm:inline">
-                    {MAP_STYLES.find((s) => s.id === currentStyle)?.label ?? "Map"}
+                    {styleLabel(MAP_STYLES.find((s) => s.id === currentStyle))}
                 </span>
             </button>
 
@@ -68,10 +84,10 @@ export default function MapStyleSwitcher({
                                 ? "bg-primary-subtle text-primary ring-1 ring-primary/30"
                                 : "text-foreground hover:bg-surface-2"
                                 }`}
-                            title={s.label}
+                            title={styleLabel(s)}
                         >
                             <s.icon className="h-5 w-5" aria-hidden="true" />
-                            <span>{s.label}</span>
+                            <span>{styleLabel(s)}</span>
                         </button>
                     ))}
                 </div>

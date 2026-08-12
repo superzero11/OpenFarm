@@ -59,16 +59,19 @@ function today(): string {
 }
 
 /* ── Job sub-step labels ─────────────────────────────────────── */
-function getStepLabels(indexType: IndexType): Record<string, string> {
+function getStepLabels(
+    indexType: IndexType,
+    t: (key: string, values?: Record<string, string>) => string,
+): Record<string, string> {
     const label = INDEX_CONFIG[indexType].label;
     return {
-        scene_search: "Searching satellite scenes",
-        download_bands: "Downloading bands",
-        [`compute_${indexType.toLowerCase()}`]: `Computing ${label}`,
-        write_cog: "Writing COG",
-        compute_stats: "Computing statistics",
-        run_alerts: "Checking alert rules",
-        complete: "Complete",
+        scene_search: t("jobStep.sceneSearch"),
+        download_bands: t("jobStep.downloadBands"),
+        [`compute_${indexType.toLowerCase()}`]: t("jobStep.computeIndex", { index: label }),
+        write_cog: t("jobStep.writeCog"),
+        compute_stats: t("jobStep.computeStats"),
+        run_alerts: t("jobStep.runAlerts"),
+        complete: t("jobStep.complete"),
     };
 }
 
@@ -202,7 +205,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                         loadData();
                         onDataLoaded?.();
                     } else {
-                        toast.error(`${names} job failed: ${job.error || "Unknown error"}`);
+                        toast.error(tMon("jobFailedWith", { names, error: job.error || tMon("unknownError") }));
                     }
                     setActiveJob(null);
                 }
@@ -210,7 +213,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                 // poll error - keep trying
             }
         },
-        [loadData, config.label, jobIndices, onDataLoaded],
+        [loadData, config.label, jobIndices, onDataLoaded, tMon],
     );
 
     useEffect(() => {
@@ -257,7 +260,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                 pollRef.current = setInterval(() => pollJob(lastJob!.id), 5000);
             }
         } catch (err: any) {
-            toast.error(err.detail || "Failed to start job");
+            toast.error(err.detail || tMon("failedStartJob"));
         } finally {
             setSubmitting(false);
         }
@@ -276,9 +279,9 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
             await fieldsApi.backfillIndices(fieldId);
             setBackfillTriggered(true);
             setBackfillActive(true);
-            toast.success("Historical analysis started. Data will appear over the next few hours.");
+            toast.success(tMon("backfill.started"));
         } catch (err: any) {
-            const msg = err.detail || "Failed to start backfill";
+            const msg = err.detail || tMon("backfill.failed");
             if (err.status === 409) {
                 setBackfillActive(true);
                 setBackfillTriggered(true);
@@ -294,7 +297,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
         if (!activeJob?.progress_json) return null;
         const p = activeJob.progress_json as Record<string, string>;
         const lastIdx = jobIndices[jobIndices.length - 1] || activeIndex;
-        const stepLabels = getStepLabels(lastIdx);
+        const stepLabels = getStepLabels(lastIdx, tMon);
         const steps = Object.entries(stepLabels);
         return steps.map(([key, label]) => {
             const status = p[key] || "pending";
@@ -371,7 +374,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                     onClick={handleBackfill}
                     disabled={backfilling || backfillTriggered || backfillActive}
                     className="flex items-center gap-1.5"
-                    title={backfillActive ? "Backfill is already in progress" : "Backfill 24 months of historical data for all indices"}
+                    title={backfillActive ? tMon("backfill.inProgressTitle") : tMon("backfill.buttonTitle")}
                 >
                     {backfilling ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -460,7 +463,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                                 />
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">Maximum 180-day range.</p>
+                        <p className="text-xs text-muted-foreground">{tMon("maxRange")}</p>
                         <Button
                             onClick={handleSubmitJob}
                             disabled={submitting || !!activeJob}
@@ -471,7 +474,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                             ) : (
                                 <PlayCircle className="h-4 w-4 mr-2" />
                             )}
-                            {submitting ? "Starting…" : "Start Processing"}
+                            {submitting ? tMon("starting") : tMon("startProcessing")}
                         </Button>
                     </CardContent>
                 </Card>
@@ -563,7 +566,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                             size="sm"
                             className="gap-1 px-2 text-xs"
                             onClick={() => setShowWeatherOverlay(!showWeatherOverlay)}
-                            title={showWeatherOverlay ? "Hide weather overlay" : "Show weather overlay"}
+                            title={showWeatherOverlay ? tMon("hideWeatherOverlay") : tMon("showWeatherOverlay")}
                         >
                             <CloudRain className="h-3 w-3" />
                             Weather
@@ -599,7 +602,7 @@ export default function NdviTab({ fieldId, onShowLayer, onActiveIndexChange, act
                                 size="sm"
                                 onClick={() => setLayerVisible(!layerVisible)}
                                 className="h-9 w-9 p-0"
-                                title={layerVisible ? `Hide ${config.label} overlay` : `Show ${config.label} overlay`}
+                                title={layerVisible ? tMon("hideOverlay", { index: config.label }) : tMon("showOverlay", { index: config.label })}
                             >
                                 {layerVisible ? (
                                     <Eye className="h-4 w-4" />

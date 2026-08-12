@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams, usePathname, useRouter as useNextRouter } from "next/navigation";
 import { useOrg } from "@/components/org-context";
 import { orgsApi } from "@/lib/api";
-import type { Member, Invite } from "@/lib/api";
+import type { Member, Invite, OrgDeletionImpact } from "@/lib/api";
 import { toast } from "sonner";
 import {
     Users,
@@ -135,7 +135,7 @@ export default function SettingsPage() {
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const nextRouter = useNextRouter();
-    const { currentOrg, refreshOrgs, user } = useOrg();
+    const { currentOrg, orgs, switchOrg, refreshOrgs, user } = useOrg();
 
     const VALID_TABS = ["workspace", "team", "integrations"] as const;
     const tabParam = searchParams.get("tab");
@@ -173,6 +173,10 @@ export default function SettingsPage() {
     const [transferTarget, setTransferTarget] = useState<string>("");
     const [transferring, setTransferring] = useState(false);
 
+    // Workspace deletion
+    const [impact, setImpact] = useState<OrgDeletionImpact | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
     // Audit log
     const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
     const [auditTotal, setAuditTotal] = useState(0);
@@ -193,6 +197,7 @@ export default function SettingsPage() {
     // Derive current user's role from user.orgs (available immediately, no API call needed)
     const myRole = user?.orgs?.find((o) => o.id === currentOrg?.id)?.role;
     const isAdminOrOwner = myRole === "owner" || myRole === "admin";
+    const isOwner = myRole === "owner";
 
     const loadInvites = useCallback(async () => {
         if (!currentOrg) return;
@@ -203,6 +208,16 @@ export default function SettingsPage() {
             toast.error(t("failedLoadInvites"));
         }
     }, [currentOrg, t]);
+
+    const loadDeletionImpact = useCallback(async () => {
+        if (!currentOrg) return;
+        try {
+            setImpact(await orgsApi.deletionImpact(currentOrg.id));
+        } catch {
+            // Non-owners get a 403 here; the zone is hidden for them anyway.
+            setImpact(null);
+        }
+    }, [currentOrg]);
 
     const loadAuditEvents = useCallback(async (offset = 0, append = false) => {
         if (!currentOrg) return;
@@ -224,11 +239,14 @@ export default function SettingsPage() {
         setOrgName(currentOrg.name);
         setLoading(true);
         const promises: Promise<void>[] = [loadMembers()];
+        if (isOwner) {
+            loadDeletionImpact();
+        }
         if (isAdminOrOwner) {
             promises.push(loadInvites(), loadAuditEvents(0));
         }
         Promise.all(promises).finally(() => setLoading(false));
-    }, [currentOrg, isAdminOrOwner, loadMembers, loadInvites, loadAuditEvents]);
+    }, [currentOrg, isOwner, isAdminOrOwner, loadMembers, loadInvites, loadAuditEvents, loadDeletionImpact]);
 
     const handleSaveName = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -363,6 +381,37 @@ export default function SettingsPage() {
     }
 
     // Determine if current user is owner/admin
+    const handleDeleteWorkspace = async () => {
+        if (!currentOrg || !impact) return;
+        const ok = await confirm({
+            title: t("deleteConfirm", { name: currentOrg.name }),
+            description: t("deleteImpact", {
+                farmCount: impact.farm_count,
+                fieldCount: impact.field_count,
+                historyMonths: impact.history_months,
+                scoutingCount: impact.scouting_count,
+            }),
+            confirmLabel: t("deleteWorkspace"),
+            variant: "destructive",
+        });
+        if (!ok) return;
+
+        setDeleting(true);
+        try {
+            await orgsApi.delete(currentOrg.id);
+            toast.success(t("workspaceDeleted"));
+            // Move to whatever workspace is left before the org list
+            // refreshes, so no request goes out with a dead X-Org-Id.
+            const next = orgs.find((o) => o.id !== currentOrg.id);
+            if (next) switchOrg(next.id);
+            await refreshOrgs();
+            nextRouter.replace("/dashboard");
+        } catch (err: any) {
+            toast.error(err.detail || t("failedDeleteWorkspace"));
+            setDeleting(false);
+        }
+    };
+
     const currentMember = members.find((m) => m.user_id === user?.id);
     const canManage = currentMember?.role === "owner" || currentMember?.role === "admin";
 
@@ -507,6 +556,51 @@ export default function SettingsPage() {
                                 )}
                             </CardContent>
                         </Card>
+                    )}
+
+                    {/* Destructive zone. A danger border on the normal card
+                        surface - a red-washed panel would fight every other
+                        card on the page for attention it does not deserve
+                        until clicked. */}
+                    {isOwner && (
+                        <div className="rounded-lg border border-danger bg-card p-5">
+                            <h2 className="text-lg font-semibold leading-none tracking-tight text-danger">
+                                {t("dangerZone")}
+                            </h2>
+                            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                                {impact
+                                    ? t("deleteImpact", {
+                                        farmCount: impact.farm_count,
+                                        fieldCount: impact.field_count,
+                                        historyMonths: impact.history_months,
+                                        scoutingCount: impact.scouting_count,
+                                    })
+                                    : t("deleteLoading")}
+                            </p>
+                            {orgs.length <= 1 && (
+                                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                                    {t("deleteLastWorkspace")}
+                                </p>
+                            )}
+                            <Button
+                                variant="destructive"
+                                className="mt-4"
+                                disabled={deleting || !impact || orgs.length <= 1}
+                                onClick={handleDeleteWorkspace}
+                            >
+                                {deleting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        {t("deleting")}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        {t("deleteWorkspace")}
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     )}
                 </TabsContent>
 
@@ -666,7 +760,7 @@ export default function SettingsPage() {
                                         type="email"
                                         value={inviteEmail}
                                         onChange={(e) => setInviteEmail(e.target.value)}
-                                        placeholder="colleague@company.com"
+                                        placeholder={t("invitePlaceholder")}
                                         required
                                     />
                                 </div>

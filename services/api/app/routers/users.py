@@ -37,6 +37,7 @@ async def get_me(
     result = await db.execute(
         select(OrgMember.role, Org.id, Org.name)
         .join(Org, OrgMember.org_id == Org.id)
+        .where(Org.deleted_at.is_(None))
         .where(OrgMember.user_id == current_user.id)
     )
     orgs = [OrgBrief(id=row.id, name=row.name, role=row.role) for row in result.all()]

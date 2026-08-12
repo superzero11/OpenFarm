@@ -393,12 +393,12 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("File too large (max 10 MB)");
+            toast.error(t("fileTooLarge"));
             return;
         }
         setPhotoFile(file);
         setPhotoPreview(URL.createObjectURL(file));
-    }, []);
+    }, [t]);
 
     /* ── Submit ─────────────────────────────────────────────── */
 
@@ -647,7 +647,7 @@ export default function ScoutingTab({ fieldId, mapInstance, activeTab }: Scoutin
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={photoPreview}
-                                    alt="Preview"
+                                    alt={t("photoPreview")}
                                     className="w-full h-32 object-cover"
                                 />
                                 <div className="absolute top-1 right-1 flex gap-1">

@@ -37,7 +37,6 @@ export default function DashboardPage() {
     const [orgDetail, setOrgDetail] = useState<OrgDetail | null>(null);
     const [farms, setFarms] = useState<Farm[]>([]);
     const [farmStats, setFarmStats] = useState<Record<string, FarmStats>>({});
-    const [totalFields, setTotalFields] = useState(0);
     const [openAlerts, setOpenAlerts] = useState<Alert[]>([]);
     const [openAlertTotal, setOpenAlertTotal] = useState(0);
     const [fieldMap, setFieldMap] = useState<Record<string, Field>>({});
@@ -88,7 +87,6 @@ export default function DashboardPage() {
                 }
                 setFarmStats(stats);
                 setFieldMap(fields);
-                setTotalFields(perFarm.reduce((sum, p) => sum + p.total, 0));
             } catch (err) {
                 console.error("Dashboard load failed:", err);
             } finally {
@@ -143,7 +141,7 @@ export default function DashboardPage() {
                 <StatCard
                     icon={<Map className="h-5 w-5 text-primary" />}
                     label={t("fields")}
-                    value={totalFields}
+                    value={orgDetail?.field_count ?? 0}
                     sublabel={t("acrossAllFarms")}
                 />
                 <StatCard

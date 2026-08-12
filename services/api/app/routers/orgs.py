@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -19,13 +20,24 @@ from app.middleware.auth import (
     get_org_context,
     require_roles,
 )
-from app.models.tables import AuditEvent, Farm, Invite, Org, OrgMember, User
+from app.models.tables import (
+    AuditEvent,
+    Farm,
+    Field,
+    Invite,
+    Org,
+    OrgMember,
+    RasterLayer,
+    ScoutingObservation,
+    User,
+)
 from app.schemas.auth import (
     InviteCreate,
     InviteOut,
     MemberOut,
     MemberRoleUpdate,
     OrgCreate,
+    OrgDeletionImpactOut,
     OrgDetailOut,
     OrgOut,
     OrgUpdate,
@@ -50,7 +62,7 @@ async def list_orgs(
     result = await db.execute(
         select(Org)
         .join(OrgMember, OrgMember.org_id == Org.id)
-        .where(OrgMember.user_id == current_user.id)
+        .where(OrgMember.user_id == current_user.id, Org.deleted_at.is_(None))
     )
     return result.scalars().all()
 
@@ -92,7 +104,7 @@ async def get_org(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     org = await db.get(Org, org_id)
-    if not org:
+    if not org or org.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Org not found")
 
     member_count = (
@@ -104,6 +116,14 @@ async def get_org(
         )
     ).scalar() or 0
 
+    field_count = (
+        await db.execute(
+            select(func.count()).where(
+                Field.org_id == org_id, Field.deleted_at.is_(None)
+            )
+        )
+    ).scalar() or 0
+
     return OrgDetailOut(
         id=org.id,
         name=org.name,
@@ -111,6 +131,7 @@ async def get_org(
         created_at=org.created_at,
         member_count=member_count,
         farm_count=farm_count,
+        field_count=field_count,
     )
 
 
@@ -122,7 +143,7 @@ async def update_org(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     org = await db.get(Org, org_id)
-    if not org:
+    if not org or org.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Org not found")
     org.name = body.name
     await db.flush()
@@ -130,6 +151,110 @@ async def update_org(
 
 
 # ── Members ──────────────────────────────────────────────────────────
+
+
+@router.get("/orgs/{org_id}/deletion-impact", response_model=OrgDeletionImpactOut)
+async def get_org_deletion_impact(
+    org_id: uuid.UUID,
+    ctx: Annotated[OrgContext, Depends(require_roles("owner"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """What deleting this workspace would take with it.
+
+    "This action cannot be undone" tells the owner nothing about what
+    they are losing, so the confirm dialog states the blast radius:
+    farms, fields, months of index history and scouting notes.
+    """
+    org = await db.get(Org, org_id)
+    if not org or org.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Org not found")
+
+    live_farms = select(Farm.id).where(Farm.org_id == org_id, Farm.deleted_at.is_(None))
+    live_fields = select(Field.id).where(
+        Field.org_id == org_id, Field.deleted_at.is_(None)
+    )
+
+    farm_count = (
+        await db.execute(select(func.count()).select_from(live_farms.subquery()))
+    ).scalar() or 0
+    field_count = (
+        await db.execute(select(func.count()).select_from(live_fields.subquery()))
+    ).scalar() or 0
+    scouting_count = (
+        await db.execute(
+            select(func.count()).where(ScoutingObservation.org_id == org_id)
+        )
+    ).scalar() or 0
+
+    # Index history is only meaningful as a span, so report the months
+    # covered rather than a raster count nobody can picture.
+    bounds = (
+        await db.execute(
+            select(func.min(RasterLayer.date), func.max(RasterLayer.date)).where(
+                RasterLayer.org_id == org_id
+            )
+        )
+    ).first()
+    history_months = 0
+    if bounds and bounds[0] and bounds[1]:
+        history_months = (
+            (bounds[1].year - bounds[0].year) * 12
+            + (bounds[1].month - bounds[0].month)
+            + 1
+        )
+
+    return OrgDeletionImpactOut(
+        farm_count=farm_count,
+        field_count=field_count,
+        history_months=history_months,
+        scouting_count=scouting_count,
+    )
+
+
+@router.delete("/orgs/{org_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_org(
+    org_id: uuid.UUID,
+    ctx: Annotated[OrgContext, Depends(require_roles("owner"))],
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Soft-delete a workspace and cascade to its farms and fields.
+
+    Owner only. Follows the same pattern as delete_farm: stamp
+    deleted_at and bulk-update the children, so nothing is destroyed and
+    the rows stay available for recovery or audit.
+
+    Membership rows are deliberately left intact - get_org_context joins
+    Org and filters deleted_at, so access is already closed, and keeping
+    the members makes an undelete a single column update.
+    """
+    org = await db.get(Org, org_id)
+    if not org or org.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Org not found")
+
+    now = datetime.now(timezone.utc)
+    org.deleted_at = now
+
+    await db.execute(
+        update(Farm)
+        .where(Farm.org_id == org_id, Farm.deleted_at.is_(None))
+        .values(deleted_at=now)
+    )
+    await db.execute(
+        update(Field)
+        .where(Field.org_id == org_id, Field.deleted_at.is_(None))
+        .values(deleted_at=now)
+    )
+
+    db.add(
+        AuditEvent(
+            org_id=org_id,
+            user_id=ctx.user.id,
+            event_type="org_deleted",
+            metadata_json={"name": org.name},
+        )
+    )
+    await db.flush()
+    logger.info("org_deleted", org_id=str(org_id), user_id=str(ctx.user.id))
 
 
 @router.get("/orgs/{org_id}/members", response_model=PaginatedResponse[MemberOut])

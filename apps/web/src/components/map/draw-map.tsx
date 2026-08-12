@@ -8,6 +8,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { registerPMTilesProtocol, getBasemapStyle, tryUpgradeToPMTiles } from "@/lib/pmtiles";
 import { createTransformRequest, refreshMapToken } from "@/lib/map-auth";
+import { useTranslations } from "next-intl";
 
 interface DrawMapProps {
     /** Existing geometry (GeoJSON) to load for editing */
@@ -37,6 +38,7 @@ export default function DrawMap({
     zoom = 5,
     className = "",
 }: DrawMapProps) {
+    const t = useTranslations("mapControls");
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<maplibregl.Map | null>(null);
     const drawRef = useRef<MapboxDraw | null>(null);
@@ -248,7 +250,7 @@ export default function DrawMap({
             <div ref={containerRef} className="w-full h-full" />
             {!ready && (
                 <div className="absolute inset-0 flex items-center justify-center bg-surface-2">
-                    <p className="text-sm text-muted-foreground">Loading map...</p>
+                    <p className="text-sm text-muted-foreground">{t("loadingMap")}</p>
                 </div>
             )}
             <div className={`${MAP_CHROME} absolute bottom-4 left-4 rounded-lg px-3 py-2 text-xs text-muted-foreground`}>

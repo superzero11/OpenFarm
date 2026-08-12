@@ -1,11 +1,12 @@
 {
-  "version": "0.0.1",
-  "configurations": [
-    {
-      "name": "openfarm-web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "apps/web"],
-      "port": 3000
-    }
-  ]
+    "version": "0.0.1",
+    "configurations": [
+        {
+            "name": "openfarm-web",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "dev", "--prefix", "apps/web"],
+            "port": 3000,
+            "autoPort": false
+        }
+    ]
 }

@@ -106,6 +106,15 @@ export interface Org {
 export interface OrgDetail extends Org {
     member_count: number;
     farm_count: number;
+    field_count: number;
+}
+
+/** Blast radius of a workspace deletion, shown before the owner confirms. */
+export interface OrgDeletionImpact {
+    farm_count: number;
+    field_count: number;
+    history_months: number;
+    scouting_count: number;
 }
 
 export interface OrgBrief {
@@ -436,6 +445,12 @@ export const orgsApi = {
         apiFetch(`/orgs/${orgId}/transfer-ownership`, { method: "POST", body: JSON.stringify({ new_owner_user_id: newOwnerUserId }), orgId }),
     auditEvents: (orgId: string, limit = 50, offset = 0) =>
         apiFetch<Paginated<any>>(`/orgs/${orgId}/audit-events?limit=${limit}&offset=${offset}`, { orgId }),
+    /** What deleting this workspace would take with it. Owner only. */
+    deletionImpact: (orgId: string) =>
+        apiFetch<OrgDeletionImpact>(`/orgs/${orgId}/deletion-impact`, { orgId }),
+    /** Soft-delete the workspace and cascade to its farms and fields. Owner only. */
+    delete: (orgId: string) =>
+        apiFetch<void>(`/orgs/${orgId}`, { method: "DELETE", orgId }),
 };
 
 // ── Farms ────────────────────────────────────────────────────────────

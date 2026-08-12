@@ -36,6 +36,7 @@ import { useTranslations } from "next-intl";
 export default function FarmDetailPage() {
     const tCreate = useTranslations("createFarm");
     const tFarms = useTranslations("farmsPage");
+    const tCommon = useTranslations("common");
     const params = useParams();
     const router = useRouter();
     const farmId = params.id as string;
@@ -66,7 +67,7 @@ export default function FarmDetailPage() {
             setEditRegion(f.region || "");
             setEditTimezone(f.timezone || "");
         } catch {
-            toast.error("Farm not found");
+            toast.error(tFarms("farmNotFound"));
             router.push("/farms");
             return;
         }
@@ -79,7 +80,7 @@ export default function FarmDetailPage() {
         }
 
         setLoading(false);
-    }, [farmId, router]);
+    }, [farmId, router, tFarms]);
 
     useEffect(() => {
         if (currentOrg) loadData();
@@ -97,9 +98,9 @@ export default function FarmDetailPage() {
             });
             setFarm(updated);
             setEditing(false);
-            toast.success("Farm updated");
+            toast.success(tFarms("farmUpdated"));
         } catch (err: any) {
-            toast.error(err.detail || "Failed to update");
+            toast.error(err.detail || tFarms("failedUpdate"));
         } finally {
             setSaving(false);
         }
@@ -107,18 +108,18 @@ export default function FarmDetailPage() {
 
     const handleDelete = async () => {
         const ok = await confirm({
-            title: "Delete Farm",
-            description: "Delete this farm? All its fields will also be deleted. This cannot be undone.",
-            confirmLabel: "Delete",
+            title: tFarms("deleteFarm"),
+            description: tFarms("deleteFarmConfirm"),
+            confirmLabel: tCommon("delete"),
             variant: "destructive",
         });
         if (!ok) return;
         try {
             await farmsApi.delete(farmId);
-            toast.success("Farm deleted");
+            toast.success(tFarms("farmDeleted"));
             router.push("/farms");
         } catch (err: any) {
-            toast.error(err.detail || "Failed to delete");
+            toast.error(err.detail || tFarms("failedDelete"));
         }
     };
 
@@ -143,18 +144,18 @@ export default function FarmDetailPage() {
 
     const handleDeleteField = async (fieldId: string, fieldName: string) => {
         const ok = await confirm({
-            title: "Delete Field",
-            description: `Delete field "${fieldName}"? This cannot be undone.`,
-            confirmLabel: "Delete",
+            title: tFarms("deleteField"),
+            description: tFarms("deleteFieldConfirm", { name: fieldName }),
+            confirmLabel: tCommon("delete"),
             variant: "destructive",
         });
         if (!ok) return;
         try {
             await fieldsApi.delete(fieldId);
-            toast.success("Field deleted");
+            toast.success(tFarms("fieldDeleted"));
             setFields((prev) => prev.filter((f) => f.id !== fieldId));
         } catch (err: any) {
-            toast.error(err.detail || "Failed to delete field");
+            toast.error(err.detail || tFarms("failedDeleteField"));
         }
     };
 

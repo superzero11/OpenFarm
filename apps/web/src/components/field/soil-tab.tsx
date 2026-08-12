@@ -227,7 +227,12 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
             if (!features.length) return;
             const props = features[0].properties!;
             const coords = (features[0].geometry as GeoJSON.Point).coordinates as [number, number];
-            const priorityLabel = props.priority === 1 ? "High" : props.priority === 2 ? "Medium" : "Low";
+            const priorityLabel =
+                props.priority === 1
+                    ? t("priorityHigh")
+                    : props.priority === 2
+                        ? t("priorityMedium")
+                        : t("priorityLow");
             const zoneLabel = (props.zone_type as string).replace(/_/g, " ");
             const html = `<div class="openfarm-popup-body">
                 <div class="openfarm-popup-title">${t("samplingZone")}</div>
@@ -235,7 +240,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${props.color}"></span>
                     <span style="font-weight:500;text-transform:capitalize">${zoneLabel}</span>
                 </div>
-                <div class="openfarm-popup-meta"><b>Priority:</b> ${priorityLabel} (P${props.priority})</div>
+                <div class="openfarm-popup-meta"><b>${t("priority")}:</b> ${priorityLabel} (P${props.priority})</div>
                 <div class="openfarm-popup-note">${props.rationale}</div>
             </div>`;
             popup.setLngLat(coords).setHTML(html).addTo(map);

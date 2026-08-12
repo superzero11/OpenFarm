@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { toast } from "sonner";
 import { orgsApi, usersApi, setOrgId, getOrgId } from "@/lib/api";
 import type { Org, UserMe } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface OrgCtx {
     orgs: Org[];
@@ -26,6 +27,7 @@ const OrgContext = createContext<OrgCtx>({
 export const useOrg = () => useContext(OrgContext);
 
 export function OrgProvider({ children }: { children: React.ReactNode }) {
+    const t = useTranslations("common");
     const [orgs, setOrgs] = useState<Org[]>([]);
     const [currentOrg, setCurrentOrg] = useState<Org | null>(null);
     const [user, setUser] = useState<UserMe | null>(null);
@@ -47,11 +49,11 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (err) {
             console.error("Failed to fetch orgs:", err);
-            toast.error("Failed to load organizations. Please refresh the page.");
+            toast.error(t("failedLoadOrgs"));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         fetchOrgs();

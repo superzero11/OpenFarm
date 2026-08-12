@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Search, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { MAP_CHROME } from "@/lib/design-tokens";
+import { useTranslations } from "next-intl";
 
 interface LocationSearchProps {
     /** Called when user selects a location */
@@ -23,6 +24,7 @@ interface NominatimResult {
  * Starts as a collapsed icon button, expands on click.
  */
 export default function LocationSearch({ onSelect, className = "" }: LocationSearchProps) {
+    const t = useTranslations("mapControls");
     const locale = useLocale();
     const [expanded, setExpanded] = useState(false);
     const [query, setQuery] = useState("");
@@ -112,7 +114,7 @@ export default function LocationSearch({ onSelect, className = "" }: LocationSea
                         else inputRef.current?.focus();
                     }}
                     className="flex-shrink-0 flex items-center justify-center w-9 h-9 hover:bg-surface-2 transition-colors"
-                    title="Search location"
+                    title={t("searchLocation")}
                 >
                     <Search className="h-4 w-4 text-foreground" />
                 </button>
@@ -126,7 +128,7 @@ export default function LocationSearch({ onSelect, className = "" }: LocationSea
                     onKeyDown={(e) => {
                         if (e.key === "Escape") handleClose();
                     }}
-                    placeholder="Search location..."
+                    placeholder={t("searchPlaceholder")}
                     className={`flex-1 h-9 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none pr-1 transition-all duration-300 ${expanded ? "w-full opacity-100" : "w-0 opacity-0"
                         }`}
                 />

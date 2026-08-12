@@ -215,8 +215,13 @@
   /* Measured values, coordinates, dates, index readouts. */
   .value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 
-  a { color: hsl(var(--primary)); text-underline-offset: 0.2em; }
-  a:hover { color: hsl(var(--primary) / 0.82); text-decoration: underline; }
+  /* Inline text links, and only those. An anchor a component has styled
+     (a Button via asChild, a nav item, a card row) always carries its own
+     classes, and an `a:hover` rule would outrank every one of them -
+     turning primary buttons green on green and underlining list rows.
+     Scoping to class-less anchors keeps the affordance where it belongs. */
+  a:not([class]) { color: hsl(var(--primary)); text-underline-offset: 0.2em; }
+  a:not([class]):hover { color: hsl(var(--primary) / 0.82); text-decoration: underline; }
 
   ::selection { background: hsl(var(--primary) / 0.28); }
 

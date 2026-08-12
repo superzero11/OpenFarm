@@ -162,10 +162,10 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                 const vpd = latest?.vapor_pressure_deficit;
                 const vpdZone = vpd != null ? (vpd < 0.4 ? "low" : vpd < 0.8 ? "ideal" : vpd < 1.2 ? "moderate" : "high") : null;
                 const vpdColor = vpdZone ? {
-                    low: "text-blue-600 dark:text-blue-400",
-                    ideal: "text-green-600 dark:text-green-400",
-                    moderate: "text-yellow-600 dark:text-yellow-400",
-                    high: "text-red-600 dark:text-red-400",
+                    low: "text-info",
+                    ideal: "text-success",
+                    moderate: "text-caution",
+                    high: "text-danger",
                 }[vpdZone] : "";
 
                 return (
@@ -173,7 +173,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         {/* Row 1: Temp (2 cols) + Precip (2 cols) */}
                         <div className="col-span-2 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("avgTemp")}</p>
-                            <p className="text-lg font-bold leading-tight mt-0.5 text-orange-600 dark:text-orange-400">
+                            <p className="text-lg font-bold leading-tight mt-0.5 tabular-nums text-sig-temp">
                                 {summary.avg_temperature != null ? `${summary.avg_temperature.toFixed(1)}°C` : "-"}
                             </p>
                             {summary.min_temperature != null && summary.max_temperature != null && (
@@ -182,7 +182,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         </div>
                         <div className="col-span-2 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("totalPrecip")}</p>
-                            <p className="text-lg font-bold leading-tight mt-0.5 text-blue-600 dark:text-blue-400">
+                            <p className="text-lg font-bold leading-tight mt-0.5 tabular-nums text-sig-precip">
                                 {summary.total_precipitation != null ? `${summary.total_precipitation.toFixed(1)} mm` : "-"}
                             </p>
                         </div>
@@ -190,19 +190,19 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         {/* Row 2: Water Deficit + GDD + Soil Moisture + Frost/Heat */}
                         <div className="col-span-2 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("waterDeficit")}</p>
-                            <p className={`text-lg font-bold leading-tight mt-0.5 ${summary.water_deficit_mm != null && summary.water_deficit_mm < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                            <p className={`text-lg font-bold leading-tight mt-0.5 tabular-nums ${summary.water_deficit_mm != null && summary.water_deficit_mm < 0 ? "text-danger" : "text-success"}`}>
                                 {summary.water_deficit_mm != null ? `${summary.water_deficit_mm.toFixed(1)} mm` : "-"}
                             </p>
                         </div>
                         <div className="col-span-1 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("gddCumulative")}</p>
-                            <p className="text-lg font-bold leading-tight mt-0.5 text-amber-600 dark:text-amber-400">
+                            <p className="text-lg font-bold leading-tight mt-0.5 tabular-nums text-sig-temp">
                                 {summary.gdd_cumulative != null ? `${summary.gdd_cumulative.toFixed(0)}` : "-"}
                             </p>
                         </div>
                         <div className="col-span-1 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("soilMoisture")}</p>
-                            <p className="text-lg font-bold leading-tight mt-0.5 text-cyan-600 dark:text-cyan-400">
+                            <p className="text-lg font-bold leading-tight mt-0.5 tabular-nums text-sig-water">
                                 {summary.avg_soil_moisture_top != null ? `${(summary.avg_soil_moisture_top * 100).toFixed(0)}%` : "-"}
                             </p>
                         </div>
@@ -217,13 +217,13 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                         )}
                         <div className="col-span-1 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("frostDays")}</p>
-                            <p className="text-lg font-bold leading-tight mt-0.5 text-blue-600 dark:text-blue-400">
+                            <p className="text-lg font-bold leading-tight mt-0.5 tabular-nums text-info">
                                 {summary.frost_days}
                             </p>
                         </div>
                         <div className="col-span-1 rounded-lg border bg-card p-2.5 shadow-sm">
                             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{t("heatStressDays")}</p>
-                            <p className="text-lg font-bold leading-tight mt-0.5 text-red-600 dark:text-red-400">
+                            <p className="text-lg font-bold leading-tight mt-0.5 tabular-nums text-danger">
                                 {summary.heat_stress_days}
                             </p>
                         </div>
@@ -289,7 +289,7 @@ export default function WeatherTab({ fieldId }: WeatherTabProps) {
                                     </span>
                                     <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden relative">
                                         <div
-                                            className={`h-full rounded-full transition-all ${val > 30 ? "bg-red-500" : val > 20 ? "bg-orange-400" : val > 10 ? "bg-yellow-400" : val > 0 ? "bg-blue-400" : "bg-blue-600"
+                                            className={`h-full rounded-full transition-all ${val > 30 ? "bg-danger" : val <= 0 ? "bg-info" : "bg-sig-temp"
                                                 }`}
                                             style={{ width: `${Math.min(Math.max(((val + 10) / 50) * 100, 5), 100)}%` }}
                                         />

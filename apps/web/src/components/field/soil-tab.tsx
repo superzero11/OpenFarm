@@ -19,6 +19,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, RefreshCw, Info, Layers, Check, Leaf, Droplets, AlertTriangle, Sprout, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { tokenColor } from "@/lib/design-tokens";
 import {
     Tooltip,
     TooltipContent,
@@ -33,35 +34,35 @@ function depthLabel(top: number, bottom: number): string {
 }
 
 function phColor(ph: number): string {
-    if (ph < 5.5) return "text-red-600 dark:text-red-400";
-    if (ph < 6.5) return "text-yellow-600 dark:text-yellow-400";
-    if (ph <= 7.5) return "text-green-600 dark:text-green-400";
-    return "text-yellow-600 dark:text-yellow-400";
+    if (ph < 5.5) return "text-danger";
+    if (ph < 6.5) return "text-warning";
+    if (ph <= 7.5) return "text-success";
+    return "text-warning";
 }
 
 function phBg(ph: number): string {
-    if (ph < 5.5) return "bg-red-100 dark:bg-red-900/30";
-    if (ph < 6.5) return "bg-yellow-100 dark:bg-yellow-900/30";
-    if (ph <= 7.5) return "bg-green-100 dark:bg-green-900/30";
-    return "bg-yellow-100 dark:bg-yellow-900/30";
+    if (ph < 5.5) return "bg-danger-subtle";
+    if (ph < 6.5) return "bg-warning-subtle";
+    if (ph <= 7.5) return "bg-success-subtle";
+    return "bg-warning-subtle";
 }
 
 function riskColor(score: number): string {
-    if (score < 0.3) return "bg-green-500";
-    if (score < 0.6) return "bg-yellow-500";
-    return "bg-red-500";
+    if (score < 0.3) return "bg-success";
+    if (score < 0.6) return "bg-warning";
+    return "bg-danger";
 }
 
 function riskTextColor(score: number): string {
-    if (score < 0.3) return "text-green-700 dark:text-green-400";
-    if (score < 0.6) return "text-yellow-700 dark:text-yellow-400";
-    return "text-red-700 dark:text-red-400";
+    if (score < 0.3) return "text-success";
+    if (score < 0.6) return "text-warning";
+    return "text-danger";
 }
 
 function bdColor(bd: number): string {
-    if (bd < 1.4) return "text-green-600 dark:text-green-400";
-    if (bd <= 1.6) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
+    if (bd < 1.4) return "text-success";
+    if (bd <= 1.6) return "text-warning";
+    return "text-danger";
 }
 
 function awcLevel(mm: number): "low" | "moderate" | "good" {
@@ -72,9 +73,9 @@ function awcLevel(mm: number): "low" | "moderate" | "good" {
 
 function awcColor(mm: number): string {
     const level = awcLevel(mm);
-    if (level === "low") return "bg-red-500";
-    if (level === "moderate") return "bg-yellow-500";
-    return "bg-green-500";
+    if (level === "low") return "bg-danger";
+    if (level === "moderate") return "bg-warning";
+    return "bg-success";
 }
 
 function qualityLabel(score: number | null, t: (key: string) => string): string {
@@ -93,10 +94,11 @@ const SAMPLING_LAYER = "sampling-inner";
 const SAMPLING_LAYER_RING = "sampling-ring";
 const SAMPLING_LAYER_CENTER = "sampling-center";
 
-const PRIORITY_COLORS: Record<number, string> = {
-    1: "#ef4444", // red-500
-    2: "#eab308", // yellow-500
-    3: "#3b82f6", // blue-500
+// Priority hues resolved from the token layer (sev-high / sev-medium / info)
+const PRIORITY_TOKEN_VARS: Record<number, string> = {
+    1: "--sev-high",
+    2: "--sev-medium",
+    3: "--info",
 };
 
 /* ── Component ───────────────────────────────────────────── */
@@ -136,7 +138,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     zone_type: f.properties.zone_type,
                     priority: f.properties.priority,
                     rationale: f.properties.rationale,
-                    color: PRIORITY_COLORS[f.properties.priority] ?? "#6b7280",
+                    color: tokenColor(PRIORITY_TOKEN_VARS[f.properties.priority] ?? "--muted-foreground"),
                 },
             })),
         };
@@ -180,7 +182,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         source: SAMPLING_SOURCE,
                         paint: {
                             "circle-radius": 2,
-                            "circle-color": "#ffffff",
+                            "circle-color": tokenColor("--map-draw-vertex"),
                         },
                     });
                 }
@@ -486,7 +488,7 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
     return (
         <div className="space-y-4">
             {/* Disclaimer banner */}
-            <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 p-2.5 text-xs text-blue-800 dark:text-blue-300">
+            <div className="flex items-start gap-2 rounded-lg border bg-info-subtle p-2.5 text-xs text-info">
                 <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span>{t("disclaimer")}</span>
             </div>
@@ -497,15 +499,15 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     <h3 className="text-xs font-semibold">{t("depthProfile")}</h3>
                     <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-amber-400 dark:bg-amber-500" />
+                            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-soil-sand" />
                             {t("sand")}
                         </span>
                         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-sky-300 dark:bg-sky-500" />
+                            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-soil-silt" />
                             {t("silt")}
                         </span>
                         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-400 dark:bg-red-500" />
+                            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-soil-clay" />
                             {t("clay")}
                         </span>
                     </div>
@@ -613,10 +615,10 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         <div className="flex items-center gap-2 mb-2">
                             <span className={cn(
                                 "h-2.5 w-2.5 rounded-full shrink-0",
-                                weatherStress.status === "optimal" ? "bg-green-500" :
-                                    weatherStress.status === "drought_stress" ? "bg-red-500" :
-                                        weatherStress.status === "wet_stress" ? "bg-blue-500" :
-                                            weatherStress.status === "approaching_drought" ? "bg-yellow-500" :
+                                weatherStress.status === "optimal" ? "bg-success" :
+                                    weatherStress.status === "drought_stress" ? "bg-danger" :
+                                        weatherStress.status === "wet_stress" ? "bg-sig-water" :
+                                            weatherStress.status === "approaching_drought" ? "bg-warning" :
                                                 "bg-muted-foreground"
                             )} />
                             <span className="text-sm font-medium capitalize">
@@ -629,8 +631,8 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-2">
                             <div
                                 className={cn("h-full rounded-full transition-all",
-                                    weatherStress.severity < 0.3 ? "bg-green-500" :
-                                        weatherStress.severity < 0.6 ? "bg-yellow-500" : "bg-red-500"
+                                    weatherStress.severity < 0.3 ? "bg-success" :
+                                        weatherStress.severity < 0.6 ? "bg-warning" : "bg-danger"
                                 )}
                                 style={{ width: `${Math.min(weatherStress.severity * 100, 100)}%` }}
                             />
@@ -661,8 +663,8 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         <Sprout className="h-3.5 w-3.5" />
                         {t("cropSuitability")}
                     </h4>
-                    <div className="rounded-lg border border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20 p-3">
-                        <p className="text-[11px] text-yellow-700 dark:text-yellow-400">
+                    <div className="rounded-lg border bg-warning-subtle p-3">
+                        <p className="text-[11px] text-warning">
                             {t("cropSuitabilityWeatherRequired")}
                         </p>
                     </div>
@@ -677,16 +679,16 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                     {cropSuitability.field_crop_suitability && (
                         <div className={cn(
                             "rounded-lg border p-2.5",
-                            cropSuitability.field_crop_suitability.score >= 70 ? "border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950/20" :
-                                cropSuitability.field_crop_suitability.score >= 40 ? "border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20" :
-                                    "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20"
+                            cropSuitability.field_crop_suitability.score >= 70 ? "border-success/30 bg-success-subtle" :
+                                cropSuitability.field_crop_suitability.score >= 40 ? "border-warning/30 bg-warning-subtle" :
+                                    "border-danger/30 bg-danger-subtle"
                         )}>
                             <div className="flex items-center justify-between">
                                 <span className="text-[11px] font-medium">{cropSuitability.field_crop_suitability.name}</span>
                                 <span className={cn("text-xs font-bold tabular-nums",
-                                    cropSuitability.field_crop_suitability.score >= 70 ? "text-green-600 dark:text-green-400" :
-                                        cropSuitability.field_crop_suitability.score >= 40 ? "text-yellow-600 dark:text-yellow-400" :
-                                            "text-red-600 dark:text-red-400"
+                                    cropSuitability.field_crop_suitability.score >= 70 ? "text-success" :
+                                        cropSuitability.field_crop_suitability.score >= 40 ? "text-warning" :
+                                            "text-danger"
                                 )}>
                                     {cropSuitability.field_crop_suitability.score.toFixed(0)}%
                                 </span>
@@ -705,8 +707,8 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                                 <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                                     <div
                                         className={cn("h-full rounded-full",
-                                            c.score >= 70 ? "bg-green-500" :
-                                                c.score >= 40 ? "bg-yellow-500" : "bg-red-500"
+                                            c.score >= 70 ? "bg-success" :
+                                                c.score >= 40 ? "bg-warning" : "bg-danger"
                                         )}
                                         style={{ width: `${c.score}%` }}
                                     />
@@ -729,8 +731,8 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         {samplingZones.features.map((f, i) => {
                             const p = f.properties;
                             const priorityColor = p.priority === 1
-                                ? "bg-red-500" : p.priority === 2
-                                    ? "bg-yellow-500" : "bg-blue-500";
+                                ? "bg-sev-high" : p.priority === 2
+                                    ? "bg-sev-medium" : "bg-info";
                             return (
                                 <div
                                     key={i}
@@ -768,9 +770,9 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                         <div className="flex items-center gap-2 mb-1.5">
                             <span className={cn(
                                 "h-2.5 w-2.5 rounded-full shrink-0",
-                                nutrientContext.zone_class === "nutrient_retentive" ? "bg-green-500" :
-                                    nutrientContext.zone_class === "nutrient_responsive" ? "bg-yellow-500" :
-                                        "bg-red-500"
+                                nutrientContext.zone_class === "nutrient_retentive" ? "bg-success" :
+                                    nutrientContext.zone_class === "nutrient_responsive" ? "bg-warning" :
+                                        "bg-danger"
                             )} />
                             <span className="text-sm font-medium">
                                 {t(`nutrientZone_${nutrientContext.zone_class}`, { defaultMessage: nutrientContext.zone_class.replace(/_/g, " ") })}
@@ -810,8 +812,8 @@ export default function SoilTab({ fieldId, mapInstance, activeTab }: SoilTabProp
                                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                                     <div
                                         className={cn("h-full rounded-full transition-all",
-                                            carbonEstimate.saturation_pct < 50 ? "bg-green-500" :
-                                                carbonEstimate.saturation_pct < 80 ? "bg-yellow-500" : "bg-red-500"
+                                            carbonEstimate.saturation_pct < 50 ? "bg-success" :
+                                                carbonEstimate.saturation_pct < 80 ? "bg-warning" : "bg-danger"
                                         )}
                                         style={{ width: `${Math.min(carbonEstimate.saturation_pct, 100)}%` }}
                                     />
@@ -942,7 +944,7 @@ function DepthBar({
         <div className="text-xs space-y-1 py-0.5">
             <p className="font-semibold">{depthLabel(layer.depth_top_cm, layer.depth_bottom_cm)}</p>
             <div className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-sm bg-amber-400 dark:bg-amber-500 shrink-0" />
+                <span className="inline-block w-2 h-2 rounded-sm bg-soil-sand shrink-0" />
                 <span>
                     {t("sand")}: {sand.toFixed(0)}%
                     {layer.sand_q05 != null && layer.sand_q95 != null && (
@@ -953,11 +955,11 @@ function DepthBar({
                 </span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-sm bg-sky-300 dark:bg-sky-500 shrink-0" />
+                <span className="inline-block w-2 h-2 rounded-sm bg-soil-silt shrink-0" />
                 <span>{t("silt")}: {silt.toFixed(0)}%</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-sm bg-red-400 dark:bg-red-500 shrink-0" />
+                <span className="inline-block w-2 h-2 rounded-sm bg-soil-clay shrink-0" />
                 <span>
                     {t("clay")}: {clay.toFixed(0)}%
                     {layer.clay_q05 != null && layer.clay_q95 != null && (
@@ -982,15 +984,15 @@ function DepthBar({
                 <TooltipTrigger asChild>
                     <div className="flex-1 h-5 rounded-full overflow-hidden flex cursor-default">
                         <div
-                            className="h-full bg-amber-400 dark:bg-amber-500"
+                            className="h-full bg-soil-sand"
                             style={{ width: `${sand}%` }}
                         />
                         <div
-                            className="h-full bg-sky-300 dark:bg-sky-500"
+                            className="h-full bg-soil-silt"
                             style={{ width: `${silt}%` }}
                         />
                         <div
-                            className="h-full bg-red-400 dark:bg-red-500"
+                            className="h-full bg-soil-clay"
                             style={{ width: `${clay}%` }}
                         />
                     </div>
@@ -1051,10 +1053,10 @@ function SocCard({
     const level = soc < 10 ? "socLow" : soc < 25 ? "socMedium" : "socHigh";
     const color =
         soc < 10
-            ? "text-red-600 dark:text-red-400"
+            ? "text-danger"
             : soc < 25
-                ? "text-yellow-600 dark:text-yellow-400"
-                : "text-green-600 dark:text-green-400";
+                ? "text-warning"
+                : "text-success";
     return (
         <div className="rounded-lg border bg-card p-2.5">
             <p className="text-[10px] text-muted-foreground">{t("soc")}</p>
@@ -1086,10 +1088,10 @@ function CecCard({
     const level = cec < 10 ? "cecLow" : cec < 20 ? "cecMedium" : "cecHigh";
     const color =
         cec < 10
-            ? "text-red-600 dark:text-red-400"
+            ? "text-danger"
             : cec < 20
-                ? "text-yellow-600 dark:text-yellow-400"
-                : "text-green-600 dark:text-green-400";
+                ? "text-warning"
+                : "text-success";
     return (
         <div className="rounded-lg border bg-card p-2.5">
             <p className="text-[10px] text-muted-foreground">{t("cec")}</p>
@@ -1194,13 +1196,13 @@ function DrainageBadge({
     t: (key: string) => string;
 }) {
     const colorMap: Record<string, string> = {
-        "very poorly drained": "bg-blue-600",
-        "poorly drained": "bg-blue-500",
-        "somewhat poorly drained": "bg-blue-400",
-        "moderately well drained": "bg-green-500",
-        "well drained": "bg-green-400",
-        "somewhat excessively drained": "bg-yellow-500",
-        "excessively drained": "bg-orange-500",
+        "very poorly drained": "bg-sig-water",
+        "poorly drained": "bg-sig-water",
+        "somewhat poorly drained": "bg-info",
+        "moderately well drained": "bg-success",
+        "well drained": "bg-success",
+        "somewhat excessively drained": "bg-caution",
+        "excessively drained": "bg-warning",
     };
     const dot = colorMap[drainageClass] ?? "bg-muted-foreground";
     return (
@@ -1224,13 +1226,13 @@ function SocStockCard({
     const level = total < 40 ? "socStockLow" : total < 80 ? "socStockMedium" : "socStockHigh";
     const color =
         total < 40
-            ? "text-red-600 dark:text-red-400"
+            ? "text-danger"
             : total < 80
-                ? "text-yellow-600 dark:text-yellow-400"
-                : "text-green-600 dark:text-green-400";
+                ? "text-warning"
+                : "text-success";
     const pct = Math.min((total / 150) * 100, 100);
     const barColor =
-        total < 40 ? "bg-red-500" : total < 80 ? "bg-yellow-500" : "bg-green-500";
+        total < 40 ? "bg-danger" : total < 80 ? "bg-warning" : "bg-success";
     return (
         <div className="rounded-lg border bg-card p-2.5">
             <div className="flex items-baseline justify-between mb-1">

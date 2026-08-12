@@ -14,6 +14,18 @@ import {
 import { CanvasRenderer } from "echarts/renderers";
 import type { FieldStat, IndexType, WeatherDaily } from "@/lib/api";
 import { INDEX_CONFIG } from "@/lib/api";
+import { tokenColor } from "@/lib/design-tokens";
+import {
+    axisLabel,
+    baseTooltip,
+    indexBandColor,
+    indexLineColor,
+    legendStyle,
+    secondaryValueAxis,
+    sig,
+    thresholdMarkLine,
+    valueAxis,
+} from "./chart-base";
 
 // Register only the modules we need (tree-shake friendly)
 echarts.use([
@@ -86,12 +98,11 @@ export default function NdviChart({
                 ? {
                     data: [seriesName, "Precip (mm)", "ET₀ (mm)"],
                     top: 0,
-                    textStyle: { fontSize: 9 },
-                    itemWidth: 12,
-                    itemHeight: 8,
+                    ...legendStyle(),
                 }
                 : undefined,
             tooltip: {
+                ...baseTooltip(),
                 trigger: "axis" as const,
                 axisPointer: { type: "cross" as const },
                 formatter: (params: any) => {
@@ -111,33 +122,15 @@ export default function NdviChart({
             },
             xAxis: {
                 type: "time" as const,
-                axisLabel: { fontSize: 10 },
+                axisLabel: axisLabel(),
                 axisTick: { alignWithLabel: true },
             },
             yAxis: hasWeather
                 ? [
-                    {
-                        type: "value" as const,
-                        min: config.rescaleMin,
-                        max: config.rescaleMax + 0.1,
-                        axisLabel: { fontSize: 10 },
-                        splitLine: { lineStyle: { type: "dashed" as const, color: "#e5e7eb" } },
-                    },
-                    {
-                        type: "value" as const,
-                        name: "mm",
-                        nameTextStyle: { fontSize: 9 },
-                        axisLabel: { fontSize: 9 },
-                        splitLine: { show: false },
-                    },
+                    valueAxis({ min: config.rescaleMin, max: config.rescaleMax + 0.1 }),
+                    secondaryValueAxis({ name: "mm", nameTextStyle: axisLabel() }),
                 ]
-                : {
-                    type: "value" as const,
-                    min: config.rescaleMin,
-                    max: config.rescaleMax + 0.1,
-                    axisLabel: { fontSize: 10 },
-                    splitLine: { lineStyle: { type: "dashed" as const, color: "#e5e7eb" } },
-                },
+                : valueAxis({ min: config.rescaleMin, max: config.rescaleMax + 0.1 }),
             dataZoom: [
                 {
                     type: "inside" as const,
@@ -166,7 +159,7 @@ export default function NdviChart({
                     lineStyle: { opacity: 0 },
                     symbol: "none",
                     areaStyle: {
-                        color: config.bandColor,
+                        color: indexBandColor(indexType),
                     },
                     emphasis: { disabled: true },
                 },
@@ -176,11 +169,11 @@ export default function NdviChart({
                     type: "line",
                     data: ndviData,
                     smooth: true,
-                    lineStyle: { color: config.lineColor, width: 2 },
+                    lineStyle: { color: indexLineColor(indexType), width: 2 },
                     itemStyle: {
                         color: (params: any) => {
                             const d = Array.isArray(params.value) ? params.value[0] : stats[params.dataIndex]?.date;
-                            return d === selectedDate ? "#ef4444" : config.lineColor;
+                            return d === selectedDate ? tokenColor("--danger") : indexLineColor(indexType);
                         },
                     },
                     symbolSize: (value: any) => {
@@ -189,13 +182,7 @@ export default function NdviChart({
                     },
                     markLine: {
                         silent: true,
-                        data: [
-                            {
-                                yAxis: config.threshold,
-                                lineStyle: { color: "#ef4444", type: "dashed" as const, width: 1 },
-                                label: { formatter: "Threshold", fontSize: 9, position: "insideMiddleBottom" as const },
-                            },
-                        ],
+                        data: [thresholdMarkLine(config.threshold, "Threshold")],
                     },
                 },
                 // Weather overlay: daily precipitation bars on actual dates
@@ -207,8 +194,8 @@ export default function NdviChart({
                             yAxisIndex: 1,
                             data: precipData,
                             barMaxWidth: 6,
-                            itemStyle: { color: "rgba(59, 130, 246, 0.45)" },
-                            emphasis: { itemStyle: { color: "rgba(59, 130, 246, 0.8)" } },
+                            itemStyle: { color: sig("precip", 0.45) },
+                            emphasis: { itemStyle: { color: sig("precip", 0.8) } },
                         },
                         {
                             name: "ET₀ (mm)",
@@ -217,8 +204,8 @@ export default function NdviChart({
                             data: et0Data,
                             smooth: true,
                             symbol: "none",
-                            lineStyle: { color: "#f59e0b", width: 1.5, type: "dashed" as const },
-                            itemStyle: { color: "#f59e0b" },
+                            lineStyle: { color: sig("et0"), width: 1.5, type: "dashed" as const },
+                            itemStyle: { color: sig("et0") },
                         },
                     ]
                     : []),

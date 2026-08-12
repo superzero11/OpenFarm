@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import maplibregl from "maplibre-gl";
+import { tokenColor } from "@/lib/design-tokens";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
@@ -103,7 +104,7 @@ export default function DrawMap({
                             if (this._marker) {
                                 this._marker.setLngLat([longitude, latitude]);
                             } else {
-                                this._marker = new maplibregl.Marker({ color: "#22c55e" })
+                                this._marker = new maplibregl.Marker({ color: tokenColor("--primary") })
                                     .setLngLat([longitude, latitude])
                                     .addTo(map);
                             }
@@ -135,23 +136,23 @@ export default function DrawMap({
             // MapLibre doesn't support. Use literal arrays instead.
             styles: [
                 // Polygon fill (active)
-                { id: "gl-draw-polygon-fill-active", type: "fill", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]], paint: { "fill-color": "#fbb03b", "fill-outline-color": "#fbb03b", "fill-opacity": 0.1 } },
+                { id: "gl-draw-polygon-fill-active", type: "fill", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]], paint: { "fill-color": tokenColor("--map-draw-line"), "fill-outline-color": tokenColor("--map-draw-line"), "fill-opacity": 0.1 } },
                 // Polygon fill (inactive)
-                { id: "gl-draw-polygon-fill-inactive", type: "fill", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]], paint: { "fill-color": "#3bb2d0", "fill-outline-color": "#3bb2d0", "fill-opacity": 0.1 } },
+                { id: "gl-draw-polygon-fill-inactive", type: "fill", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]], paint: { "fill-color": tokenColor("--map-field-stroke"), "fill-outline-color": tokenColor("--map-field-stroke"), "fill-opacity": 0.1 } },
                 // Polygon stroke (active)
-                { id: "gl-draw-polygon-stroke-active", type: "line", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fbb03b", "line-dasharray": [0.2, 2], "line-width": 2 } },
+                { id: "gl-draw-polygon-stroke-active", type: "line", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": tokenColor("--map-draw-line"), "line-dasharray": [0.2, 2], "line-width": 2 } },
                 // Polygon stroke (inactive)
-                { id: "gl-draw-polygon-stroke-inactive", type: "line", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#3bb2d0", "line-dasharray": [0.2, 2], "line-width": 2 } },
+                { id: "gl-draw-polygon-stroke-inactive", type: "line", filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": tokenColor("--map-field-stroke"), "line-dasharray": [0.2, 2], "line-width": 2 } },
                 // Line (active)
-                { id: "gl-draw-line-active", type: "line", filter: ["all", ["==", "$type", "LineString"], ["==", "active", "true"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fbb03b", "line-dasharray": [0.2, 2], "line-width": 2 } },
+                { id: "gl-draw-line-active", type: "line", filter: ["all", ["==", "$type", "LineString"], ["==", "active", "true"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": tokenColor("--map-draw-line"), "line-dasharray": [0.2, 2], "line-width": 2 } },
                 // Line (inactive)
-                { id: "gl-draw-line-inactive", type: "line", filter: ["all", ["==", "$type", "LineString"], ["==", "active", "false"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#3bb2d0", "line-dasharray": [0.2, 2], "line-width": 2 } },
+                { id: "gl-draw-line-inactive", type: "line", filter: ["all", ["==", "$type", "LineString"], ["==", "active", "false"]], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": tokenColor("--map-field-stroke"), "line-dasharray": [0.2, 2], "line-width": 2 } },
                 // Vertex point (active)
-                { id: "gl-draw-point-active", type: "circle", filter: ["all", ["==", "$type", "Point"], ["==", "meta", "vertex"], ["==", "active", "true"]], paint: { "circle-radius": 6, "circle-color": "#fff", "circle-stroke-color": "#fbb03b", "circle-stroke-width": 2 } },
+                { id: "gl-draw-point-active", type: "circle", filter: ["all", ["==", "$type", "Point"], ["==", "meta", "vertex"], ["==", "active", "true"]], paint: { "circle-radius": 6, "circle-color": tokenColor("--map-draw-vertex"), "circle-stroke-color": tokenColor("--map-draw-line"), "circle-stroke-width": 2 } },
                 // Vertex point (inactive)
-                { id: "gl-draw-point-inactive", type: "circle", filter: ["all", ["==", "$type", "Point"], ["==", "meta", "vertex"], ["==", "active", "false"]], paint: { "circle-radius": 4, "circle-color": "#fff", "circle-stroke-color": "#3bb2d0", "circle-stroke-width": 2 } },
+                { id: "gl-draw-point-inactive", type: "circle", filter: ["all", ["==", "$type", "Point"], ["==", "meta", "vertex"], ["==", "active", "false"]], paint: { "circle-radius": 4, "circle-color": tokenColor("--map-draw-vertex"), "circle-stroke-color": tokenColor("--map-field-stroke"), "circle-stroke-width": 2 } },
                 // Midpoint
-                { id: "gl-draw-midpoint", type: "circle", filter: ["all", ["==", "$type", "Point"], ["==", "meta", "midpoint"]], paint: { "circle-radius": 3, "circle-color": "#fbb03b" } },
+                { id: "gl-draw-midpoint", type: "circle", filter: ["all", ["==", "$type", "Point"], ["==", "meta", "midpoint"]], paint: { "circle-radius": 3, "circle-color": tokenColor("--map-draw-line") } },
             ],
         });
 

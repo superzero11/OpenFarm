@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useCallback } from "react";
 import maplibregl from "maplibre-gl";
+import { tokenColor } from "@/lib/design-tokens";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { registerPMTilesProtocol, getBasemapStyle, tryUpgradeToPMTiles } from "@/lib/pmtiles";
 import { createTransformRequest, refreshMapToken } from "@/lib/map-auth";
@@ -93,7 +94,7 @@ export default function BaseMap({
                             if (this._marker) {
                                 this._marker.setLngLat([longitude, latitude]);
                             } else {
-                                this._marker = new maplibregl.Marker({ color: "#22c55e" })
+                                this._marker = new maplibregl.Marker({ color: tokenColor("--primary") })
                                     .setLngLat([longitude, latitude])
                                     .addTo(map);
                             }

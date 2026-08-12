@@ -13,6 +13,7 @@ import {
 import { CanvasRenderer } from "echarts/renderers";
 import type { WeatherDaily } from "@/lib/api";
 import { useTranslations } from "next-intl";
+import { axisLabel, baseTooltip, legendStyle, secondaryValueAxis, sig, valueAxis } from "./chart-base";
 
 echarts.use([
     LineChart,
@@ -43,9 +44,10 @@ export default function WeatherChart({ data, height = 220 }: WeatherChartProps) 
             legend: {
                 data: [t("tempRange"), t("precipitation")],
                 top: 0,
-                textStyle: { fontSize: 10 },
+                ...legendStyle(),
             },
             tooltip: {
+                ...baseTooltip(),
                 trigger: "axis" as const,
                 formatter: (params: any) => {
                     const idx = params[0]?.dataIndex;
@@ -62,24 +64,12 @@ export default function WeatherChart({ data, height = 220 }: WeatherChartProps) 
             xAxis: {
                 type: "category" as const,
                 data: dates,
-                axisLabel: { fontSize: 9, rotate: 30 },
+                axisLabel: axisLabel({ rotate: 30 }),
                 axisTick: { alignWithLabel: true },
             },
             yAxis: [
-                {
-                    type: "value" as const,
-                    name: "°C",
-                    nameTextStyle: { fontSize: 9 },
-                    axisLabel: { fontSize: 9 },
-                    splitLine: { lineStyle: { type: "dashed" as const, color: "#e5e7eb" } },
-                },
-                {
-                    type: "value" as const,
-                    name: "mm",
-                    nameTextStyle: { fontSize: 9 },
-                    axisLabel: { fontSize: 9 },
-                    splitLine: { show: false },
-                },
+                valueAxis({ name: "°C", nameTextStyle: axisLabel() }),
+                secondaryValueAxis({ name: "mm", nameTextStyle: axisLabel() }),
             ],
             dataZoom: [{ type: "inside" as const, start: 0, end: 100 }],
             series: [
@@ -106,7 +96,7 @@ export default function WeatherChart({ data, height = 220 }: WeatherChartProps) 
                     stack: "temp",
                     lineStyle: { opacity: 0 },
                     symbol: "none",
-                    areaStyle: { color: "rgba(251, 146, 60, 0.25)" },
+                    areaStyle: { color: sig("temp", 0.25) },
                     emphasis: { disabled: true },
                 },
                 // Precipitation bars
@@ -116,7 +106,7 @@ export default function WeatherChart({ data, height = 220 }: WeatherChartProps) 
                     yAxisIndex: 1,
                     data: precip,
                     barMaxWidth: 8,
-                    itemStyle: { color: "rgba(59, 130, 246, 0.6)", borderRadius: [2, 2, 0, 0] },
+                    itemStyle: { color: sig("precip", 0.6), borderRadius: [2, 2, 0, 0] },
                 },
             ],
         };

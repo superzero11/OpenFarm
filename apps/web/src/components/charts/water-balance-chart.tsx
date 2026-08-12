@@ -14,6 +14,7 @@ import {
 import { CanvasRenderer } from "echarts/renderers";
 import type { WeatherDaily } from "@/lib/api";
 import { useTranslations } from "next-intl";
+import { axisLabel, baseTooltip, legendStyle, sig, thresholdMarkLine, valueAxis } from "./chart-base";
 
 echarts.use([
     LineChart,
@@ -44,9 +45,10 @@ export default function WaterBalanceChart({ data, height = 200 }: WaterBalanceCh
             legend: {
                 data: [t("et0"), t("waterBalance30d")],
                 top: 0,
-                textStyle: { fontSize: 10 },
+                ...legendStyle(),
             },
             tooltip: {
+                ...baseTooltip(),
                 trigger: "axis" as const,
                 formatter: (params: any) => {
                     const idx = params[0]?.dataIndex;
@@ -63,16 +65,10 @@ export default function WaterBalanceChart({ data, height = 200 }: WaterBalanceCh
             xAxis: {
                 type: "category" as const,
                 data: dates,
-                axisLabel: { fontSize: 9, rotate: 30 },
+                axisLabel: axisLabel({ rotate: 30 }),
                 axisTick: { alignWithLabel: true },
             },
-            yAxis: {
-                type: "value" as const,
-                name: "mm",
-                nameTextStyle: { fontSize: 9 },
-                axisLabel: { fontSize: 9 },
-                splitLine: { lineStyle: { type: "dashed" as const, color: "#e5e7eb" } },
-            },
+            yAxis: valueAxis({ name: "mm", nameTextStyle: axisLabel() }),
             dataZoom: [{ type: "inside" as const, start: 0, end: 100 }],
             series: [
                 {
@@ -80,8 +76,8 @@ export default function WaterBalanceChart({ data, height = 200 }: WaterBalanceCh
                     type: "line",
                     data: et0,
                     smooth: true,
-                    lineStyle: { color: "#f59e0b", width: 1.5 },
-                    itemStyle: { color: "#f59e0b" },
+                    lineStyle: { color: sig("et0"), width: 1.5 },
+                    itemStyle: { color: sig("et0") },
                     symbolSize: 3,
                 },
                 {
@@ -89,24 +85,18 @@ export default function WaterBalanceChart({ data, height = 200 }: WaterBalanceCh
                     type: "line",
                     data: balance,
                     smooth: true,
-                    lineStyle: { color: "#3b82f6", width: 2 },
-                    itemStyle: { color: "#3b82f6" },
+                    lineStyle: { color: sig("water"), width: 2 },
+                    itemStyle: { color: sig("water") },
                     symbolSize: 3,
                     areaStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: "rgba(59, 130, 246, 0.15)" },
-                            { offset: 1, color: "rgba(59, 130, 246, 0)" },
+                            { offset: 0, color: sig("water", 0.12) },
+                            { offset: 1, color: sig("water", 0) },
                         ]),
                     },
                     markLine: {
                         silent: true,
-                        data: [
-                            {
-                                yAxis: 0,
-                                lineStyle: { color: "#ef4444", type: "dashed" as const, width: 1 },
-                                label: { formatter: t("deficit"), fontSize: 9, position: "insideEndBottom" as const },
-                            },
-                        ],
+                        data: [thresholdMarkLine(0, t("deficit"), "insideEndBottom")],
                     },
                 },
             ],

@@ -182,10 +182,10 @@ export interface IndexConfig {
     colormap: string;
     rescaleMin: number;
     rescaleMax: number;
+    /** CSS background for legends - references the ramp tokens so the
+        legend and the TiTiler colormap can never drift apart. */
     gradient: string;
     threshold: number;
-    lineColor: string;
-    bandColor: string;
 }
 
 export const INDEX_CONFIG: Record<IndexType, IndexConfig> = {
@@ -194,44 +194,32 @@ export const INDEX_CONFIG: Record<IndexType, IndexConfig> = {
         colormap: "rdylgn",
         rescaleMin: -0.2,
         rescaleMax: 0.9,
-        gradient:
-            "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)",
+        gradient: "var(--ramp-vegetation)",
         threshold: 0.3,
-        lineColor: "#16a34a",
-        bandColor: "rgba(34, 197, 94, 0.15)",
     },
     EVI: {
         label: "EVI",
         colormap: "rdylgn",
         rescaleMin: -0.2,
         rescaleMax: 0.8,
-        gradient:
-            "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)",
+        gradient: "var(--ramp-vegetation)",
         threshold: 0.2,
-        lineColor: "#16a34a",
-        bandColor: "rgba(34, 197, 94, 0.15)",
     },
     SAVI: {
         label: "SAVI",
         colormap: "rdylgn",
         rescaleMin: -0.2,
         rescaleMax: 0.8,
-        gradient:
-            "linear-gradient(to right, #a50026 0%, #d73027 10%, #f46d43 20%, #fdae61 30%, #fee08b 40%, #ffffbf 50%, #d9ef8b 60%, #a6d96a 70%, #66bd63 80%, #1a9850 90%, #006837 100%)",
+        gradient: "var(--ramp-vegetation)",
         threshold: 0.25,
-        lineColor: "#16a34a",
-        bandColor: "rgba(34, 197, 94, 0.15)",
     },
     NDWI: {
         label: "NDWI",
         colormap: "rdbu",
         rescaleMin: -0.5,
         rescaleMax: 0.5,
-        gradient:
-            "linear-gradient(to right, #67001f 0%, #b2182b 10%, #d6604d 20%, #f4a582 30%, #fddbc7 40%, #f7f7f7 50%, #d1e5f0 60%, #92c5de 70%, #4393c3 80%, #2166ac 90%, #053061 100%)",
+        gradient: "var(--ramp-water)",
         threshold: 0.0,
-        lineColor: "#2166ac",
-        bandColor: "rgba(33, 102, 172, 0.15)",
     },
 };
 

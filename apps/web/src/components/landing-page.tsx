@@ -734,8 +734,26 @@ export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boo
                 </div>
             </section>
 
+            {/* ── FAQ: the questions, answered where they are asked ── */}
+            <section id="faq" className="scroll-mt-16 border-t bg-surface-2">
+                <div className="mx-auto w-full max-w-6xl px-6 py-20">
+                    <SectionHeader tag={tf("tag")} title={tf("title")} desc={tf("desc")} />
+
+                    <div className="mt-8 grid gap-x-10 gap-y-7 lg:grid-cols-2">
+                        {FAQ_IDS.map((id) => (
+                            <div key={id}>
+                                <h3 className="text-[15px] font-semibold leading-snug">{tf(`${id}.q`)}</h3>
+                                <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
+                                    {tf(`${id}.a`)}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ── Closing call to action ─────────────────────────── */}
-            <section className="border-t bg-surface-2">
+            <section className="border-t">
                 <div className="mx-auto max-w-6xl px-6 py-20 text-center">
                     <h2 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">{t("footerLine")}</h2>
                     <p className="mx-auto mt-3.5 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
@@ -757,26 +775,8 @@ export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boo
                 </div>
             </section>
 
-            {/* ── FAQ: the questions, answered where they are asked ── */}
-            <section id="faq" className="scroll-mt-16 border-t bg-surface-2">
-                <div className="mx-auto w-full max-w-6xl px-6 py-20">
-                    <SectionHeader tag={tf("tag")} title={tf("title")} desc={tf("desc")} />
-
-                    <div className="mt-8 grid gap-x-10 gap-y-7 lg:grid-cols-2">
-                        {FAQ_IDS.map((id) => (
-                            <div key={id}>
-                                <h3 className="text-[15px] font-semibold leading-snug">{tf(`${id}.q`)}</h3>
-                                <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-                                    {tf(`${id}.a`)}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* ── Acknowledgements ───────────────────────────────── */}
-            <section className="border-t">
+            <section className="border-t bg-surface-2">
                 <div className="mx-auto w-full max-w-6xl px-6 py-20">
                     <SectionHeader tag={t("thanksTag")} title={t("thanksTitle")} desc={t("thanksDesc")} />
 

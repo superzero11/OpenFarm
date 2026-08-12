@@ -29,18 +29,18 @@ const SEVERITY_CONFIG: Record<
     }
 > = {
     high: {
-        dotClass: "bg-red-500",
-        textClass: "text-red-600 dark:text-red-400",
+        dotClass: "bg-sev-high",
+        textClass: "text-sev-high",
         icon: <ShieldAlert className="h-4 w-4" />,
     },
     medium: {
-        dotClass: "bg-amber-500",
-        textClass: "text-amber-600 dark:text-amber-400",
+        dotClass: "bg-sev-medium",
+        textClass: "text-sev-medium",
         icon: <AlertTriangle className="h-4 w-4" />,
     },
     low: {
-        dotClass: "bg-yellow-500",
-        textClass: "text-yellow-600 dark:text-yellow-400",
+        dotClass: "bg-sev-low",
+        textClass: "text-sev-low",
         icon: <Bell className="h-4 w-4" />,
     },
 };
@@ -118,7 +118,7 @@ export function AlertRow({
                     </span>
                     <Badge
                         variant={alert.severity === "high" && !isClosed ? "destructive" : "secondary"}
-                        className="text-[9px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+                        className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
                     >
                         {alert.severity}
                     </Badge>
@@ -209,7 +209,7 @@ export function AlertRow({
                                 ? "destructive"
                                 : "secondary"
                         }
-                        className="text-[9px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+                        className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
                     >
                         {alert.severity}
                     </Badge>
@@ -219,7 +219,7 @@ export function AlertRow({
                     {isClosed && (
                         <Badge
                             variant="outline"
-                            className="text-[9px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground"
+                            className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground"
                         >
                             Closed
                         </Badge>

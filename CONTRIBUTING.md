@@ -411,6 +411,14 @@ Adding or renaming an environment variable touches four places: `.env.example`, 
 python3 scripts/check-env-parity.py
 ```
 
+Your own `.env` is a one-time copy of `.env.example` and is never rewritten, so keys added to the template after you created it are simply absent and the code falls back to its defaults. To pick them up without touching anything you have already set:
+
+```bash
+python3 scripts/sync-env.py
+```
+
+It only appends, takes a timestamped backup first, and is safe to re-run. `deploy/setup.sh` runs it on every deploy for the same reason.
+
 ### Automated Checks (CI)
 
 The CI pipeline runs on every PR:

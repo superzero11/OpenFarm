@@ -122,7 +122,11 @@ local = read(".env")
 if local:
     missing = example_active - env_keys(local)
     if missing:
-        notes.append("your .env is missing: " + ", ".join(sorted(missing)))
+        notes.append(
+            "your .env is missing: "
+            + ", ".join(sorted(missing))
+            + "  (run: python3 scripts/sync-env.py)"
+        )
 
 for n in notes:
     print(f"  note: {n}")

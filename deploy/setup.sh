@@ -157,7 +157,16 @@ if [ ! -f .env ]; then
     echo "  ╚══════════════════════════════════════════════════════╝"
     echo ""
 else
-    echo "▸ .env already exists, skipping"
+    # Never re-copy the template over a live .env - that would overwrite the
+    # generated secrets. Instead append only the keys the template has gained
+    # since this file was created, so an existing install picks up new
+    # configuration instead of silently falling back to code defaults.
+    echo "▸ .env already exists, checking for new keys..."
+    if command -v python3 >/dev/null 2>&1; then
+        python3 scripts/sync-env.py || echo "  warning: could not reconcile .env, continuing"
+    else
+        echo "  warning: python3 not found, skipping .env reconciliation"
+    fi
 fi
 
 # ── 9. Summary ───────────────────────────────────────────────────────

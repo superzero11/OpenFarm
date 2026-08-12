@@ -109,7 +109,13 @@
         "host2": "MapLibre and PMTiles - no basemap token needed",
         "host3": "Multi-tenant with owner / admin / member / viewer roles",
         "host4": "English and Spanish, light and dark",
-        "footerLine": "Built in the open, for everyone's fields"
+        "footerLine": "Built in the open, for everyone's fields",
+        "ctaDesc": "From smallholders to enterprises. BSD-3-Clause, no seat limits, no lock-in, and contributions are genuinely wanted.",
+        "roadmapCta": "Read the roadmap",
+        "footerTagline": "Open data, open source, open to forks",
+        "footerDocs": "Docs",
+        "footerContributing": "Contributing",
+        "footerDiscord": "Discord"
     },
     "signInPage": {
         "welcomeBack": "Welcome back",

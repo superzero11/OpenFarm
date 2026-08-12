@@ -109,7 +109,13 @@
         "host2": "MapLibre y PMTiles - sin token de mapa base",
         "host3": "Multiusuario con roles owner / admin / member / viewer",
         "host4": "Inglés y español, claro y oscuro",
-        "footerLine": "Construido en abierto, para los campos de todos"
+        "footerLine": "Construido en abierto, para los campos de todos",
+        "ctaDesc": "Desde pequeños productores hasta empresas. BSD-3-Clause, sin límite de usuarios, sin dependencia de un proveedor, y las contribuciones son bienvenidas de verdad.",
+        "roadmapCta": "Ver la hoja de ruta",
+        "footerTagline": "Datos abiertos, código abierto, abierto a bifurcaciones",
+        "footerDocs": "Documentación",
+        "footerContributing": "Contribuir",
+        "footerDiscord": "Discord"
     },
     "signInPage": {
         "welcomeBack": "Bienvenido de nuevo",

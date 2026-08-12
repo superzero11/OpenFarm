@@ -23,6 +23,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignInModal } from "@/components/sign-in-modal";
 import { FieldOutline, FieldRaster, IMAGERY, IMAGERY_FLAT } from "@/components/marketing/scene";
 import { BUILT_WITH } from "@/components/marketing/brand-marks";
+import { FAQ_IDS } from "@/lib/faq";
 
 const REPO = "https://github.com/superzero11/OpenFarm";
 const DISCORD = "https://discord.gg/KM9qxpEmsU";
@@ -165,6 +166,7 @@ function Plane({
 
 export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
     const t = useTranslations("landing");
+    const tf = useTranslations("faq");
     const tc = useTranslations("common");
     const searchParams = useSearchParams();
     const [signInOpen, setSignInOpen] = useState(false);
@@ -181,6 +183,7 @@ export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boo
         { href: "#how-it-works", label: t("navHow") },
         { href: "#architecture", label: t("navArchitecture") },
         { href: "#self-host", label: t("navSelfHost") },
+        { href: "#faq", label: t("navFaq") },
     ];
 
     /* Facts that stay true as the roadmap adds indices, crops and sensors.
@@ -750,6 +753,24 @@ export function LandingPage({ isAuthenticated = false }: { isAuthenticated?: boo
                                 {t("roadmapCta")}
                             </a>
                         </Button>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── FAQ: the questions, answered where they are asked ── */}
+            <section id="faq" className="scroll-mt-16 border-t bg-surface-2">
+                <div className="mx-auto w-full max-w-6xl px-6 py-20">
+                    <SectionHeader tag={tf("tag")} title={tf("title")} desc={tf("desc")} />
+
+                    <div className="mt-8 grid gap-x-10 gap-y-7 lg:grid-cols-2">
+                        {FAQ_IDS.map((id) => (
+                            <div key={id}>
+                                <h3 className="text-[15px] font-semibold leading-snug">{tf(`${id}.q`)}</h3>
+                                <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
+                                    {tf(`${id}.a`)}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>

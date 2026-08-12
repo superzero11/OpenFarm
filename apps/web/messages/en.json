@@ -36,7 +36,7 @@
         "badge": "Open source · BSD-3-Clause · self-hostable",
         "heroTitle1": "Know what your field is doing -",
         "heroTitle2": "and why",
-        "heroDesc": "Sentinel-2 imagery, weather, soil and time fused into one explainable picture of every field you manage - with the observation, its size, its window, and the conditions behind it.",
+        "heroDesc": "OpenFarm is an open source crop intelligence platform: Sentinel-2 imagery, weather, soil and time fused into one explainable picture of every field you manage - with the observation, its size, its window, and the conditions behind it.",
         "deployCta": "Deploy your own",
         "demoCta": "Try the live demo",
         "navHow": "How it works",
@@ -121,7 +121,8 @@
         "thanksDataLabel": "Data and imagery",
         "thanksAlsoLabel": "Also built with",
         "thanksHostingLabel": "Live demo hosting",
-        "thanksHostingDesc": "runs openfarm.earth on an Always Free Ampere instance, the same 2 OCPU and 12 GB anyone can claim."
+        "thanksHostingDesc": "runs openfarm.earth on an Always Free Ampere instance, the same 2 OCPU and 12 GB anyone can claim.",
+        "navFaq": "FAQ"
     },
     "signInPage": {
         "welcomeBack": "Welcome back",
@@ -714,5 +715,52 @@
         "saturationCapacity": "Saturation",
         "seqPotential": "Seq. potential",
         "climateZone": "Climate zone"
+    },
+    "seo": {
+        "title": "OpenFarm: Open Source Crop Intelligence Platform",
+        "description": "Open source crop intelligence: Sentinel-2 imagery, weather and soil fused into explainable per-field insights. Self-hostable, BSD-3-Clause, no API keys.",
+        "longDescription": "OpenFarm is an open source crop intelligence platform. It fuses Sentinel-2 satellite imagery, daily weather and soil data into per-field insights, and shows the evidence behind every alert: which index moved, over what window, and the conditions that explain it.",
+        "category": "Crop intelligence and remote sensing",
+        "featureList": "Sentinel-2 vegetation indices at 10 m | 24 months of history backfilled per field | Daily weather history and 7-day forecast | Soil properties by depth to 200 cm | Explained anomaly alerts | Field boundary detection from imagery | Self-hosted with Docker Compose | Multi-tenant with role-based access",
+        "ogHeadline": "Know what your field is doing, and why",
+        "ogSubhead": "Open source crop intelligence from satellite, weather and soil",
+        "ogAlt": "OpenFarm, open source crop intelligence from satellite, weather and soil"
+    },
+    "faq": {
+        "tag": "Questions",
+        "title": "Answers before you deploy",
+        "desc": "The things people ask before running OpenFarm on their own fields.",
+        "what": {
+            "q": "What is OpenFarm?",
+            "a": "OpenFarm is an open source crop intelligence platform. It fuses Sentinel-2 satellite imagery, daily weather and soil data into per-field insights, and shows the evidence behind every alert: which index moved, over what window, and the conditions that explain it."
+        },
+        "stress": {
+            "q": "How does OpenFarm detect crop stress?",
+            "a": "It compares each new scene against the field's own history rather than a fixed threshold. When an index drops, OpenFarm reads rainfall, evapotranspiration and soil water balance for the same window, so the alert tells you whether it is water stress, not merely that something changed."
+        },
+        "satellite": {
+            "q": "What satellite data does OpenFarm use?",
+            "a": "Sentinel-2, the European Space Agency's 10 m multispectral mission, searched through the public Element 84 Earth Search catalogue. OpenFarm computes NDVI, EVI, SAVI and NDWI per scene, skips scenes above the cloud threshold, and backfills 24 months of history when you draw a boundary."
+        },
+        "soil": {
+            "q": "What soil data does OpenFarm use?",
+            "a": "ISRIC SoilGrids supplies texture, pH, organic carbon, CEC and hydraulic properties worldwide at 250 m, and POLARIS supplies 30 m coverage across the United States. Both are pulled automatically for every layer down to 200 cm the moment a field boundary exists."
+        },
+        "free": {
+            "q": "Is OpenFarm free?",
+            "a": "Yes. OpenFarm is BSD-3-Clause licensed with no seat limits, no per-hectare pricing and no vendor account. Run the whole stack yourself at no cost beyond your own server, or try the hosted demo first. No third-party API keys are required, including for the basemap."
+        },
+        "selfhost": {
+            "q": "Can I self-host OpenFarm?",
+            "a": "Yes, that is the default. Next.js, FastAPI, PostGIS, MinIO and TiTiler start from a single Docker Compose file on any VPS, and Terraform can provision the machine for you. The live demo runs on a free-tier 2 OCPU, 12 GB instance, which fits the entire stack."
+        },
+        "crops": {
+            "q": "Which crops does OpenFarm support?",
+            "a": "Cereals, pulses, oilseeds, vegetables, fibre and perennial crops each ship with a suitability profile: temperature, rainfall, pH, drainage and salinity envelopes scored against your field's real soil and climate. Profiles are plain data in the repository, so adding a crop is a pull request."
+        },
+        "updates": {
+            "q": "How often is the data updated?",
+            "a": "Sentinel-2 revisits most fields every few days, and OpenFarm recomputes indices weekly from the newest usable scene. Weather refreshes daily alongside a 7-day forecast. Soil is fetched once per field, because soil properties change over decades rather than weeks."
+        }
     }
 }

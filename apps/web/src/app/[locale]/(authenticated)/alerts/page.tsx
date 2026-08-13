@@ -32,7 +32,7 @@ import { AlertRow } from "@/components/alert-row";
 const SEVERITY_TABS = ["all", "high", "medium", "low"] as const;
 
 /** Rows per page. The API caps a single request at 200. */
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 export default function AlertsPage() {
     const t = useTranslations("alertsPage");

@@ -802,7 +802,12 @@
         "featureList": "Índices de vegetación Sentinel-2 a 10 m | 24 meses de historial recuperados por campo | Historial climático diario y pronóstico de 7 días | Propiedades del suelo por profundidad hasta 200 cm | Alertas de anomalías explicadas | Detección de límites de campo desde imágenes | Autoalojamiento con Docker Compose | Multiusuario con roles",
         "ogHeadline": "Sabe qué está pasando en tu campo, y por qué",
         "ogSubhead": "Inteligencia de cultivos de código abierto: satélite, clima y suelo",
-        "ogAlt": "OpenFarm, inteligencia de cultivos de código abierto: satélite, clima y suelo"
+        "ogAlt": "OpenFarm, inteligencia de cultivos de código abierto: satélite, clima y suelo",
+        "datasetDesc": {
+            "sentinel": "Imágenes ópticas multiespectrales de la misión Sentinel-2 de la Agencia Espacial Europea: 13 bandas de 10 a 60 m de resolución con revisita de cinco días en el ecuador. OpenFarm calcula NDVI, EVI, SAVI y NDWI por escena a partir de sus bandas roja, infrarroja cercana e infrarroja de onda corta, y recupera 24 meses de historial para cada límite de campo.",
+            "weather": "Historial y pronóstico meteorológico diario y horario agregado de servicios meteorológicos nacionales. OpenFarm lee temperatura, precipitación, evapotranspiración, viento y humedad del suelo, y deriva grados día de crecimiento, evapotranspiración de referencia, balance hídrico e índice de sequía para cada campo.",
+            "soil": "Mapas globales de propiedades del suelo estimados a 250 m de resolución a partir de observaciones de perfiles de suelo y covariables ambientales. OpenFarm lee textura, pH, carbono orgánico, capacidad de intercambio catiónico, densidad aparente y capacidad de agua disponible por capa de profundidad hasta 200 cm."
+        }
     },
     "faq": {
         "tag": "Preguntas",

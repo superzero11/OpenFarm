@@ -6,6 +6,41 @@ import { FAQ_IDS } from "@/lib/faq";
 import { DISCORD_URL, REPO_URL, SAME_AS, SITE_NAME, SITE_URL, localeUrl } from "@/lib/site";
 
 /**
+ * The third-party datasets every reading on the site is computed from.
+ *
+ * Licences are the publishers' own terms, not ours: Copernicus data is
+ * free and open under the Data Space terms, and both Open-Meteo and
+ * SoilGrids publish under CC BY 4.0. Descriptions live in the message
+ * files so the Spanish page describes them in Spanish.
+ */
+const DATA_SOURCES = [
+    {
+        id: "sentinel",
+        name: "Copernicus Sentinel-2",
+        url: "https://dataspace.copernicus.eu",
+        license: "https://dataspace.copernicus.eu/terms-and-conditions",
+        creator: "European Space Agency",
+        creatorUrl: "https://www.esa.int",
+    },
+    {
+        id: "weather",
+        name: "Open-Meteo",
+        url: "https://open-meteo.com",
+        license: "https://creativecommons.org/licenses/by/4.0/",
+        creator: "Open-Meteo",
+        creatorUrl: "https://open-meteo.com",
+    },
+    {
+        id: "soil",
+        name: "ISRIC SoilGrids",
+        url: "https://soilgrids.org",
+        license: "https://creativecommons.org/licenses/by/4.0/",
+        creator: "ISRIC - World Soil Information",
+        creatorUrl: "https://www.isric.org",
+    },
+] as const;
+
+/**
  * Structured data for the landing page, rendered into the initial HTML so
  * crawlers that do not execute JavaScript still get it.
  *
@@ -64,12 +99,24 @@ async function buildJsonLd(locale: string) {
                     .map((f) => f.trim()),
                 publisher: { "@id": `${SITE_URL}/#organization` },
                 /* What the numbers are computed from. Naming the sources is
-                   what lets an engine treat our claims as grounded. */
-                isBasedOn: [
-                    { "@type": "Dataset", name: "Copernicus Sentinel-2", url: "https://dataspace.copernicus.eu" },
-                    { "@type": "Dataset", name: "Open-Meteo", url: "https://open-meteo.com" },
-                    { "@type": "Dataset", name: "ISRIC SoilGrids", url: "https://soilgrids.org" },
-                ],
+                   what lets an engine treat our claims as grounded.
+
+                   Google validates every Dataset node it finds, and
+                   description is required on each one - name and url alone
+                   made these three report as invalid in Search Console. */
+                isBasedOn: DATA_SOURCES.map((source) => ({
+                    "@type": "Dataset",
+                    name: source.name,
+                    url: source.url,
+                    description: t(`datasetDesc.${source.id}`),
+                    license: source.license,
+                    creator: {
+                        "@type": "Organization",
+                        name: source.creator,
+                        url: source.creatorUrl,
+                    },
+                    isAccessibleForFree: true,
+                })),
                 discussionUrl: DISCORD_URL,
             },
             {

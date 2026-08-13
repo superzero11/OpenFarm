@@ -802,7 +802,12 @@
         "featureList": "Sentinel-2 vegetation indices at 10 m | 24 months of history backfilled per field | Daily weather history and 7-day forecast | Soil properties by depth to 200 cm | Explained anomaly alerts | Field boundary detection from imagery | Self-hosted with Docker Compose | Multi-tenant with role-based access",
         "ogHeadline": "Know what your field is doing, and why",
         "ogSubhead": "Open source crop intelligence from satellite, weather and soil",
-        "ogAlt": "OpenFarm, open source crop intelligence from satellite, weather and soil"
+        "ogAlt": "OpenFarm, open source crop intelligence from satellite, weather and soil",
+        "datasetDesc": {
+            "sentinel": "Multispectral optical imagery from the European Space Agency's Sentinel-2 mission: 13 bands at 10 to 60 m resolution with a five-day revisit at the equator. OpenFarm computes NDVI, EVI, SAVI and NDWI per scene from its red, near-infrared and short-wave infrared bands, and backfills 24 months of history for every field boundary.",
+            "weather": "Daily and hourly weather history and forecasts aggregated from national meteorological services. OpenFarm reads temperature, precipitation, evapotranspiration, wind and soil moisture from it, and derives growing degree days, reference evapotranspiration, water balance and a drought index for each field.",
+            "soil": "Global soil property maps predicted at 250 m resolution from a compilation of soil profile observations and environmental covariates. OpenFarm reads texture, pH, organic carbon, cation exchange capacity, bulk density and available water capacity by depth layer down to 200 cm."
+        }
     },
     "faq": {
         "tag": "Questions",

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useOrg } from "@/components/org-context";
-import { alertsApi, farmsApi } from "@/lib/api";
-import type { Alert, AlertSummary, Farm, Field } from "@/lib/api";
+import { alertsApi } from "@/lib/api";
+import type { Alert, AlertSummary } from "@/lib/api";
 import { toast } from "sonner";
 import {
     AlertTriangle,
@@ -51,10 +51,6 @@ export default function AlertsPage() {
     const [severityFilter, setSeverityFilter] = useState<string>("all");
     const [page, setPage] = useState(0);
 
-    // Field/Farm lookup maps
-    const [fieldMap, setFieldMap] = useState<Record<string, Field>>({});
-    const [farmMap, setFarmMap] = useState<Record<string, Farm>>({});
-
     const loadAlerts = useCallback(async () => {
         setLoading(true);
         try {
@@ -82,35 +78,6 @@ export default function AlertsPage() {
             setSummary(null);
         }
     }, []);
-
-    // Load farms and fields for lookup
-    const loadLookups = useCallback(async () => {
-        try {
-            const farmRes = await farmsApi.list(200, 0);
-            const fMap: Record<string, Farm> = {};
-            farmRes.items.forEach((f) => { fMap[f.id] = f; });
-            setFarmMap(fMap);
-
-            // Load fields per farm
-            const allFields: Field[] = [];
-            await Promise.all(
-                farmRes.items.map(async (farm) => {
-                    try {
-                        const fieldRes = await farmsApi.fields(farm.id, 200, 0);
-                        allFields.push(...fieldRes.items);
-                    } catch { /* silent */ }
-                }),
-            );
-            const fiMap: Record<string, Field> = {};
-            allFields.forEach((f) => { fiMap[f.id] = f; });
-            setFieldMap(fiMap);
-        } catch { /* silent */ }
-    }, []);
-
-    useEffect(() => {
-        if (!currentOrg) return;
-        loadLookups();
-    }, [currentOrg, loadLookups]);
 
     useEffect(() => {
         if (!currentOrg) return;
@@ -274,16 +241,13 @@ export default function AlertsPage() {
             ) : (
                 <div className="flex flex-col gap-2">
                     {alerts.map((alert) => {
-                        const field = fieldMap[alert.field_id];
-                        const farm = field ? farmMap[field.farm_id] : null;
-
                         return (
                             <AlertRow
                                 key={alert.id}
                                 alert={alert}
-                                fieldName={field?.name}
-                                farmId={field?.farm_id}
-                                farmName={farm?.name}
+                                fieldName={alert.field_name ?? undefined}
+                                farmId={alert.farm_id ?? undefined}
+                                farmName={alert.farm_name ?? undefined}
                                 showActions
                                 onToggleStatus={toggleStatus}
                                 togglingId={togglingId}

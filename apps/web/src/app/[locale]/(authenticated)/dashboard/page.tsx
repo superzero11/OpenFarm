@@ -44,7 +44,6 @@ export default function DashboardPage() {
     const [farmStats, setFarmStats] = useState<Record<string, FarmStats>>({});
     const [openAlerts, setOpenAlerts] = useState<Alert[]>([]);
     const [openAlertTotal, setOpenAlertTotal] = useState(0);
-    const [fieldMap, setFieldMap] = useState<Record<string, Field>>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -66,9 +65,9 @@ export default function DashboardPage() {
                 // The list is capped at 10 rows; the metric must count them all.
                 setOpenAlertTotal(alertRes.total);
 
-                // One request per farm gives both the count and the hectares,
-                // and doubles as the field lookup the alert rows need for
-                // their "field . farm" context line.
+                // One request per farm, for the count and the hectares each
+                // row carries. The alert rows below get their field and farm
+                // names from the API now, so nothing else needs this.
                 const perFarm = await Promise.all(
                     farmRes.items.map(async (f) => {
                         try {
@@ -82,16 +81,13 @@ export default function DashboardPage() {
                 if (cancelled) return;
 
                 const stats: Record<string, FarmStats> = {};
-                const fields: Record<string, Field> = {};
                 for (const { farm, total, items } of perFarm) {
                     stats[farm.id] = {
                         fieldCount: total,
                         areaHa: items.reduce((sum, f) => sum + (f.area_ha ?? 0), 0),
                     };
-                    for (const f of items) fields[f.id] = f;
                 }
                 setFarmStats(stats);
-                setFieldMap(fields);
             } catch (err) {
                 console.error("Dashboard load failed:", err);
             } finally {
@@ -275,21 +271,15 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2">
-                                {openAlerts.slice(0, ALERT_PREVIEW).map((alert) => {
-                                    const field = fieldMap[alert.field_id];
-                                    const farm = field
-                                        ? farms.find((f) => f.id === field.farm_id)
-                                        : undefined;
-                                    return (
-                                        <AlertRow
-                                            key={alert.id}
-                                            alert={alert}
-                                            fieldName={field?.name}
-                                            farmId={field?.farm_id}
-                                            farmName={farm?.name}
-                                        />
-                                    );
-                                })}
+                                {openAlerts.slice(0, ALERT_PREVIEW).map((alert) => (
+                                    <AlertRow
+                                        key={alert.id}
+                                        alert={alert}
+                                        fieldName={alert.field_name ?? undefined}
+                                        farmId={alert.farm_id ?? undefined}
+                                        farmName={alert.farm_name ?? undefined}
+                                    />
+                                ))}
                                 {openAlertTotal > ALERT_PREVIEW && (
                                     <Link
                                         href="/alerts"

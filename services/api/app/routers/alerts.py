@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.logging import logger
 from app.middleware.auth import OrgContext, get_org_context, require_roles
-from app.models.tables import Alert
+from app.models.tables import Alert, Farm, Field
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import AlertOut, AlertSummaryOut, AlertUpdate
 
@@ -20,6 +20,39 @@ router = APIRouter()
 
 # Dependency: restrict write operations to owner/admin/member (viewers are read-only)
 _writer = require_roles("owner", "admin", "member")
+
+
+def _with_context(stmt):
+    """Attach the field and farm an alert belongs to.
+
+    Outer joins, deliberately: an alert outlives its field, and an inner
+    join would make alerts silently disappear from the list the moment
+    someone deletes a field. The deleted_at condition sits in the join
+    rather than in a WHERE for the same reason - it nulls the name
+    without dropping the row.
+
+    Nothing here is stored on the alert: the names are read from their
+    own tables on every request, so a rename shows up immediately.
+    """
+    return stmt.outerjoin(
+        Field, (Alert.field_id == Field.id) & Field.deleted_at.is_(None)
+    ).outerjoin(Farm, (Field.farm_id == Farm.id) & Farm.deleted_at.is_(None))
+
+
+def _alert_out(
+    alert: Alert,
+    field_name: str | None,
+    farm_id: uuid.UUID | None,
+    farm_name: str | None,
+) -> AlertOut:
+    """Build the response from an (alert, field name, farm) row."""
+    return AlertOut.model_validate(alert).model_copy(
+        update={
+            "field_name": field_name,
+            "farm_id": farm_id,
+            "farm_name": farm_name,
+        }
+    )
 
 
 @router.get("/alerts", response_model=PaginatedResponse[AlertOut])
@@ -34,7 +67,7 @@ async def list_alerts(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
-    base = select(Alert).where(Alert.org_id == ctx.org_id)
+    base = _with_context(select(Alert)).where(Alert.org_id == ctx.org_id)
     if field_id:
         base = base.where(Alert.field_id == field_id)
     if status_filter:
@@ -43,22 +76,25 @@ async def list_alerts(
         base = base.where(Alert.severity == severity)
     if index_type:
         base = base.where(Alert.index_type == index_type)
-    # farm_id filter would require a join through fields → farms
     if farm_id:
-        from app.models.tables import Field
-
-        base = base.join(Field, Alert.field_id == Field.id).where(
-            Field.farm_id == farm_id
-        )
+        base = base.where(Field.farm_id == farm_id)
 
     total = (
         await db.execute(select(func.count()).select_from(base.subquery()))
     ).scalar() or 0
-    result = await db.execute(
-        base.order_by(Alert.created_at.desc()).limit(limit).offset(offset)
-    )
+    rows = (
+        await db.execute(
+            base.add_columns(Field.name, Farm.id, Farm.name)
+            .order_by(Alert.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+    ).all()
     return PaginatedResponse(
-        items=result.scalars().all(), total=total, limit=limit, offset=offset
+        items=[_alert_out(*row) for row in rows],
+        total=total,
+        limit=limit,
+        offset=offset,
     )
 
 
@@ -97,15 +133,25 @@ async def list_field_alerts(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
-    base = select(Alert).where(Alert.org_id == ctx.org_id, Alert.field_id == field_id)
+    base = _with_context(select(Alert)).where(
+        Alert.org_id == ctx.org_id, Alert.field_id == field_id
+    )
     total = (
         await db.execute(select(func.count()).select_from(base.subquery()))
     ).scalar() or 0
-    result = await db.execute(
-        base.order_by(Alert.created_at.desc()).limit(limit).offset(offset)
-    )
+    rows = (
+        await db.execute(
+            base.add_columns(Field.name, Farm.id, Farm.name)
+            .order_by(Alert.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+    ).all()
     return PaginatedResponse(
-        items=result.scalars().all(), total=total, limit=limit, offset=offset
+        items=[_alert_out(*row) for row in rows],
+        total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

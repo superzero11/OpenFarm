@@ -125,6 +125,13 @@ class AlertOut(BaseModel):
     soil_context: dict[str, Any] | None = None
     created_at: datetime
 
+    # Resolved by an outer join at query time, never stored on the alert
+    # row: a rename is reflected on the next request. Null when the field
+    # has been soft-deleted, which is what the client used to show.
+    field_name: str | None = None
+    farm_id: uuid.UUID | None = None
+    farm_name: str | None = None
+
     model_config = {"from_attributes": True}
 
 

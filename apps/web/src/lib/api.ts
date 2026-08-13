@@ -299,6 +299,11 @@ export interface Alert {
     weather_context: Record<string, any> | null;
     soil_context: Record<string, any> | null;
     created_at: string;
+    /** Resolved by the API at query time, not stored on the alert. Null
+     *  when the field or farm has been deleted. */
+    field_name: string | null;
+    farm_id: string | null;
+    farm_name: string | null;
 }
 
 // ── Scouting Types ───────────────────────────────────────────────
